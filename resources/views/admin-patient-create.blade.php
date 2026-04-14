@@ -3,213 +3,134 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tambah Patient - Khayra</title>
+    <title>Create Patient - Khayra Physio</title>
     <style>
         * { box-sizing: border-box; }
-
         body {
             margin: 0;
             font-family: Arial, sans-serif;
-            background:
-                radial-gradient(circle at top left, rgba(15,118,110,.10), transparent 30%),
-                linear-gradient(180deg, #f6fbfa 0%, #eef7f5 100%);
-            color: #1f2937;
+            background: #f6f8f8;
+            color: #17232b;
         }
-
         .layout {
             min-height: 100vh;
             display: flex;
         }
-
-        .sidebar {
-            width: 250px;
-            flex-shrink: 0;
-            background: linear-gradient(180deg, #0f766e 0%, #115e59 100%);
-            color: white;
-            padding: 28px 22px;
-            box-shadow: 8px 0 30px rgba(15,118,110,.12);
-        }
-
-        .brand {
-            font-size: 24px;
-            font-weight: bold;
-            margin-bottom: 8px;
-        }
-
-        .brand-subtitle {
-            font-size: 14px;
-            opacity: .85;
-            margin-bottom: 32px;
-            line-height: 1.5;
-        }
-
-        .nav-title {
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            opacity: .7;
-            margin-bottom: 12px;
-        }
-
-        .nav-item {
-            display: block;
-            text-decoration: none;
-            color: white;
-            padding: 12px 14px;
-            border-radius: 12px;
-            margin-bottom: 10px;
-            background: rgba(255,255,255,.06);
-            font-weight: 600;
-        }
-
-        .nav-item.active {
-            background: rgba(255,255,255,.18);
-            font-weight: bold;
-        }
-
-        .logout-form {
-            margin-top: 18px;
-        }
-
-        .logout-btn {
-            width: 100%;
-            border: none;
-            padding: 12px 14px;
-            border-radius: 12px;
-            background: rgba(255,255,255,.14);
-            color: white;
-            font-weight: 700;
-            cursor: pointer;
-        }
-
         .main {
             flex: 1;
             min-width: 0;
-            padding: 32px;
-        }
-
-        .topbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 24px;
-        }
-
-        .title h1 {
-            margin: 0;
-            font-size: 34px;
-            color: #0f766e;
-        }
-
-        .title p {
-            margin: 8px 0 0;
-            color: #6b7280;
-        }
-
-        .ghost-link {
-            display: inline-block;
-            text-decoration: none;
-            padding: 10px 14px;
-            border-radius: 12px;
-            border: 1px solid #d7ebe6;
-            color: #0f766e;
-            background: #f8fffd;
-            font-size: 14px;
-            font-weight: 600;
-        }
-
-        .form-card {
-            background: white;
-            border-radius: 24px;
             padding: 28px;
-            box-shadow: 0 16px 40px rgba(15,118,110,.08);
-            border: 1px solid #edf5f3;
         }
-
-        .grid {
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+        .section-card {
+            background: #ffffff;
+            border: 1px solid #ecefef;
+            border-radius: 24px;
+            padding: 24px;
+            box-shadow: 0 10px 26px rgba(15, 23, 42, 0.04);
+        }
+        .title {
+            font-size: 38px;
+            font-weight: 800;
+            color: #22343a;
+            margin: 0 0 10px;
+        }
+        .subtitle {
+            font-size: 14px;
+            line-height: 1.8;
+            color: #6b7280;
+            margin: 0 0 22px;
+        }
+        .top-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 18px;
+        }
+        .ghost-link {
+            display: inline-flex;
+            align-items: center;
+            text-decoration: none;
+            padding: 11px 14px;
+            border-radius: 12px;
+            background: #ffffff;
+            border: 1px solid #e6ebea;
+            color: #2c5b5a;
+            font-size: 13px;
+            font-weight: 700;
+        }
+        .form-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 18px;
         }
-
-        .field {
-            display: flex;
-            flex-direction: column;
-        }
-
         .field.full {
             grid-column: 1 / -1;
         }
-
-        label {
+        .field label {
+            display: block;
             margin-bottom: 8px;
+            font-size: 13px;
             font-weight: 700;
-            color: #374151;
-            font-size: 14px;
+            color: #334155;
         }
-
         input, select, textarea {
             width: 100%;
-            padding: 14px;
-            border: 1px solid #d7dedd;
+            padding: 14px 14px;
+            border: 1px solid #dde5e3;
             border-radius: 14px;
             font-size: 14px;
-            background: #fcfefd;
+            background: #ffffff;
+            color: #111827;
+            font-family: Arial, sans-serif;
         }
-
         input:focus, select:focus, textarea:focus {
             outline: none;
-            border-color: #0f766e;
-            box-shadow: 0 0 0 4px rgba(15,118,110,.08);
+            border-color: #176f69;
+            box-shadow: 0 0 0 4px rgba(23,111,105,.08);
         }
-
-        textarea {
-            min-height: 120px;
-            resize: vertical;
+        .readonly-box {
+            width: 100%;
+            padding: 14px 14px;
+            border: 1px dashed #d9e4e1;
+            border-radius: 14px;
+            background: #f8fbfa;
+            color: #7b8794;
+            font-size: 14px;
+            line-height: 1.7;
         }
-
-        .submit-row {
-            margin-top: 24px;
+        .actions {
             display: flex;
             justify-content: flex-end;
+            margin-top: 22px;
         }
-
         .submit-btn {
             border: none;
-            padding: 14px 20px;
+            background: linear-gradient(135deg, #3d8a89 0%, #2f7c7a 100%);
+            color: #ffffff;
+            padding: 14px 22px;
             border-radius: 14px;
-            background: #0f766e;
-            color: white;
-            font-size: 15px;
-            font-weight: 700;
+            font-size: 14px;
+            font-weight: 800;
             cursor: pointer;
+            box-shadow: 0 10px 20px rgba(47,124,122,.16);
         }
-
-        @media (max-width: 1024px) {
-            .layout {
-                display: block;
-            }
-
-            .sidebar {
-                width: 100%;
-                border-radius: 0 0 24px 24px;
-            }
-
-            .main {
-                padding: 20px;
-            }
+        .error-box {
+            background: #fff1f2;
+            border: 1px solid #ffe0e6;
+            color: #be123c;
+            padding: 14px 16px;
+            border-radius: 14px;
+            margin-bottom: 18px;
+            line-height: 1.8;
+            font-size: 13px;
         }
-
-        @media (max-width: 768px) {
-            .grid {
-                grid-template-columns: 1fr;
-            }
-
-            .topbar {
-                flex-direction: column;
-                align-items: flex-start;
-            }
+        @media (max-width: 860px) {
+            .layout { display: block; }
+            .main { padding: 16px; }
+            .form-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -218,54 +139,102 @@
     @include('partials.admin-sidebar', ['activeMenu' => 'patients'])
 
     <main class="main">
-        <div class="topbar">
-            <div class="title">
-                <h1>Tambah Patient</h1>
-                <p>Input data pasien baru ke dalam sistem.</p>
+        <div class="container">
+            <div class="top-actions">
+                <a href="/admin/patients" class="ghost-link">← Kembali ke Patients</a>
             </div>
 
-            <a href="/admin/patients" class="ghost-link">← Kembali ke Patients</a>
-        </div>
+            <section class="section-card">
+                <h1 class="title">Create Patient</h1>
+                <p class="subtitle">
+                    Tambahkan data patient baru dengan informasi identitas yang lebih lengkap untuk kebutuhan klinik dan rekam medis.
+                </p>
 
-        <div class="form-card">
-            <form method="POST" action="/admin/patients">
-                @csrf
+                @if ($errors->any())
+                    <div class="error-box">
+                        @foreach ($errors->all() as $error)
+                            <div>{{ $error }}</div>
+                        @endforeach
+                    </div>
+                @endif
 
-                <div class="grid">
-                    <div class="field">
-                        <label>Nama Lengkap</label>
-                        <input type="text" name="full_name" placeholder="Masukkan nama lengkap" required>
+                <form method="POST" action="/admin/patients">
+                    @csrf
+
+                    <div class="form-grid">
+                        <div class="field full">
+                            <label>Medical Record Number</label>
+                            <div class="readonly-box">
+                                Akan dibuat otomatis setelah gender dan tanggal lahir patient terisi.
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <label>Nama Lengkap</label>
+                            <input type="text" name="full_name" value="{{ old('full_name') }}" required>
+                        </div>
+
+                        <div class="field">
+                            <label>NIK</label>
+                            <input type="text" name="nik" value="{{ old('nik') }}">
+                        </div>
+
+                        <div class="field">
+                            <label>Gender</label>
+                            <select name="gender">
+                                <option value="">Pilih Gender</option>
+                                <option value="female" {{ old('gender') == 'female' ? 'selected' : '' }}>Perempuan</option>
+                                <option value="male" {{ old('gender') == 'male' ? 'selected' : '' }}>Laki-laki</option>
+                            </select>
+                        </div>
+
+                        <div class="field">
+                            <label>Tanggal Lahir</label>
+                            <input type="date" name="birth_date" value="{{ old('birth_date') }}">
+                        </div>
+
+                        <div class="field">
+                            <label>WhatsApp</label>
+                            <input type="text" name="whatsapp" value="{{ old('whatsapp') }}" required>
+                        </div>
+
+                        <div class="field">
+                            <label>Agama</label>
+                            <input type="text" name="religion" value="{{ old('religion') }}">
+                        </div>
+
+                        <div class="field">
+                            <label>Pekerjaan</label>
+                            <input type="text" name="occupation" value="{{ old('occupation') }}">
+                        </div>
+
+                        <div class="field">
+                            <label>Pendidikan</label>
+                            <input type="text" name="education" value="{{ old('education') }}">
+                        </div>
+
+                        <div class="field">
+                            <label>Status Perkawinan</label>
+                            <select name="marital_status">
+                                <option value="">Pilih Status</option>
+                                <option value="Cerai hidup" {{ old('marital_status') == 'Cerai hidup' ? 'selected' : '' }}>Cerai hidup</option>
+                                <option value="Cerai mati" {{ old('marital_status') == 'Cerai mati' ? 'selected' : '' }}>Cerai mati</option>
+                                <option value="Kawin" {{ old('marital_status') == 'Kawin' ? 'selected' : '' }}>Kawin</option>
+                                <option value="Belum kawin" {{ old('marital_status') == 'Belum kawin' ? 'selected' : '' }}>Belum kawin</option>
+                            </select>
+                        </div>
+
+                        <div class="field full">
+                            <label>Alamat</label>
+                            <textarea name="address" rows="4">{{ old('address') }}</textarea>
+                        </div>
                     </div>
 
-                    <div class="field">
-                        <label>Gender</label>
-                        <select name="gender">
-                            <option value="">Pilih gender</option>
-                            <option value="male">Male</option>
-                            <option value="female">Female</option>
-                        </select>
+                    <div class="actions">
+                        <button type="submit" class="submit-btn">Simpan Patient</button>
                     </div>
-
-                    <div class="field">
-                        <label>Tanggal Lahir</label>
-                        <input type="date" name="birth_date">
-                    </div>
-
-                    <div class="field">
-                        <label>WhatsApp</label>
-                        <input type="text" name="whatsapp" placeholder="Masukkan nomor WhatsApp">
-                    </div>
-
-                    <div class="field full">
-                        <label>Alamat</label>
-                        <textarea name="address" placeholder="Masukkan alamat pasien"></textarea>
-                    </div>
-                </div>
-
-                <div class="submit-row">
-                    <button type="submit" class="submit-btn">Simpan Patient</button>
-                </div>
-            </form>
+                </form>
+            </section>
         </div>
     </main>
 </div>

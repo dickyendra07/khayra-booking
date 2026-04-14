@@ -253,13 +253,19 @@ Route::post('/admin/bookings/{id}/create-patient', function ($id) {
     $booking = Booking::findOrFail($id);
 
     if (!$booking->patient_id) {
-        $patient = Patient::create([
-            'full_name' => $booking->full_name,
-            'gender' => null,
-            'birth_date' => null,
-            'whatsapp' => $booking->whatsapp,
-            'address' => null,
-        ]);
+        $patient = new Patient();
+        $patient->full_name = $booking->full_name;
+        $patient->gender = null;
+        $patient->birth_date = null;
+        $patient->whatsapp = $booking->whatsapp;
+        $patient->address = null;
+        $patient->nik = null;
+        $patient->religion = null;
+        $patient->occupation = null;
+        $patient->education = null;
+        $patient->marital_status = null;
+        $patient->medical_record_number = null;
+        $patient->save();
 
         $booking->patient_id = $patient->id;
         $booking->save();
@@ -269,13 +275,41 @@ Route::post('/admin/bookings/{id}/create-patient', function ($id) {
         ->with('success', 'Booking berhasil dihubungkan ke data patient.');
 });
 
-Route::get('/admin/patients', function () {
+Route::get('/admin/patients', function (Request $request) {
     if (!session('admin_logged_in')) {
         return redirect('/admin/login');
     }
 
-    $patients = Patient::latest()->get();
-    return view('admin-patients', compact('patients'));
+    $search = $request->query('search');
+    $gender = $request->query('gender');
+    $birthDate = $request->query('birth_date');
+
+    $query = Patient::with(['visits', 'billings'])->latest();
+
+    if ($search) {
+        $query->where(function ($q) use ($search) {
+            $q->where('full_name', 'like', '%' . $search . '%')
+              ->orWhere('whatsapp', 'like', '%' . $search . '%')
+              ->orWhere('address', 'like', '%' . $search . '%')
+              ->orWhere('nik', 'like', '%' . $search . '%')
+              ->orWhere('religion', 'like', '%' . $search . '%')
+              ->orWhere('occupation', 'like', '%' . $search . '%')
+              ->orWhere('education', 'like', '%' . $search . '%')
+              ->orWhere('medical_record_number', 'like', '%' . $search . '%');
+        });
+    }
+
+    if ($gender && in_array($gender, ['male', 'female'])) {
+        $query->where('gender', $gender);
+    }
+
+    if ($birthDate) {
+        $query->whereDate('birth_date', $birthDate);
+    }
+
+    $patients = $query->get();
+
+    return view('admin-patients', compact('patients', 'search', 'gender', 'birthDate'));
 });
 
 Route::get('/admin/patients/create', function () {
@@ -297,15 +331,30 @@ Route::post('/admin/patients', function (Request $request) {
         'birth_date' => 'nullable|date',
         'whatsapp' => 'required|string|max:50',
         'address' => 'nullable|string',
+        'nik' => 'nullable|string|max:30',
+        'religion' => 'nullable|string|max:100',
+        'occupation' => 'nullable|string|max:100',
+        'education' => 'nullable|string|max:100',
+        'marital_status' => 'nullable|in:Cerai hidup,Cerai mati,Kawin,Belum kawin',
     ]);
 
-    Patient::create([
-        'full_name' => $request->full_name,
-        'gender' => $request->gender,
-        'birth_date' => $request->birth_date,
-        'whatsapp' => $request->whatsapp,
-        'address' => $request->address,
-    ]);
+    $patient = new Patient();
+    $patient->full_name = $request->full_name;
+    $patient->gender = $request->gender;
+    $patient->birth_date = $request->birth_date;
+    $patient->whatsapp = $request->whatsapp;
+    $patient->address = $request->address;
+    $patient->nik = $request->nik;
+    $patient->religion = $request->religion;
+    $patient->occupation = $request->occupation;
+    $patient->education = $request->education;
+    $patient->marital_status = $request->marital_status;
+
+    if (empty($patient->medical_record_number)) {
+        $patient->medical_record_number = $patient->generateMedicalRecordNumber();
+    }
+
+    $patient->save();
 
     return redirect('/admin/patients')->with('success', 'Data pasien berhasil ditambahkan!');
 });
@@ -317,7 +366,7 @@ Route::get('/admin/patients/{id}', function ($id) {
 
     $patient = Patient::with([
         'visits' => function ($query) {
-            $query->latest();
+            $query->with(['medicalRecord', 'therapistRelation'])->latest();
         },
         'billings' => function ($query) {
             $query->latest();
@@ -349,6 +398,11 @@ Route::post('/admin/patients/{id}/update', function (Request $request, $id) {
         'birth_date' => 'nullable|date',
         'whatsapp' => 'required|string|max:50',
         'address' => 'nullable|string',
+        'nik' => 'nullable|string|max:30',
+        'religion' => 'nullable|string|max:100',
+        'occupation' => 'nullable|string|max:100',
+        'education' => 'nullable|string|max:100',
+        'marital_status' => 'nullable|in:Cerai hidup,Cerai mati,Kawin,Belum kawin',
     ]);
 
     $patient->full_name = $request->full_name;
@@ -356,6 +410,16 @@ Route::post('/admin/patients/{id}/update', function (Request $request, $id) {
     $patient->birth_date = $request->birth_date;
     $patient->whatsapp = $request->whatsapp;
     $patient->address = $request->address;
+    $patient->nik = $request->nik;
+    $patient->religion = $request->religion;
+    $patient->occupation = $request->occupation;
+    $patient->education = $request->education;
+    $patient->marital_status = $request->marital_status;
+
+    if (empty($patient->medical_record_number)) {
+        $patient->medical_record_number = $patient->generateMedicalRecordNumber();
+    }
+
     $patient->save();
 
     return redirect('/admin/patients/' . $patient->id)->with('success', 'Data patient berhasil diperbarui!');
