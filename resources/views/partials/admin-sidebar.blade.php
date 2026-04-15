@@ -1,120 +1,156 @@
-<aside style="
-    width: 280px;
+<div style="
+    width: 276px;
     min-height: 100vh;
-    background: linear-gradient(180deg, #3f7f82 0%, #2f6d72 58%, #25545a 100%);
+    background: linear-gradient(180deg, #3f7f7e 0%, #2d5f66 100%);
     color: #ffffff;
-    padding: 22px 18px;
+    padding: 20px 16px;
+    box-sizing: border-box;
     position: sticky;
     top: 0;
     align-self: flex-start;
-    box-shadow: inset -1px 0 0 rgba(255,255,255,.06);
+    box-shadow: inset -1px 0 0 rgba(255,255,255,0.06);
 ">
-    <div style="display:flex; align-items:center; gap:12px; margin-bottom:18px;">
-        <img src="/images/khayra-logo.png" alt="Khayra Logo" style="
-            width: 46px;
-            height: 46px;
-            object-fit: contain;
-            border-radius: 12px;
-            background: rgba(255,255,255,.14);
-            padding: 5px;
-            border: 1px solid rgba(255,255,255,.16);
-        ">
+    <div style="
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 18px;
+    ">
+        <img
+            src="/images/khayra-logo.png"
+            alt="Khayra Logo"
+            style="
+                width: 46px;
+                height: 46px;
+                object-fit: contain;
+                border-radius: 14px;
+                background: rgba(255,255,255,0.10);
+                border: 1px solid rgba(255,255,255,0.16);
+                padding: 4px;
+                flex-shrink: 0;
+            "
+        >
         <div>
-            <div style="font-size:28px; font-weight:800; line-height:1;">Khayra</div>
-            <div style="font-size:14px; color:rgba(255,255,255,.78); margin-top:4px;">Admin Workspace</div>
+            <div style="
+                font-size: 16px;
+                font-weight: 800;
+                line-height: 1.15;
+                color: #ffffff;
+            ">
+                Khayra Physio
+            </div>
+            <div style="
+                margin-top: 4px;
+                font-size: 11px;
+                letter-spacing: .6px;
+                text-transform: uppercase;
+                color: rgba(255,255,255,0.78);
+                font-weight: 700;
+            ">
+                Admin Workspace
+            </div>
         </div>
     </div>
 
     <div style="
-        padding: 16px;
+        background: rgba(255,255,255,0.10);
+        border: 1px solid rgba(255,255,255,0.10);
         border-radius: 18px;
-        background: rgba(255,255,255,.10);
-        border: 1px solid rgba(255,255,255,.12);
-        margin-bottom: 20px;
-        line-height: 1.8;
-        font-size: 13px;
-        color: rgba(255,255,255,.88);
+        padding: 16px 14px;
+        margin-bottom: 22px;
     ">
-        Dashboard utama untuk memantau aktivitas klinik, booking, patient, visit, therapist, dan billing.
-    </div>
-
-    <div style="
-        font-size: 11px;
-        text-transform: uppercase;
-        letter-spacing: .8px;
-        font-weight: 800;
-        color: rgba(255,255,255,.68);
-        margin: 0 8px 12px;
-    ">
-        Main Navigation
+        <div style="
+            font-size: 14px;
+            line-height: 1.75;
+            color: rgba(255,255,255,0.94);
+            font-weight: 500;
+        ">
+            Dashboard utama untuk memantau aktivitas klinik, booking, patient, visit, physiotherapy team, billing, dan form booking.
+        </div>
     </div>
 
     @php
         $menus = [
-            'dashboard' => ['/admin/dashboard', 'Dashboard'],
-            'bookings' => ['/admin/bookings', 'Daftar Booking'],
-            'patients' => ['/admin/patients', 'Patients'],
-            'visits' => ['/admin/visits', 'Visits'],
-            'therapists' => ['/admin/therapists', 'Therapists'],
-            'billings' => ['/admin/billings', 'Billings'],
-            'form-booking' => ['/booking', 'Form Booking'],
-            'home' => ['/', 'Home'],
+            ['key' => 'dashboard', 'label' => 'Dashboard', 'url' => '/admin/dashboard'],
+            ['key' => 'bookings', 'label' => 'Daftar Booking', 'url' => '/admin/bookings'],
+            ['key' => 'patients', 'label' => 'Patients', 'url' => '/admin/patients'],
+            ['key' => 'visits', 'label' => 'Visits', 'url' => '/admin/visits'],
+            ['key' => 'therapists', 'label' => 'Physiotherapy Team', 'url' => '/admin/therapists'],
+            ['key' => 'billings', 'label' => 'Billings', 'url' => '/admin/billings'],
+            ['key' => 'form-booking', 'label' => 'Form Booking', 'url' => '/booking'],
+            ['key' => 'home', 'label' => 'Home', 'url' => '/'],
         ];
     @endphp
 
-    <nav style="display:grid; gap:10px;">
-        @foreach($menus as $key => [$url, $label])
-            @php $isActive = ($activeMenu ?? '') === $key; @endphp
-            <a href="{{ $url }}" style="
-                display:flex;
-                align-items:center;
-                justify-content:space-between;
-                text-decoration:none;
-                padding: 14px 16px;
-                border-radius: 16px;
-                font-weight: 700;
-                font-size: 15px;
-                transition: all .18s ease;
-                border: 1px solid {{ $isActive ? 'rgba(255,255,255,.24)' : 'rgba(255,255,255,.08)' }};
-                background: {{ $isActive ? 'rgba(255,255,255,.16)' : 'rgba(255,255,255,.06)' }};
-                color: #ffffff;
-                box-shadow: {{ $isActive ? '0 10px 24px rgba(15,23,42,.10)' : 'none' }};
-            "
-            onmouseover="this.style.background='rgba(255,255,255,.14)'; this.style.transform='translateX(2px)';"
-            onmouseout="this.style.background='{{ $isActive ? 'rgba(255,255,255,.16)' : 'rgba(255,255,255,.06)' }}'; this.style.transform='translateX(0)';">
-                <span>{{ $label }}</span>
+    <div style="
+        font-size: 11px;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        color: rgba(255,255,255,0.70);
+        font-weight: 800;
+        margin: 0 10px 12px;
+    ">
+        Main Navigation
+    </div>
+
+    <div style="display: grid; gap: 10px;">
+        @foreach ($menus as $menu)
+            @php
+                $isActive = ($activeMenu ?? '') === $menu['key'];
+            @endphp
+
+            <a
+                href="{{ $menu['url'] }}"
+                style="
+                    text-decoration: none;
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    gap: 10px;
+                    padding: 13px 14px;
+                    border-radius: 16px;
+                    font-size: 14px;
+                    font-weight: 800;
+                    transition: .2s ease;
+                    color: {{ $isActive ? '#ffffff' : 'rgba(255,255,255,0.96)' }};
+                    background: {{ $isActive ? 'rgba(255,255,255,0.16)' : 'rgba(255,255,255,0.06)' }};
+                    border: 1px solid {{ $isActive ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.05)' }};
+                    box-shadow: {{ $isActive ? '0 8px 18px rgba(0,0,0,0.10)' : 'none' }};
+                "
+            >
+                <span>{{ $menu['label'] }}</span>
                 @if($isActive)
                     <span style="
                         width: 8px;
                         height: 8px;
                         border-radius: 999px;
-                        background: #ffffff;
-                        opacity: .95;
+                        background: rgba(255,255,255,0.92);
+                        flex-shrink: 0;
                     "></span>
                 @endif
             </a>
         @endforeach
-    </nav>
+    </div>
 
     <div style="margin-top: 18px;">
         <form method="POST" action="/admin/logout">
             @csrf
-            <button type="submit" style="
-                width: 100%;
-                border: 1px solid rgba(255,255,255,.14);
-                background: rgba(255,255,255,.10);
-                color: #ffffff;
-                padding: 14px 16px;
-                border-radius: 16px;
-                font-size: 15px;
-                font-weight: 800;
-                cursor: pointer;
-                transition: all .18s ease;
-            "
-            onmouseover="this.style.background='rgba(255,255,255,.16)'"
-            onmouseout="this.style.background='rgba(255,255,255,.10)'">
+            <button
+                type="submit"
+                style="
+                    width: 100%;
+                    border: 1px solid rgba(255,255,255,0.10);
+                    cursor: pointer;
+                    padding: 13px 14px;
+                    border-radius: 16px;
+                    font-size: 14px;
+                    font-weight: 800;
+                    color: #ffffff;
+                    background: rgba(255,255,255,0.12);
+                "
+            >
                 Logout
             </button>
         </form>
     </div>
-</aside>
+</div>
