@@ -9,6 +9,7 @@ use App\Models\Visit;
 use App\Models\MedicalRecord;
 use App\Models\Billing;
 use App\Models\Therapist;
+use App\Models\InformedConsent;
 use App\Models\MedicalRecordHistory;
 use App\Models\MedicalRecordComorbidity;
 use App\Models\MedicalRecordSupportingData;
@@ -284,7 +285,7 @@ Route::get('/admin/patients', function (Request $request) {
     $gender = $request->query('gender');
     $birthDate = $request->query('birth_date');
 
-    $query = Patient::with(['visits', 'billings'])->latest();
+    $query = Patient::with(['visits', 'billings', 'informedConsents'])->latest();
 
     if ($search) {
         $query->where(function ($q) use ($search) {
@@ -370,6 +371,9 @@ Route::get('/admin/patients/{id}', function ($id) {
         },
         'billings' => function ($query) {
             $query->latest();
+        },
+        'informedConsents' => function ($query) {
+            $query->with('visit')->latest();
         }
     ])->findOrFail($id);
 
@@ -423,6 +427,70 @@ Route::post('/admin/patients/{id}/update', function (Request $request, $id) {
     $patient->save();
 
     return redirect('/admin/patients/' . $patient->id)->with('success', 'Data patient berhasil diperbarui!');
+});
+
+Route::get('/admin/patients/{id}/informed-consent', function ($id) {
+    if (!session('admin_logged_in')) {
+        return redirect('/admin/login');
+    }
+
+    $patient = Patient::with([
+        'visits' => function ($query) {
+            $query->latest();
+        }
+    ])->findOrFail($id);
+
+    $latestConsent = InformedConsent::with('visit')
+        ->where('patient_id', $patient->id)
+        ->latest()
+        ->first();
+
+    return view('admin-informed-consent-form', compact('patient', 'latestConsent'));
+});
+
+Route::post('/admin/patients/{id}/informed-consent', function (Request $request, $id) {
+    if (!session('admin_logged_in')) {
+        return redirect('/admin/login');
+    }
+
+    $patient = Patient::findOrFail($id);
+
+    $request->validate([
+        'visit_id' => 'nullable|exists:visits,id',
+        'consent_date' => 'required|date',
+        'status' => 'required|in:pending,signed',
+        'physiotherapy_name' => 'required|string|max:255',
+        'treatment_location' => 'required|string|max:255',
+        'representative_name' => 'nullable|string|max:255',
+        'relationship_to_patient' => 'nullable|string|max:255',
+        'agreement_text' => 'nullable|string',
+        'notes' => 'nullable|string',
+    ]);
+
+    InformedConsent::create([
+        'patient_id' => $patient->id,
+        'visit_id' => $request->visit_id ?: null,
+        'consent_date' => $request->consent_date,
+        'status' => $request->status,
+        'physiotherapy_name' => $request->physiotherapy_name,
+        'treatment_location' => $request->treatment_location,
+        'representative_name' => $request->representative_name,
+        'relationship_to_patient' => $request->relationship_to_patient,
+        'agreement_text' => $request->agreement_text,
+        'notes' => $request->notes,
+    ]);
+
+    return redirect('/admin/patients/' . $patient->id)->with('success', 'Informed consent berhasil disimpan!');
+});
+
+Route::get('/admin/informed-consents/{id}/print', function ($id) {
+    if (!session('admin_logged_in')) {
+        return redirect('/admin/login');
+    }
+
+    $consent = InformedConsent::with(['patient', 'visit'])->findOrFail($id);
+
+    return view('admin-informed-consent-print', compact('consent'));
 });
 
 Route::get('/admin/visits', function () {
@@ -1027,6 +1095,7 @@ Route::get('/admin/billings', function (Request $request) {
     if ($search) {
         $query->where(function ($q) use ($search) {
             $q->where('invoice_number', 'like', '%' . $search . '%')
+              ->orWhere('payment_method', 'like', '%' . $search . '%')
               ->orWhereHas('patient', function ($patientQuery) use ($search) {
                   $patientQuery->where('full_name', 'like', '%' . $search . '%');
               });
@@ -1088,7 +1157,8 @@ Route::post('/admin/billings', function (Request $request) {
         'invoice_date' => 'required|date',
         'amount' => 'required|numeric|min:0',
         'payment_status' => 'required|in:paid,unpaid,partial',
-        'payment_method' => 'nullable|string|max:255',
+        'payment_method' => 'nullable|in:qr,debit,credit,bank_bca,bank_bni,bank_mandiri,insurance',
+        'payment_detail_notes' => 'nullable|string',
         'notes' => 'nullable|string',
     ]);
 
@@ -1103,6 +1173,7 @@ Route::post('/admin/billings', function (Request $request) {
         'amount' => $request->amount,
         'payment_status' => $request->payment_status ?: 'unpaid',
         'payment_method' => $request->payment_method,
+        'payment_detail_notes' => $request->payment_detail_notes,
         'notes' => $request->notes,
     ]);
 
@@ -1143,7 +1214,8 @@ Route::post('/admin/billings/{id}/update', function (Request $request, $id) {
         'invoice_date' => 'required|date',
         'amount' => 'required|numeric|min:0',
         'payment_status' => 'required|in:paid,unpaid,partial',
-        'payment_method' => 'nullable|string|max:255',
+        'payment_method' => 'nullable|in:qr,debit,credit,bank_bca,bank_bni,bank_mandiri,insurance',
+        'payment_detail_notes' => 'nullable|string',
         'notes' => 'nullable|string',
     ]);
 
@@ -1153,6 +1225,7 @@ Route::post('/admin/billings/{id}/update', function (Request $request, $id) {
     $billing->amount = $request->amount;
     $billing->payment_status = $request->payment_status;
     $billing->payment_method = $request->payment_method;
+    $billing->payment_detail_notes = $request->payment_detail_notes;
     $billing->notes = $request->notes;
     $billing->save();
 

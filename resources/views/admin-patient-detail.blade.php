@@ -44,6 +44,31 @@
             font-size: 13px;
             font-weight: 700;
         }
+        .edit-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            padding: 12px 16px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #3d8a89 0%, #2f7c7a 100%);
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: 800;
+        }
+        .consent-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            padding: 12px 16px;
+            border-radius: 14px;
+            background: #ffffff;
+            border: 1px solid #dce7e4;
+            color: #2c5b5a;
+            font-size: 14px;
+            font-weight: 800;
+        }
         .hero {
             background: #ffffff;
             border: 1px solid #ecefef;
@@ -249,7 +274,7 @@
         table {
             width: 100%;
             border-collapse: collapse;
-            min-width: 700px;
+            min-width: 760px;
         }
         th {
             text-align: left;
@@ -297,18 +322,8 @@
         .billing-paid { background: #dcfce7; color: #166534; }
         .billing-unpaid { background: #fee2e2; color: #b91c1c; }
         .billing-partial { background: #fef3c7; color: #92400e; }
-        .edit-btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            text-decoration: none;
-            padding: 12px 16px;
-            border-radius: 14px;
-            background: linear-gradient(135deg, #3d8a89 0%, #2f7c7a 100%);
-            color: #ffffff;
-            font-size: 14px;
-            font-weight: 800;
-        }
+        .consent-pending { background: #fef3c7; color: #92400e; }
+        .consent-signed { background: #dcfce7; color: #166534; }
         @media (max-width: 1180px) {
             .info-grid { grid-template-columns: 1fr 1fr; }
         }
@@ -332,6 +347,7 @@
         <div class="container">
             <div class="top-actions">
                 <a href="/admin/patients" class="ghost-link">← Kembali ke Patients</a>
+                <a href="/admin/patients/{{ $patient->id }}/informed-consent" class="consent-btn">Informed Consent</a>
                 <a href="/admin/patients/{{ $patient->id }}/edit" class="edit-btn">Edit Patient</a>
             </div>
 
@@ -341,7 +357,7 @@
                         <div class="hero-badge">Patient Detail</div>
                         <h1 class="hero-title">{{ $patient->full_name }}</h1>
                         <p class="hero-text">
-                            Halaman ini menampilkan identitas lengkap patient, nomor rekam medis, ringkasan visit, dan relasi billing yang sudah terhubung di sistem Khayra Physio.
+                            Halaman ini menampilkan identitas lengkap patient, nomor rekam medis, ringkasan visit, billing, dan informed consent yang sudah terhubung di sistem Khayra Physio.
                         </p>
 
                         <div class="hero-tags">
@@ -369,8 +385,10 @@
                             </div>
 
                             <div class="snapshot-card">
-                                <div class="snapshot-label">Birth Date</div>
-                                <div class="snapshot-value">{{ $patient->birth_date ? $patient->birth_date->format('Y-m-d') : '-' }}</div>
+                                <div class="snapshot-label">Latest Consent</div>
+                                <div class="snapshot-value">
+                                    {{ $patient->informedConsents->first() && $patient->informedConsents->first()->consent_date ? $patient->informedConsents->first()->consent_date->format('Y-m-d') : 'Belum ada' }}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -391,9 +409,9 @@
                 </div>
 
                 <div class="info-card">
-                    <div class="info-label">Gender</div>
-                    <div class="info-value">{{ $patient->gender ? ucfirst($patient->gender) : '-' }}</div>
-                    <div class="info-sub">Jenis kelamin yang dipakai untuk nomor rekam medis.</div>
+                    <div class="info-label">Total Consents</div>
+                    <div class="info-value">{{ $patient->informedConsents->count() }}</div>
+                    <div class="info-sub">Dokumen informed consent yang tersimpan.</div>
                 </div>
 
                 <div class="info-card">
@@ -462,6 +480,58 @@
                         <div class="identity-key">Alamat</div>
                         <div class="identity-value">{{ $patient->address ?: '-' }}</div>
                     </div>
+                </div>
+            </section>
+
+            <section class="section-card">
+                <h2 class="section-title">Informed Consent History</h2>
+                <p class="section-subtitle">Riwayat informed consent patient yang tersimpan di sistem.</p>
+
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Consent</th>
+                                <th>Date</th>
+                                <th>Visit</th>
+                                <th>Physiotherapy</th>
+                                <th>Status</th>
+                                <th>Print</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($patient->informedConsents as $consent)
+                                <tr>
+                                    <td>
+                                        <div class="primary-text">Consent #{{ $consent->id }}</div>
+                                        <div class="secondary-text">{{ $patient->medical_record_number ?: 'MR belum terbentuk' }}</div>
+                                    </td>
+                                    <td>{{ $consent->consent_date ? $consent->consent_date->format('Y-m-d') : '-' }}</td>
+                                    <td>
+                                        @if($consent->visit)
+                                            <div class="primary-text">Visit #{{ $consent->visit->id }}</div>
+                                            <div class="secondary-text">{{ $consent->visit->visit_date ?: '-' }}</div>
+                                        @else
+                                            -
+                                        @endif
+                                    </td>
+                                    <td>{{ $consent->physiotherapy_name ?: '-' }}</td>
+                                    <td>
+                                        <span class="status-pill consent-{{ $consent->status }}">
+                                            {{ $consent->status ?: '-' }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a href="/admin/informed-consents/{{ $consent->id }}/print" class="ghost-link" target="_blank">Print</a>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="6">Belum ada informed consent untuk patient ini.</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
                 </div>
             </section>
 

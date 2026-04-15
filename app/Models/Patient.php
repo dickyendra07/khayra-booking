@@ -35,6 +35,11 @@ class Patient extends Model
         return $this->hasMany(Billing::class);
     }
 
+    public function informedConsents(): HasMany
+    {
+        return $this->hasMany(InformedConsent::class);
+    }
+
     public function generateMedicalRecordNumber(): ?string
     {
         if (!empty($this->medical_record_number)) {
