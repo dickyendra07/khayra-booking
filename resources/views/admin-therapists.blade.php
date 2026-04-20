@@ -3,17 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Therapists - Khayra Admin</title>
+    <title>Physiotherapy Team - Khayra Physio</title>
     <style>
         * { box-sizing: border-box; }
 
         body {
             margin: 0;
             font-family: Arial, sans-serif;
-            color: #1f2937;
-            background:
-                radial-gradient(circle at top left, rgba(15,118,110,.10), transparent 30%),
-                linear-gradient(180deg, #f6fbfa 0%, #eef7f5 100%);
+            background: linear-gradient(180deg, #f7faf9 0%, #f3f7f6 100%);
+            color: #17232b;
         }
 
         .layout {
@@ -24,290 +22,267 @@
         .main {
             flex: 1;
             min-width: 0;
-            padding: 32px;
+            padding: 28px;
         }
 
-        .page-header {
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+        }
+
+        .topbar {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
             gap: 16px;
-            margin-bottom: 24px;
+            margin-bottom: 18px;
+            flex-wrap: wrap;
         }
 
-        .page-title {
+        .title {
             margin: 0;
             font-size: 38px;
-            color: #0f766e;
-            line-height: 1.1;
+            line-height: 1.08;
+            font-weight: 800;
+            color: #17756f;
         }
 
-        .page-subtitle {
+        .subtitle {
             margin: 10px 0 0;
-            color: #6b7280;
-            font-size: 15px;
-            line-height: 1.7;
             max-width: 760px;
-        }
-
-        .add-btn {
-            display: inline-block;
-            text-decoration: none;
-            padding: 12px 16px;
-            border-radius: 14px;
-            background: #0f766e;
-            color: white;
-            font-weight: 700;
-            box-shadow: 0 12px 26px rgba(15,118,110,.16);
-            white-space: nowrap;
-        }
-
-        .alert {
-            padding: 14px 16px;
-            border-radius: 14px;
-            margin-bottom: 20px;
-            border: 1px solid transparent;
             font-size: 14px;
-            line-height: 1.7;
+            line-height: 1.8;
+            color: #5f6b76;
         }
 
-        .alert-success {
-            background: #d1fae5;
-            color: #065f46;
-            border-color: #a7f3d0;
-        }
-
-        .alert-error {
-            background: #fee2e2;
-            color: #b91c1c;
-            border-color: #fecaca;
+        .primary-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            padding: 14px 18px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #17857e 0%, #136b66 100%);
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: 800;
+            box-shadow: 0 12px 24px rgba(23, 117, 111, 0.18);
         }
 
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(4, minmax(0,1fr));
+            grid-template-columns: repeat(4, 1fr);
             gap: 18px;
             margin-bottom: 22px;
         }
 
         .stat-card {
-            background: white;
-            border-radius: 22px;
+            background: #ffffff;
+            border: 1px solid #e8efed;
+            border-radius: 24px;
             padding: 22px;
-            box-shadow: 0 14px 35px rgba(15,118,110,.08);
-            border: 1px solid #edf5f3;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04);
         }
 
         .stat-label {
-            font-size: 14px;
-            color: #6b7280;
+            font-size: 13px;
+            color: #6d7784;
+            margin-bottom: 12px;
         }
 
         .stat-value {
-            font-size: 34px;
+            font-size: 30px;
+            line-height: 1;
             font-weight: 800;
-            color: #0f766e;
-            margin-top: 10px;
+            color: #17756f;
+            margin-bottom: 10px;
         }
 
-        .stat-sub {
-            font-size: 13px;
-            color: #94a3b8;
-            margin-top: 8px;
-            line-height: 1.6;
+        .stat-desc {
+            font-size: 12px;
+            line-height: 1.7;
+            color: #8a97a6;
         }
 
         .section-card {
-            background: white;
-            border-radius: 24px;
-            padding: 24px;
-            box-shadow: 0 16px 40px rgba(15,118,110,.08);
-            border: 1px solid #edf5f3;
-        }
-
-        .section-head {
-            margin-bottom: 18px;
+            background: #ffffff;
+            border: 1px solid #e8efed;
+            border-radius: 26px;
+            padding: 22px;
+            box-shadow: 0 12px 32px rgba(15, 23, 42, 0.05);
         }
 
         .section-title {
             margin: 0;
-            font-size: 22px;
-            color: #0f766e;
+            font-size: 24px;
+            line-height: 1.2;
+            font-weight: 800;
+            color: #17756f;
         }
 
         .section-subtitle {
-            margin: 8px 0 0;
-            color: #6b7280;
+            margin: 10px 0 0;
             font-size: 14px;
-            line-height: 1.7;
+            line-height: 1.8;
+            color: #667381;
         }
 
         .table-wrap {
-            overflow-x: auto;
-            border-radius: 18px;
-            border: 1px solid #e8f1ef;
+            margin-top: 22px;
+            border: 1px solid #e7edeb;
+            border-radius: 20px;
+            overflow: hidden;
+            background: #ffffff;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            min-width: 1360px;
         }
 
-        th {
-            background: #effaf7;
-            color: #0f766e;
+        thead th {
+            background: #eef6f4;
+            color: #2e7a75;
             text-align: left;
-            padding: 16px;
             font-size: 14px;
-            border-bottom: 1px solid #e5efec;
-        }
-
-        td {
-            padding: 16px;
-            border-bottom: 1px solid #eef2f1;
-            font-size: 14px;
-            color: #374151;
-            vertical-align: top;
-        }
-
-        tr:hover td {
-            background: #fafefd;
-        }
-
-        .name-main {
             font-weight: 800;
-            font-size: 15px;
-            color: #111827;
+            padding: 16px 16px;
+            border-bottom: 1px solid #e3ece9;
         }
 
-        .name-sub {
-            margin-top: 4px;
+        tbody td {
+            padding: 16px;
+            border-bottom: 1px solid #edf2f1;
+            vertical-align: middle;
+            font-size: 14px;
+            color: #314150;
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .staff-name {
+            font-size: 16px;
+            font-weight: 800;
+            color: #1f2f3d;
+            margin-bottom: 4px;
+        }
+
+        .staff-sub {
             font-size: 12px;
-            color: #94a3b8;
+            color: #8d9aab;
         }
 
-        .email-main {
+        .email-link {
+            color: #1f7b75;
+            text-decoration: none;
             font-weight: 700;
-            color: #0f766e;
         }
 
-        .specialty-chip,
-        .contact-chip {
-            display: inline-block;
-            padding: 7px 11px;
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 7px 12px;
             border-radius: 999px;
             font-size: 12px;
-            font-weight: 700;
+            font-weight: 800;
             border: 1px solid transparent;
             white-space: nowrap;
         }
 
-        .specialty-chip {
-            background: #f0fdfa;
-            border-color: #cfe8e2;
-            color: #0f766e;
+        .pill-specialty {
+            background: #edf7f4;
+            color: #2d7a75;
+            border-color: #d9ebe6;
         }
 
-        .contact-chip {
-            background: #f8fafc;
-            border-color: #dbe4ee;
-            color: #334155;
-        }
-
-        .status-pill {
-            display: inline-block;
-            padding: 8px 12px;
-            border-radius: 999px;
-            font-size: 13px;
-            font-weight: 700;
-            text-transform: capitalize;
-            white-space: nowrap;
-        }
-
-        .status-active {
+        .pill-active {
             background: #dcfce7;
             color: #166534;
         }
 
-        .status-inactive {
+        .pill-inactive {
             background: #fee2e2;
             color: #b91c1c;
         }
 
-        .action-stack {
+        .action-row {
             display: flex;
             gap: 8px;
             flex-wrap: wrap;
         }
 
-        .edit-link,
-        .status-btn {
-            display: inline-block;
+        .action-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
             text-decoration: none;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 10px;
-            font-size: 13px;
-            font-weight: 700;
+            padding: 9px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 800;
+            border: 1px solid transparent;
             cursor: pointer;
-            white-space: nowrap;
+            font-family: Arial, sans-serif;
+            background: #ffffff;
         }
 
-        .edit-link {
-            background: #eff6ff;
-            color: #1d4ed8;
-            border: 1px solid #cfe0ff;
+        .btn-edit {
+            background: #eef2ff;
+            color: #3859d6;
+            border-color: #dbe4ff;
         }
 
-        .status-btn.active-btn {
-            background: #dcfce7;
-            color: #166534;
-        }
-
-        .status-btn.inactive-btn {
+        .btn-deactivate {
             background: #fee2e2;
             color: #b91c1c;
+            border-color: #fecdd3;
+        }
+
+        .btn-activate {
+            background: #dcfce7;
+            color: #166534;
+            border-color: #bbf7d0;
         }
 
         .empty-state {
-            background: #f8fafc;
-            border: 1px dashed #cbd5e1;
-            border-radius: 16px;
-            padding: 28px;
-            color: #64748b;
+            padding: 26px;
             text-align: center;
-            line-height: 1.7;
+            color: #7b8794;
+            font-size: 14px;
         }
 
-        @media (max-width: 1200px) {
+        @media (max-width: 1100px) {
             .stats-grid {
                 grid-template-columns: 1fr 1fr;
             }
+
+            .table-wrap {
+                overflow-x: auto;
+            }
+
+            table {
+                min-width: 980px;
+            }
         }
 
-        @media (max-width: 1024px) {
+        @media (max-width: 820px) {
             .layout {
                 display: block;
             }
 
             .main {
-                padding: 20px;
+                padding: 16px;
             }
 
-            .page-header {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-        }
-
-        @media (max-width: 768px) {
             .stats-grid {
                 grid-template-columns: 1fr;
             }
 
-            .page-title {
-                font-size: 32px;
+            .title {
+                font-size: 30px;
             }
         }
     </style>
@@ -317,145 +292,116 @@
     @include('partials.admin-sidebar', ['activeMenu' => 'therapists'])
 
     <main class="main">
-        <div class="page-header">
-            <div>
-                <h1 class="page-title">Therapists</h1>
-                <p class="page-subtitle">
-                    Kelola therapist aktif dan nonaktif, pantau kontak mereka, dan atur akses operasional
-                    therapist dari satu halaman yang lebih rapi.
-                </p>
-            </div>
-            <a href="/admin/therapists/create" class="add-btn">+ Tambah Therapist</a>
-        </div>
+        <div class="container">
+            <div class="topbar">
+                <div>
+                    <h1 class="title">Physiotherapy Team</h1>
+                    <p class="subtitle">
+                        Kelola staff physiotherapy aktif dan nonaktif, pantau kontak mereka, dan atur akses operasional tim dari satu halaman yang lebih rapi.
+                    </p>
+                </div>
 
-        @if(session('success'))
-            <div class="alert alert-success">{{ session('success') }}</div>
-        @endif
-
-        @if(session('error'))
-            <div class="alert alert-error">{{ session('error') }}</div>
-        @endif
-
-        @php
-            $totalTherapistsCount = $therapists->count();
-            $activeTherapistsCount = $therapists->where('status', 'active')->count();
-            $inactiveTherapistsCount = $therapists->where('status', 'inactive')->count();
-            $specialtyCount = $therapists->pluck('specialty')->filter()->unique()->count();
-        @endphp
-
-        <section class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-label">Total Therapists</div>
-                <div class="stat-value">{{ $totalTherapistsCount }}</div>
-                <div class="stat-sub">Semua therapist yang terdaftar di sistem.</div>
+                <a href="/admin/therapists/create" class="primary-link">+ Tambah Staff</a>
             </div>
 
-            <div class="stat-card">
-                <div class="stat-label">Active</div>
-                <div class="stat-value">{{ $activeTherapistsCount }}</div>
-                <div class="stat-sub">Therapist yang sedang aktif dipakai operasional.</div>
-            </div>
+            @php
+                $totalStaff = $therapists->count();
+                $activeStaff = $therapists->where('status', 'active')->count();
+                $inactiveStaff = $therapists->where('status', 'inactive')->count();
+                $specialtiesCount = $therapists->pluck('specialty')->filter()->unique()->count();
+            @endphp
 
-            <div class="stat-card">
-                <div class="stat-label">Inactive</div>
-                <div class="stat-value">{{ $inactiveTherapistsCount }}</div>
-                <div class="stat-sub">Therapist yang sedang tidak aktif.</div>
-            </div>
+            <section class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Total Physiotherapy Team</div>
+                    <div class="stat-value">{{ $totalStaff }}</div>
+                    <div class="stat-desc">Semua staff physiotherapy yang terdaftar di sistem.</div>
+                </div>
 
-            <div class="stat-card">
-                <div class="stat-label">Specialties</div>
-                <div class="stat-value">{{ $specialtyCount }}</div>
-                <div class="stat-sub">Jumlah specialty unik yang terdata.</div>
-            </div>
-        </section>
+                <div class="stat-card">
+                    <div class="stat-label">Active</div>
+                    <div class="stat-value">{{ $activeStaff }}</div>
+                    <div class="stat-desc">Staff physiotherapy yang sedang aktif dipakai operasional.</div>
+                </div>
 
-        <section class="section-card">
-            <div class="section-head">
-                <h2 class="section-title">Therapist List</h2>
+                <div class="stat-card">
+                    <div class="stat-label">Inactive</div>
+                    <div class="stat-value">{{ $inactiveStaff }}</div>
+                    <div class="stat-desc">Staff physiotherapy yang sedang tidak aktif.</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-label">Specialties</div>
+                    <div class="stat-value">{{ $specialtiesCount }}</div>
+                    <div class="stat-desc">Jumlah specialty unik yang terdata.</div>
+                </div>
+            </section>
+
+            <section class="section-card">
+                <h2 class="section-title">Physiotherapy Team List</h2>
                 <p class="section-subtitle">
-                    Kelola data therapist, update status aktif, dan buka halaman edit dengan cepat.
+                    Kelola data staff physiotherapy, update status aktif, dan buka halaman edit dengan cepat.
                 </p>
-            </div>
 
-            @if($therapists->count() > 0)
                 <div class="table-wrap">
                     <table>
                         <thead>
                             <tr>
-                                <th>Therapist</th>
+                                <th>Physiotherapy Staff</th>
                                 <th>Email</th>
                                 <th>WhatsApp</th>
                                 <th>Specialty</th>
                                 <th>Status</th>
-                                <th>Actions</th>
+                                <th style="width: 190px;">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($therapists as $therapist)
+                            @forelse($therapists as $therapist)
                                 <tr>
                                     <td>
-                                        <div class="name-main">{{ $therapist->full_name }}</div>
-                                        <div class="name-sub">Therapist ID #{{ $therapist->id }}</div>
+                                        <div class="staff-name">{{ $therapist->full_name }}</div>
+                                        <div class="staff-sub">Staff ID #{{ $therapist->id }}</div>
                                     </td>
-
                                     <td>
-                                        <div class="email-main">{{ $therapist->email }}</div>
+                                        <a href="mailto:{{ $therapist->email }}" class="email-link">{{ $therapist->email }}</a>
                                     </td>
-
                                     <td>
-                                        @if($therapist->whatsapp)
-                                            <span class="contact-chip">{{ $therapist->whatsapp }}</span>
+                                        {{ $therapist->whatsapp ?: '-' }}
+                                    </td>
+                                    <td>
+                                        <span class="pill pill-specialty">{{ $therapist->specialty ?: 'General' }}</span>
+                                    </td>
+                                    <td>
+                                        @if($therapist->status === 'active')
+                                            <span class="pill pill-active">Active</span>
                                         @else
-                                            -
+                                            <span class="pill pill-inactive">Inactive</span>
                                         @endif
                                     </td>
-
                                     <td>
-                                        @if($therapist->specialty)
-                                            <span class="specialty-chip">{{ $therapist->specialty }}</span>
-                                        @else
-                                            -
-                                        @endif
-                                    </td>
+                                        <div class="action-row">
+                                            <a href="/admin/therapists/{{ $therapist->id }}/edit" class="action-btn btn-edit">Edit</a>
 
-                                    <td>
-                                        <span class="status-pill status-{{ $therapist->status }}">
-                                            {{ $therapist->status }}
-                                        </span>
-                                    </td>
-
-                                    <td>
-                                        <div class="action-stack">
-                                            <a href="/admin/therapists/{{ $therapist->id }}/edit" class="edit-link">Edit</a>
-
-                                            @if($therapist->status === 'active')
-                                                <form method="POST" action="/admin/therapists/{{ $therapist->id }}/status">
-                                                    @csrf
-                                                    <button type="submit" name="status" value="inactive" class="status-btn inactive-btn">
-                                                        Set Inactive
-                                                    </button>
-                                                </form>
-                                            @else
-                                                <form method="POST" action="/admin/therapists/{{ $therapist->id }}/status">
-                                                    @csrf
-                                                    <button type="submit" name="status" value="active" class="status-btn active-btn">
-                                                        Set Active
-                                                    </button>
-                                                </form>
-                                            @endif
+                                            <form method="POST" action="/admin/therapists/{{ $therapist->id }}/status" style="margin: 0;">
+                                                @csrf
+                                                <input type="hidden" name="status" value="{{ $therapist->status === 'active' ? 'inactive' : 'active' }}">
+                                                <button type="submit" class="action-btn {{ $therapist->status === 'active' ? 'btn-deactivate' : 'btn-activate' }}">
+                                                    {{ $therapist->status === 'active' ? 'Set Inactive' : 'Set Active' }}
+                                                </button>
+                                            </form>
                                         </div>
                                     </td>
                                 </tr>
-                            @endforeach
+                            @empty
+                                <tr>
+                                    <td colspan="6" class="empty-state">Belum ada data staff physiotherapy yang terdaftar.</td>
+                                </tr>
+                            @endforelse
                         </tbody>
                     </table>
                 </div>
-            @else
-                <div class="empty-state">
-                    Belum ada data therapist di sistem. Tambahkan therapist pertama untuk mulai membagi assignment visit.
-                </div>
-            @endif
-        </section>
+            </section>
+        </div>
     </main>
 </div>
 </body>

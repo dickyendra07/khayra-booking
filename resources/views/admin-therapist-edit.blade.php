@@ -3,197 +3,232 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit Therapist - Khayra</title>
+    <title>Edit Physiotherapy Staff - Khayra Physio</title>
     <style>
         * { box-sizing: border-box; }
 
         body {
             margin: 0;
             font-family: Arial, sans-serif;
-            background:
-                radial-gradient(circle at top left, rgba(15,118,110,.10), transparent 30%),
-                linear-gradient(180deg, #f6fbfa 0%, #eef7f5 100%);
-            color: #1f2937;
+            background: linear-gradient(180deg, #f7faf9 0%, #f3f7f6 100%);
+            color: #17232b;
         }
 
-        .layout { min-height: 100vh; display: flex; }
-
-        .sidebar {
-            width: 250px;
-            flex-shrink: 0;
-            background: linear-gradient(180deg, #0f766e 0%, #115e59 100%);
-            color: white;
-            padding: 28px 22px;
-            box-shadow: 8px 0 30px rgba(15,118,110,.12);
-        }
-
-        .brand {
-            font-size: 24px;
-            font-weight: bold;
-            margin-bottom: 8px;
-            line-height: 1.2;
-        }
-
-        .brand-subtitle {
-            font-size: 14px;
-            opacity: .88;
-            margin-bottom: 32px;
-            line-height: 1.6;
-        }
-
-        .nav-title {
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            opacity: .72;
-            margin-bottom: 12px;
-        }
-
-        .nav-item {
-            display: block;
-            text-decoration: none;
-            color: white;
-            padding: 13px 14px;
-            border-radius: 14px;
-            margin-bottom: 10px;
-            background: rgba(255,255,255,.07);
-            font-weight: 600;
-        }
-
-        .nav-item.active {
-            background: rgba(255,255,255,.18);
-        }
-
-        .logout-form { margin-top: 18px; }
-
-        .logout-btn {
-            width: 100%;
-            border: none;
-            padding: 13px 14px;
-            border-radius: 14px;
-            background: rgba(255,255,255,.14);
-            color: white;
-            font-weight: 700;
-            cursor: pointer;
+        .layout {
+            min-height: 100vh;
+            display: flex;
         }
 
         .main {
             flex: 1;
             min-width: 0;
-            padding: 32px;
+            padding: 28px;
+        }
+
+        .container {
+            max-width: 1180px;
+            margin: 0 auto;
         }
 
         .topbar {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 24px;
-        }
-
-        .title h1 {
-            margin: 0;
-            font-size: 34px;
-            color: #0f766e;
-        }
-
-        .title p {
-            margin: 8px 0 0;
-            color: #6b7280;
+            justify-content: flex-end;
+            margin-bottom: 18px;
         }
 
         .ghost-link {
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
             text-decoration: none;
-            padding: 10px 14px;
-            border-radius: 12px;
-            border: 1px solid #d7ebe6;
-            color: #0f766e;
-            background: #f8fffd;
+            padding: 11px 14px;
+            border-radius: 14px;
+            background: #ffffff;
+            border: 1px solid #e5ece9;
+            color: #2d6d69;
+            font-size: 13px;
+            font-weight: 800;
+            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.03);
+        }
+
+        .hero {
+            background: #ffffff;
+            border: 1px solid #e8efed;
+            border-radius: 28px;
+            padding: 26px;
+            box-shadow: 0 12px 32px rgba(15, 23, 42, 0.05);
+            margin-bottom: 18px;
+        }
+
+        .hero-grid {
+            display: grid;
+            grid-template-columns: 1.08fr 0.92fr;
+            gap: 20px;
+            align-items: stretch;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 8px 14px;
+            border-radius: 999px;
+            background: #eef6f4;
+            color: #3d6567;
+            font-size: 12px;
+            font-weight: 800;
+            margin-bottom: 14px;
+        }
+
+        .hero-title {
+            margin: 0;
+            font-size: 38px;
+            line-height: 1.08;
+            font-weight: 800;
+            color: #17756f;
+        }
+
+        .hero-text {
+            margin: 12px 0 0;
+            max-width: 700px;
             font-size: 14px;
-            font-weight: 600;
+            line-height: 1.85;
+            color: #667381;
+        }
+
+        .hero-side {
+            background: linear-gradient(145deg, #467f83 0%, #346d73 52%, #244f55 100%);
+            border-radius: 24px;
+            padding: 24px;
+            color: #ffffff;
+        }
+
+        .hero-side h3 {
+            margin: 0 0 8px;
+            font-size: 24px;
+            line-height: 1.2;
+            font-weight: 800;
+        }
+
+        .hero-side p {
+            margin: 0 0 14px;
+            font-size: 13px;
+            line-height: 1.8;
+            color: rgba(255,255,255,.92);
+        }
+
+        .side-list {
+            margin: 0;
+            padding-left: 18px;
+            font-size: 13px;
+            line-height: 1.9;
+            color: rgba(255,255,255,.95);
         }
 
         .form-card {
-            background: white;
-            border-radius: 24px;
-            padding: 28px;
-            box-shadow: 0 16px 40px rgba(15,118,110,.08);
-            border: 1px solid #edf5f3;
+            background: #ffffff;
+            border: 1px solid #e8efed;
+            border-radius: 28px;
+            padding: 24px;
+            box-shadow: 0 12px 32px rgba(15, 23, 42, 0.05);
         }
 
-        .grid {
+        .form-title {
+            margin: 0;
+            font-size: 26px;
+            line-height: 1.2;
+            font-weight: 800;
+            color: #20343a;
+        }
+
+        .form-subtitle {
+            margin: 8px 0 20px;
+            font-size: 14px;
+            line-height: 1.8;
+            color: #6b7280;
+        }
+
+        .error-box {
+            margin-bottom: 18px;
+            padding: 14px 16px;
+            border-radius: 16px;
+            background: #fff4f4;
+            border: 1px solid #ffd9d9;
+            color: #b42318;
+            font-size: 13px;
+            line-height: 1.8;
+        }
+
+        .form-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 18px;
         }
 
-        .field {
-            display: flex;
-            flex-direction: column;
+        .field.full {
+            grid-column: 1 / -1;
         }
 
-        label {
+        .field label {
+            display: block;
             margin-bottom: 8px;
-            font-weight: 700;
-            color: #374151;
-            font-size: 14px;
+            font-size: 13px;
+            font-weight: 800;
+            color: #334155;
         }
 
-        input, select {
+        input,
+        select,
+        textarea {
             width: 100%;
-            padding: 14px;
-            border: 1px solid #d7dedd;
-            border-radius: 14px;
+            padding: 14px 14px;
+            border: 1px solid #dbe5e2;
+            border-radius: 16px;
+            background: #ffffff;
+            color: #17232b;
             font-size: 14px;
-            background: #fcfefd;
+            font-family: Arial, sans-serif;
+            transition: .2s ease;
         }
 
-        input:focus, select:focus {
+        input:focus,
+        select:focus,
+        textarea:focus {
             outline: none;
-            border-color: #0f766e;
-            box-shadow: 0 0 0 4px rgba(15,118,110,.08);
+            border-color: #2f7c7a;
+            box-shadow: 0 0 0 4px rgba(47,124,122,.10);
         }
 
-        .helper {
-            margin-top: 6px;
-            color: #6b7280;
+        .hint {
+            margin-top: 7px;
             font-size: 12px;
+            line-height: 1.6;
+            color: #8b97a6;
         }
 
-        .submit-row {
-            margin-top: 24px;
+        .actions {
             display: flex;
             justify-content: flex-end;
+            margin-top: 22px;
         }
 
         .submit-btn {
             border: none;
-            padding: 14px 20px;
-            border-radius: 14px;
-            background: #0f766e;
-            color: white;
-            font-size: 15px;
-            font-weight: 700;
             cursor: pointer;
-            box-shadow: 0 12px 26px rgba(15,118,110,.16);
+            padding: 14px 18px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #17857e 0%, #136b66 100%);
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: 800;
+            box-shadow: 0 12px 24px rgba(23, 117, 111, 0.18);
         }
 
-        @media (max-width: 1024px) {
+        @media (max-width: 980px) {
             .layout { display: block; }
-            .sidebar {
-                width: 100%;
-                border-radius: 0 0 24px 24px;
-            }
-            .main { padding: 20px; }
-        }
-
-        @media (max-width: 768px) {
-            .grid { grid-template-columns: 1fr; }
-            .topbar {
-                flex-direction: column;
-                align-items: flex-start;
-            }
+            .main { padding: 16px; }
+            .hero-grid,
+            .form-grid { grid-template-columns: 1fr; }
+            .hero-title { font-size: 30px; }
         }
     </style>
 </head>
@@ -202,59 +237,90 @@
     @include('partials.admin-sidebar', ['activeMenu' => 'therapists'])
 
     <main class="main">
-        <div class="topbar">
-            <div class="title">
-                <h1>Edit Therapist</h1>
-                <p>Perbarui data therapist yang sudah terdaftar.</p>
+        <div class="container">
+            <div class="topbar">
+                <a href="/admin/therapists" class="ghost-link">← Kembali ke Physiotherapy Team</a>
             </div>
 
-            <a href="/admin/therapists" class="ghost-link">← Kembali ke Therapists</a>
-        </div>
-
-        <div class="form-card">
-            <form method="POST" action="/admin/therapists/{{ $therapist->id }}/update">
-                @csrf
-
-                <div class="grid">
-                    <div class="field">
-                        <label>Nama Lengkap</label>
-                        <input type="text" name="full_name" value="{{ $therapist->full_name }}" required>
+            <section class="hero">
+                <div class="hero-grid">
+                    <div>
+                        <div class="hero-badge">Edit Physiotherapy Staff</div>
+                        <h1 class="hero-title">Update physiotherapy staff information with a cleaner admin flow.</h1>
+                        <p class="hero-text">
+                            Halaman ini dipakai untuk memperbarui identitas, kontak, specialty, status aktif, dan akses login staff physiotherapy yang sudah terdaftar.
+                        </p>
                     </div>
 
-                    <div class="field">
-                        <label>Email</label>
-                        <input type="email" name="email" value="{{ $therapist->email }}" required>
-                    </div>
-
-                    <div class="field">
-                        <label>WhatsApp</label>
-                        <input type="text" name="whatsapp" value="{{ $therapist->whatsapp }}">
-                    </div>
-
-                    <div class="field">
-                        <label>Specialty</label>
-                        <input type="text" name="specialty" value="{{ $therapist->specialty }}">
-                    </div>
-
-                    <div class="field">
-                        <label>Password Baru</label>
-                        <input type="password" name="password" placeholder="Kosongkan jika tidak ingin ganti password">
-                        <div class="helper">Isi hanya jika ingin mengganti password therapist.</div>
-                    </div>
-
-                    <div class="field">
-                        <label>Status</label>
-                        <select name="status">
-                            <option value="active" {{ $therapist->status === 'active' ? 'selected' : '' }}>Active</option>
-                            <option value="inactive" {{ $therapist->status === 'inactive' ? 'selected' : '' }}>Inactive</option>
-                        </select>
+                    <div class="hero-side">
+                        <h3>Update Notes</h3>
+                        <p>Gunakan form ini untuk merapikan data staff aktif agar assignment visit dan akses internal tetap konsisten.</p>
+                        <ul class="side-list">
+                            <li>Email harus tetap valid untuk login</li>
+                            <li>Nomor WhatsApp bisa dipakai untuk kontak cepat</li>
+                            <li>Password baru bersifat opsional</li>
+                            <li>Status inactive akan menghentikan pemakaian operasional</li>
+                        </ul>
                     </div>
                 </div>
+            </section>
 
-                <div class="submit-row">
-                    <button type="submit" class="submit-btn">Update Therapist</button>
-                </div>
-            </form>
+            <section class="form-card">
+                <h2 class="form-title">Physiotherapy Staff Form</h2>
+                <p class="form-subtitle">Perbarui data staff yang sudah tersimpan di sistem Khayra.</p>
+
+                @if ($errors->any())
+                    <div class="error-box">
+                        @foreach ($errors->all() as $error)
+                            <div>{{ $error }}</div>
+                        @endforeach
+                    </div>
+                @endif
+
+                <form method="POST" action="/admin/therapists/{{ $therapist->id }}/update">
+                    @csrf
+
+                    <div class="form-grid">
+                        <div class="field">
+                            <label>Full Name</label>
+                            <input type="text" name="full_name" value="{{ old('full_name', $therapist->full_name) }}" placeholder="Masukkan nama staff physiotherapy" required>
+                        </div>
+
+                        <div class="field">
+                            <label>Email</label>
+                            <input type="email" name="email" value="{{ old('email', $therapist->email) }}" placeholder="Masukkan email staff" required>
+                        </div>
+
+                        <div class="field">
+                            <label>WhatsApp</label>
+                            <input type="text" name="whatsapp" value="{{ old('whatsapp', $therapist->whatsapp) }}" placeholder="Masukkan nomor WhatsApp">
+                        </div>
+
+                        <div class="field">
+                            <label>Specialty</label>
+                            <input type="text" name="specialty" value="{{ old('specialty', $therapist->specialty) }}" placeholder="Contoh: Sports Rehab">
+                        </div>
+
+                        <div class="field">
+                            <label>New Password</label>
+                            <input type="password" name="password" placeholder="Kosongkan jika tidak ingin ganti password">
+                            <div class="hint">Isi hanya jika ingin mengganti password login staff.</div>
+                        </div>
+
+                        <div class="field">
+                            <label>Status</label>
+                            <select name="status" required>
+                                <option value="active" {{ old('status', $therapist->status) == 'active' ? 'selected' : '' }}>Active</option>
+                                <option value="inactive" {{ old('status', $therapist->status) == 'inactive' ? 'selected' : '' }}>Inactive</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="actions">
+                        <button type="submit" class="submit-btn">Update Staff</button>
+                    </div>
+                </form>
+            </section>
         </div>
     </main>
 </div>
