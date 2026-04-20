@@ -15,7 +15,21 @@ use App\Models\MedicalRecordComorbidity;
 use App\Models\MedicalRecordSupportingData;
 use App\Models\MedicalRecordHomeExercise;
 
-Route::get('/', function () {
+Route::get('/', function (Request $request) {
+    $host = $request->getHost();
+
+    if ($host === 'app.khayraphysio.com') {
+        return redirect('/admin/login');
+    }
+
+    if ($host === 'physio.khayraphysio.com') {
+        return redirect('/therapist/login');
+    }
+
+    if ($host === 'patient.khayraphysio.com') {
+        return redirect('/patient');
+    }
+
     return view('welcome');
 });
 
