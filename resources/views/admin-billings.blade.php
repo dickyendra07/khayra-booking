@@ -93,6 +93,19 @@
             font-weight: 700;
         }
 
+        .primary-link {
+            display: inline-flex;
+            align-items: center;
+            text-decoration: none;
+            padding: 11px 16px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #176f69 0%, #2f7c7a 100%);
+            color: #ffffff;
+            font-size: 13px;
+            font-weight: 800;
+            box-shadow: 0 12px 24px rgba(47, 124, 122, 0.18);
+        }
+
         .hero {
             background: #ffffff;
             border: 1px solid #ecefef;
@@ -595,7 +608,9 @@
         }
 
         .action-link:hover,
-        .mini-submit:hover {
+        .mini-submit:hover,
+        .ghost-link:hover,
+        .primary-link:hover {
             transform: translateY(-1px);
             box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
         }
@@ -754,6 +769,7 @@
                 <div class="top-actions">
                     <a href="/admin/dashboard" class="ghost-link">Dashboard</a>
                     <a href="/admin/patients" class="ghost-link">Patients</a>
+                    <a href="/admin/billings/create" class="primary-link">+ Create Billing</a>
                 </div>
             </div>
 
