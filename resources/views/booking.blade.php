@@ -317,41 +317,142 @@
             line-height: 1.6;
         }
 
-        .submit-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 14px;
-            margin-top: 8px;
-            flex-wrap: wrap;
+
+        .slot-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
         }
 
-        .submit-note {
-            font-size: 12px;
-            color: #94a3b8;
-            line-height: 1.7;
-            max-width: 420px;
-        }
-
-        .submit-btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            min-width: 220px;
-            height: 52px;
-            border: none;
-            border-radius: 14px;
-            background: linear-gradient(135deg, #3d8a89 0%, #2f7c7a 100%);
-            color: #ffffff;
-            font-size: 15px;
-            font-weight: 800;
+        .slot-card {
+            border: 1px solid #e3ebea;
+            border-radius: 18px;
+            padding: 16px;
+            min-height: 88px;
             cursor: pointer;
-            transition: .2s ease;
-            box-shadow: 0 12px 24px rgba(47, 124, 122, 0.16);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            background: linear-gradient(180deg, #ffffff 0%, #fbfdfd 100%);
+            transition: .18s ease;
+            position: relative;
+            box-shadow: 0 8px 18px rgba(15, 23, 42, 0.025);
         }
 
-        .submit-btn:hover {
-            background: linear-gradient(135deg, #2f7c7a 0%, #246866 100%);
+        .slot-card:hover {
+            transform: translateY(-1px);
+            border-color: #9fcfca;
+            box-shadow: 0 12px 24px rgba(47, 124, 122, 0.08);
+        }
+
+        .slot-card input {
+            position: absolute;
+            opacity: 0;
+            width: 1px;
+            height: 1px;
+            pointer-events: none;
+        }
+
+        .slot-check {
+            width: 22px;
+            height: 22px;
+            border-radius: 999px;
+            border: 2px solid #d6e4e2;
+            background: #ffffff;
+            flex: 0 0 auto;
+            position: relative;
+        }
+
+        .slot-card:has(input:checked) {
+            border-color: #2f7c7a;
+            background: #eef8f6;
+            box-shadow: 0 0 0 4px rgba(47, 124, 122, 0.08);
+        }
+
+        .slot-card:has(input:checked) .slot-check {
+            border-color: #2f7c7a;
+            background: #2f7c7a;
+        }
+
+        .slot-card:has(input:checked) .slot-check::after {
+            content: "";
+            position: absolute;
+            width: 7px;
+            height: 11px;
+            border: solid #ffffff;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+            left: 6px;
+            top: 2px;
+        }
+
+        .slot-main {
+            display: grid;
+            gap: 6px;
+            min-width: 0;
+            flex: 1;
+        }
+
+        .slot-time {
+            font-size: 20px;
+            font-weight: 900;
+            color: #22343a;
+            letter-spacing: -0.2px;
+        }
+
+        .slot-badge {
+            width: fit-content;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: #ecfdf5;
+            color: #166534;
+            font-size: 11px;
+            font-weight: 900;
+        }
+
+        .slot-small {
+            font-size: 12px;
+            color: #64748b;
+            font-weight: 800;
+            white-space: nowrap;
+            text-align: right;
+            line-height: 1.4;
+        }
+
+        .slot-disabled {
+            opacity: .58;
+            cursor: not-allowed;
+            background: #f8fafc;
+        }
+
+        .slot-disabled:hover {
+            transform: none;
+            box-shadow: 0 8px 18px rgba(15, 23, 42, 0.025);
+            border-color: #e3ebea;
+        }
+
+        .slot-disabled .slot-badge {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .empty-slot {
+            padding: 18px;
+            border-radius: 16px;
+            border: 1px dashed #d9e2e1;
+            background: #fafcfc;
+            color: #7b8794;
+            font-size: 13px;
+            line-height: 1.8;
+        }
+
+        @media (max-width: 980px) {
+            .slot-grid { grid-template-columns: 1fr 1fr; }
+        }
+
+        @media (max-width: 560px) {
+            .slot-grid { grid-template-columns: 1fr; }
         }
 
         @media (max-width: 1080px) {
@@ -383,7 +484,8 @@
                 font-size: 28px;
             }
 
-            .field-grid {
+            .field-grid,
+            .slot-grid {
                 grid-template-columns: 1fr;
             }
 
@@ -529,19 +631,51 @@
                         <label>Tanggal Booking</label>
                         <input
                             type="date"
+                            id="booking_date"
                             name="booking_date"
-                            value="{{ old('booking_date') }}"
+                            value="{{ old('booking_date', $selectedDate ?? now()->toDateString()) }}"
+                            min="{{ now()->toDateString() }}"
                         >
-                        <div class="helper">Pilih tanggal terapi yang Anda inginkan.</div>
+                        <div class="helper">Pilih tanggal terapi yang Anda inginkan. Slot jam akan mengikuti tanggal ini.</div>
                     </div>
 
                     <div class="field full">
                         <label>Jam Booking</label>
-                        <input
-                            type="time"
-                            name="booking_time"
-                            value="{{ old('booking_time') }}"
-                        >
+
+                        @if(isset($timeSlots) && $timeSlots->count())
+                            <div class="slot-grid">
+                                @foreach($timeSlots as $slot)
+                                    <label class="slot-card {{ !$slot['available'] ? 'slot-disabled' : '' }}">
+                                        <input
+                                            type="radio"
+                                            name="booking_time"
+                                            value="{{ $slot['time'] }}"
+                                            {{ old('booking_time') == $slot['time'] ? 'checked' : '' }}
+                                            {{ !$slot['available'] ? 'disabled' : '' }}
+                                        >
+
+                                        <span class="slot-check"></span>
+
+                                        <span class="slot-main">
+                                            <span class="slot-time">{{ $slot['time'] }}</span>
+                                            <span class="slot-badge">
+                                                {{ $slot['available'] ? 'Available' : 'FULL' }}
+                                            </span>
+                                        </span>
+
+                                        <span class="slot-small">
+                                            {{ $slot['booked'] }}/{{ $slot['capacity'] }}<br>booked
+                                        </span>
+                                    </label>
+                                @endforeach
+                            </div>
+                        @else
+                            <div class="empty-slot">
+                                Belum ada slot tersedia untuk tanggal ini. Silakan pilih tanggal lain atau hubungi admin.
+                            </div>
+                        @endif
+
+                        <div class="helper">Slot mengikuti jadwal availability therapist dan otomatis disabled jika sudah penuh.</div>
                     </div>
 
                     <div class="field full">
@@ -563,5 +697,16 @@
         </section>
     </div>
 </div>
+<script>
+    const bookingDateInput = document.getElementById('booking_date');
+
+    if (bookingDateInput) {
+        bookingDateInput.addEventListener('change', function () {
+            if (this.value) {
+                window.location.href = '/booking?date=' + encodeURIComponent(this.value);
+            }
+        });
+    }
+</script>
 </body>
 </html>

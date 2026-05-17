@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Billings - Khayra Physio</title>
+    <title>Kasir Ledger - Khayra Physio</title>
     <style>
         * { box-sizing: border-box; }
 
@@ -26,84 +26,112 @@
         }
 
         .container {
-            max-width: 1280px;
+            max-width: 1380px;
             margin: 0 auto;
         }
 
         .topbar {
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            align-items: flex-start;
             gap: 16px;
             margin-bottom: 18px;
+            flex-wrap: wrap;
         }
 
-        .brand-wrap {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-        }
-
-        .brand-wrap img {
-            width: 46px;
-            height: 46px;
-            object-fit: contain;
-            border-radius: 12px;
-            background: #ffffff;
-            border: 1px solid #e6ebea;
-            padding: 4px;
-        }
-
-        .brand-text {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-
-        .brand-kicker {
+        .badge {
+            display: inline-flex;
+            padding: 8px 13px;
+            border-radius: 999px;
+            background: #eef5f4;
+            color: #35565d;
             font-size: 12px;
-            font-weight: 800;
-            letter-spacing: .5px;
+            font-weight: 900;
             text-transform: uppercase;
-            color: #7b8794;
+            letter-spacing: .06em;
+            margin-bottom: 12px;
         }
 
-        .brand-title {
-            font-size: 18px;
-            font-weight: 800;
+        .title {
+            margin: 0;
+            font-size: 42px;
+            line-height: 1.05;
             color: #22343a;
+            font-weight: 900;
         }
 
-        .top-actions {
+        .subtitle {
+            margin: 12px 0 0;
+            max-width: 860px;
+            color: #6b7280;
+            font-size: 14px;
+            line-height: 1.9;
+        }
+
+        .actions {
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
         }
 
-        .ghost-link {
+        .btn {
+            min-height: 42px;
+            border: 0;
+            cursor: pointer;
+            padding: 0 15px;
+            border-radius: 14px;
+            font-size: 13px;
+            font-weight: 900;
+            text-decoration: none;
             display: inline-flex;
             align-items: center;
-            text-decoration: none;
-            padding: 11px 14px;
-            border-radius: 12px;
+            justify-content: center;
+            font-family: Arial, sans-serif;
+            white-space: nowrap;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3d8a89 0%, #2f7c7a 100%);
+            color: #ffffff;
+            box-shadow: 0 12px 24px rgba(47,124,122,.16);
+        }
+
+        .btn-dark {
+            background: linear-gradient(135deg, #0f172a 0%, #1f2d3d 100%);
+            color: #ffffff;
+        }
+
+        .btn-soft {
+            color: #2f7c7a;
             background: #ffffff;
             border: 1px solid #e6ebea;
-            color: #2c5b5a;
-            font-size: 13px;
+        }
+
+        .btn-blue {
+            background: #eef2ff;
+            color: #3457d5;
+            border: 1px solid #dde5ff;
+        }
+
+        .btn-danger {
+            background: #fff1f2;
+            color: #be123c;
+            border: 1px solid #ffe0e6;
+        }
+
+        .alert {
+            padding: 14px 16px;
+            border-radius: 16px;
+            margin-bottom: 18px;
+            font-size: 14px;
+            line-height: 1.7;
             font-weight: 700;
         }
 
-        .primary-link {
-            display: inline-flex;
-            align-items: center;
-            text-decoration: none;
-            padding: 11px 16px;
-            border-radius: 12px;
-            background: linear-gradient(135deg, #176f69 0%, #2f7c7a 100%);
-            color: #ffffff;
-            font-size: 13px;
-            font-weight: 800;
-            box-shadow: 0 12px 24px rgba(47, 124, 122, 0.18);
+        .alert-success {
+            background: #ecfdf5;
+            color: #166534;
+            border: 1px solid #bbf7d0;
         }
 
         .hero {
@@ -111,73 +139,24 @@
             border: 1px solid #ecefef;
             border-radius: 28px;
             padding: 28px;
-            box-shadow: 0 14px 34px rgba(15, 23, 42, 0.05);
+            box-shadow: 0 14px 34px rgba(15,23,42,.05);
             margin-bottom: 18px;
         }
 
         .hero-grid {
             display: grid;
-            grid-template-columns: 1.15fr .85fr;
-            gap: 20px;
+            grid-template-columns: 1.08fr .92fr;
+            gap: 18px;
             align-items: stretch;
-        }
-
-        .hero-badge {
-            display: inline-block;
-            padding: 8px 14px;
-            border-radius: 999px;
-            background: #eef5f4;
-            color: #35565d;
-            font-size: 12px;
-            font-weight: 800;
-            margin-bottom: 16px;
-        }
-
-        .hero-title {
-            margin: 0;
-            font-size: 42px;
-            line-height: 1.06;
-            color: #22343a;
-            max-width: 760px;
-        }
-
-        .hero-text {
-            margin: 16px 0 0;
-            font-size: 14px;
-            line-height: 1.95;
-            color: #6b7280;
-            max-width: 700px;
-        }
-
-        .hero-tags {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            margin-top: 18px;
-        }
-
-        .hero-tag {
-            display: inline-block;
-            padding: 9px 13px;
-            border-radius: 999px;
-            background: #f7faf9;
-            border: 1px solid #e7eceb;
-            color: #486168;
-            font-size: 12px;
-            font-weight: 700;
         }
 
         .hero-side {
             background: linear-gradient(145deg, #467f83 0%, #346d73 52%, #244f55 100%);
             border-radius: 24px;
-            padding: 24px;
             color: #ffffff;
+            padding: 24px;
             position: relative;
             overflow: hidden;
-            box-shadow: inset 0 1px 0 rgba(255,255,255,.08);
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
         }
 
         .hero-side::before {
@@ -185,7 +164,7 @@
             position: absolute;
             inset: 0;
             background:
-                radial-gradient(circle at top right, rgba(255,255,255,.12), transparent 28%),
+                radial-gradient(circle at top right, rgba(255,255,255,.13), transparent 28%),
                 linear-gradient(rgba(255,255,255,.06) 1px, transparent 1px),
                 linear-gradient(90deg, rgba(255,255,255,.06) 1px, transparent 1px);
             background-size: auto, 56px 56px, 56px 56px;
@@ -198,7 +177,8 @@
         }
 
         .hero-side h3 {
-            margin: 0 0 8px;
+            margin: 0 0 10px;
+            color: #ffffff;
             font-size: 26px;
             line-height: 1.2;
         }
@@ -207,13 +187,14 @@
             margin: 0;
             font-size: 13px;
             line-height: 1.85;
-            color: rgba(255,255,255,.94);
+            color: rgba(255,255,255,.92);
         }
 
         .snapshot-grid {
             display: grid;
+            grid-template-columns: 1fr 1fr;
             gap: 12px;
-            margin-top: 20px;
+            margin-top: 18px;
         }
 
         .snapshot-card {
@@ -221,30 +202,28 @@
             border-radius: 18px;
             background: rgba(255,255,255,.14);
             border: 1px solid rgba(255,255,255,.18);
-            backdrop-filter: blur(4px);
         }
 
         .snapshot-label {
             font-size: 11px;
             text-transform: uppercase;
             letter-spacing: .45px;
-            color: rgba(255,255,255,.88);
+            color: rgba(255,255,255,.82);
             margin-bottom: 6px;
-            font-weight: 700;
+            font-weight: 900;
         }
 
         .snapshot-value {
             font-size: 16px;
-            font-weight: 800;
+            font-weight: 900;
             color: #ffffff;
-            line-height: 1.5;
-            word-break: break-word;
+            line-height: 1.45;
         }
 
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 16px;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 14px;
             margin-bottom: 18px;
         }
 
@@ -252,225 +231,92 @@
             background: #ffffff;
             border: 1px solid #ecefef;
             border-radius: 22px;
-            padding: 22px;
-            box-shadow: 0 10px 26px rgba(15, 23, 42, 0.04);
+            padding: 20px;
+            box-shadow: 0 10px 26px rgba(15,23,42,.04);
         }
 
         .stat-label {
-            font-size: 12px;
+            font-size: 11px;
             text-transform: uppercase;
-            letter-spacing: .5px;
+            letter-spacing: .06em;
             color: #7b8794;
-            font-weight: 700;
+            font-weight: 900;
             margin-bottom: 10px;
         }
 
         .stat-value {
-            font-size: 38px;
-            line-height: 1;
-            font-weight: 800;
+            font-size: 27px;
+            line-height: 1.05;
+            font-weight: 900;
             color: #22343a;
+            word-break: break-word;
         }
 
         .stat-sub {
             margin-top: 8px;
             font-size: 12px;
-            line-height: 1.75;
+            line-height: 1.6;
             color: #94a3b8;
-        }
-
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: 1.02fr .98fr;
-            gap: 18px;
-            margin-bottom: 18px;
         }
 
         .section-card {
             background: #ffffff;
             border: 1px solid #ecefef;
-            border-radius: 24px;
+            border-radius: 26px;
             padding: 24px;
-            box-shadow: 0 10px 26px rgba(15, 23, 42, 0.04);
+            box-shadow: 0 10px 26px rgba(15,23,42,.04);
+            margin-bottom: 18px;
+        }
+
+        .section-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 14px;
+            flex-wrap: wrap;
             margin-bottom: 18px;
         }
 
         .section-title {
             margin: 0;
-            font-size: 24px;
+            font-size: 26px;
             color: #22343a;
             line-height: 1.2;
+            font-weight: 900;
         }
 
         .section-subtitle {
-            margin: 8px 0 18px;
+            margin: 8px 0 0;
             font-size: 13px;
             line-height: 1.8;
             color: #6b7280;
         }
 
-        .chart-grid {
-            display: grid;
-            grid-template-columns: 250px 1fr;
-            gap: 18px;
-            align-items: center;
-        }
-
-        .donut-wrap {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .donut {
-            width: 190px;
-            height: 190px;
-            border-radius: 50%;
-            position: relative;
-        }
-
-        .donut::after {
-            content: "";
-            position: absolute;
-            inset: 28px;
-            border-radius: 50%;
-            background: #ffffff;
-            border: 1px solid #edf1f0;
-        }
-
-        .donut-center {
-            position: absolute;
-            inset: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1;
-            flex-direction: column;
-            text-align: center;
-        }
-
-        .donut-total {
-            font-size: 34px;
-            font-weight: 800;
-            color: #22343a;
-            line-height: 1;
-        }
-
-        .donut-label {
-            margin-top: 6px;
-            font-size: 12px;
-            color: #7b8794;
-            font-weight: 700;
-        }
-
-        .legend {
-            display: grid;
-            gap: 10px;
-        }
-
-        .legend-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 14px;
-            padding: 12px 14px;
-            border: 1px solid #edf1f0;
-            border-radius: 14px;
-            background: #fafcfc;
-        }
-
-        .legend-left {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .legend-dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 999px;
-            flex: 0 0 auto;
-        }
-
-        .legend-name {
-            font-size: 13px;
-            font-weight: 700;
-            color: #334155;
-        }
-
-        .legend-value {
-            font-size: 13px;
-            font-weight: 800;
-            color: #22343a;
-        }
-
-        .spark-card {
-            background: linear-gradient(180deg, #fbfcfc 0%, #f7faf9 100%);
-            border: 1px solid #edf1f0;
-            border-radius: 20px;
-            padding: 18px;
-        }
-
-        .spark-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 12px;
-            margin-bottom: 14px;
-        }
-
-        .spark-title {
-            font-size: 15px;
-            font-weight: 800;
-            color: #294047;
-        }
-
-        .spark-note {
-            margin-top: 6px;
-            font-size: 12px;
-            color: #7b8794;
-            line-height: 1.7;
-        }
-
-        .spark-total {
-            font-size: 34px;
-            font-weight: 800;
-            color: #2f7c7a;
-            line-height: 1;
-        }
-
-        .spark-svg {
-            width: 100%;
-            height: 180px;
-            display: block;
-        }
-
         .filter-grid {
             display: grid;
-            grid-template-columns: 1.2fr .8fr auto;
-            gap: 14px;
+            grid-template-columns: 1.4fr .8fr .8fr .8fr .8fr auto auto;
+            gap: 12px;
             align-items: end;
         }
 
         .field label {
             display: block;
             margin-bottom: 8px;
-            font-size: 13px;
-            font-weight: 700;
+            font-size: 12px;
+            font-weight: 900;
             color: #334155;
         }
 
         input,
         select {
             width: 100%;
-            height: 50px;
-            padding: 0 14px;
+            height: 48px;
+            padding: 0 13px;
             border: 1px solid #dde5e3;
             border-radius: 14px;
-            font-size: 14px;
+            font-size: 13px;
             background: #ffffff;
             color: #111827;
-            transition: .2s ease;
             font-family: Arial, sans-serif;
         }
 
@@ -479,18 +325,6 @@
             outline: none;
             border-color: #176f69;
             box-shadow: 0 0 0 4px rgba(23,111,105,.08);
-        }
-
-        .filter-btn {
-            height: 50px;
-            padding: 0 22px;
-            border: none;
-            border-radius: 14px;
-            background: linear-gradient(135deg, #0f172a 0%, #1f2d3d 100%);
-            color: #ffffff;
-            font-size: 14px;
-            font-weight: 800;
-            cursor: pointer;
         }
 
         .table-wrap {
@@ -503,21 +337,24 @@
         table {
             width: 100%;
             border-collapse: collapse;
-            min-width: 1150px;
+            min-width: 1320px;
         }
 
         th {
             text-align: left;
-            padding: 15px 16px;
+            padding: 14px 15px;
             background: #f7faf9;
             color: #486168;
-            font-size: 12px;
-            font-weight: 800;
+            font-size: 11px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: .05em;
             border-bottom: 1px solid #edf1f0;
+            white-space: nowrap;
         }
 
         td {
-            padding: 16px;
+            padding: 15px;
             font-size: 13px;
             color: #334155;
             border-bottom: 1px solid #f2f5f5;
@@ -525,520 +362,415 @@
         }
 
         tr:last-child td {
-            border-bottom: none;
+            border-bottom: 0;
+        }
+
+        tr.void-row {
+            background: #f8fafc;
+            opacity: .78;
         }
 
         .primary-text {
-            font-weight: 800;
+            font-weight: 900;
             color: #22343a;
-            line-height: 1.5;
+            line-height: 1.45;
         }
 
         .secondary-text {
             margin-top: 4px;
             font-size: 11px;
-            line-height: 1.6;
+            line-height: 1.55;
             color: #94a3b8;
         }
 
-        .amount-text {
-            font-weight: 800;
-            color: #2f7c7a;
-        }
-
-        .status-pill {
-            display: inline-block;
-            padding: 7px 11px;
-            border-radius: 999px;
-            font-size: 11px;
-            font-weight: 800;
-            text-transform: capitalize;
+        .money {
+            font-weight: 900;
+            color: #22343a;
             white-space: nowrap;
         }
 
-        .billing-paid { background: #dcfce7; color: #166534; }
-        .billing-unpaid { background: #fee2e2; color: #b91c1c; }
-        .billing-partial { background: #fef3c7; color: #92400e; }
+        .status-pill,
+        .method-pill,
+        .promo-pill {
+            display: inline-flex;
+            padding: 7px 11px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 900;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .paid { background: #dcfce7; color: #166534; }
+        .unpaid { background: #fee2e2; color: #b91c1c; }
+        .partial { background: #fef3c7; color: #92400e; }
+        .void { background: #e5e7eb; color: #374151; }
+
+        .method-pill {
+            background: #eef7f5;
+            color: #2f7c7a;
+        }
+
+        .promo-pill {
+            background: #eef2ff;
+            color: #3457d5;
+        }
 
         .action-stack {
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
-            margin-bottom: 10px;
         }
 
-        .action-link,
-        .mini-submit {
+        form {
+            margin: 0;
+        }
+
+        .mini-btn {
+            min-height: 34px;
+            padding: 0 11px;
+            border-radius: 11px;
+            font-size: 12px;
+            font-weight: 900;
+            text-decoration: none;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            text-decoration: none;
-            padding: 9px 12px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 800;
             border: 1px solid transparent;
-            transition: all .18s ease;
-            font-family: Arial, sans-serif;
             cursor: pointer;
+            font-family: Arial, sans-serif;
+            white-space: nowrap;
         }
 
-        .btn-detail {
-            background: #eef7f5;
-            color: #2f7c7a;
-            border-color: #d8ebe7;
-        }
-
-        .btn-edit {
-            background: #eef2ff;
-            color: #3457d5;
-            border-color: #dde5ff;
-        }
-
-        .btn-print {
-            background: #f5f3ff;
-            color: #6d28d9;
-            border-color: #e9e3ff;
-        }
-
-        .btn-delete {
-            background: #fff1f2;
-            color: #be123c;
-            border-color: #ffe0e6;
-        }
-
-        .action-link:hover,
-        .mini-submit:hover,
-        .ghost-link:hover,
-        .primary-link:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
-        }
-
-        .status-form {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .status-form select {
-            width: 150px;
-            height: 40px;
-            padding: 0 12px;
-            border-radius: 12px;
-            font-size: 12px;
-        }
-
-        .mini-submit {
-            height: 40px;
-            padding: 0 14px;
-            background: linear-gradient(135deg, #3d8a89 0%, #2f7c7a 100%);
-            color: #ffffff;
-            border: none;
-        }
+        .mini-detail { background: #eef7f5; color: #2f7c7a; border-color: #d8ebe7; }
+        .mini-print { background: #eef2ff; color: #3457d5; border-color: #dde5ff; }
+        .mini-edit { background: #fff7ed; color: #c2410c; border-color: #fed7aa; }
+        .mini-void { background: #fff1f2; color: #be123c; border-color: #ffe0e6; }
 
         .empty-state {
             padding: 28px;
-            border-radius: 18px;
-            border: 1px dashed #d9e2e1;
-            background: #fafcfc;
             text-align: center;
-            color: #7b8794;
-            font-size: 13px;
+            color: #6b7280;
             line-height: 1.8;
         }
 
-        @media (max-width: 1180px) {
+        @media (max-width: 1280px) {
             .stats-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .filter-grid {
                 grid-template-columns: 1fr 1fr;
             }
         }
 
-        @media (max-width: 1080px) {
-            .hero-grid,
-            .dashboard-grid,
-            .chart-grid,
-            .filter-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        @media (max-width: 820px) {
-            .layout {
-                display: block;
-            }
-
-            .main {
-                padding: 16px;
-            }
-
-            .topbar {
-                flex-direction: column;
-                align-items: flex-start;
-            }
+        @media (max-width: 980px) {
+            .layout { display: block; }
+            .main { padding: 16px; }
+            .hero-grid, .snapshot-grid, .filter-grid { grid-template-columns: 1fr; }
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+            .title { font-size: 32px; }
         }
 
         @media (max-width: 640px) {
-            .hero,
-            .section-card,
-            .stat-card {
-                padding: 20px;
-                border-radius: 22px;
-            }
-
-            .hero-title {
-                font-size: 32px;
-            }
-
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .brand-title {
-                font-size: 16px;
-            }
+            .stats-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
-@php
-    $totalBillings = $billings->count();
-    $paidCount = $billings->where('payment_status', 'paid')->count();
-    $unpaidCount = $billings->where('payment_status', 'unpaid')->count();
-    $partialCount = $billings->where('payment_status', 'partial')->count();
-
-    $safeTotalBillings = max($totalBillings, 1);
-    $paidPct = round(($paidCount / $safeTotalBillings) * 100, 1);
-    $unpaidPct = round(($unpaidCount / $safeTotalBillings) * 100, 1);
-    $partialPct = round(($partialCount / $safeTotalBillings) * 100, 1);
-
-    $donutStyle = "background: conic-gradient(
-        #3f8b89 0% {$paidPct}%,
-        #eab308 {$paidPct}% " . ($paidPct + $partialPct) . "%,
-        #ef4444 " . ($paidPct + $partialPct) . "% 100%
-    );";
-
-    $totalAmount = $billings->sum('amount');
-    $paidAmount = $billings->where('payment_status', 'paid')->sum('amount');
-    $partialAmount = $billings->where('payment_status', 'partial')->sum('amount');
-    $unpaidAmount = $billings->where('payment_status', 'unpaid')->sum('amount');
-
-    $sparkValues = [
-        max($totalBillings, 1),
-        max($paidCount, 1),
-        max($partialCount, 1),
-        max($unpaidCount, 1),
-        max((int) round($paidAmount / 100000), 1),
-        max((int) round($totalAmount / 100000), 1),
-    ];
-
-    $sparkMax = max($sparkValues);
-    $sparkPoints = [];
-    $pointCount = count($sparkValues);
-    $chartWidth = 520;
-    $chartHeight = 180;
-    $paddingX = 20;
-    $paddingY = 20;
-
-    foreach ($sparkValues as $i => $value) {
-        $x = $paddingX + (($chartWidth - ($paddingX * 2)) / max($pointCount - 1, 1)) * $i;
-        $normalized = $value / max($sparkMax, 1);
-        $y = $chartHeight - $paddingY - (($chartHeight - ($paddingY * 2)) * $normalized);
-        $sparkPoints[] = round($x, 2) . ',' . round($y, 2);
-    }
-
-    $sparkPolyline = implode(' ', $sparkPoints);
-    $sparkArea = '20,160 ' . $sparkPolyline . ' 500,160';
-@endphp
-
 <div class="layout">
     @include('partials.admin-sidebar', ['activeMenu' => 'billings'])
 
     <main class="main">
         <div class="container">
             <div class="topbar">
-                <div class="brand-wrap">
-                    <img src="/images/khayra-logo.png" alt="Khayra Logo">
-                    <div class="brand-text">
-                        <div class="brand-kicker">Clinic Billing Management</div>
-                        <div class="brand-title">Khayra Billings List</div>
-                    </div>
+                <div>
+                    <span class="badge">Kasir Ledger</span>
+                    <h1 class="title">Billing & Transaction Ledger</h1>
+                    <p class="subtitle">
+                        Pusat monitoring transaksi kasir, invoice pasien, pembayaran, promo, status unpaid, dan void transaction.
+                    </p>
                 </div>
 
-                <div class="top-actions">
-                    <a href="/admin/dashboard" class="ghost-link">Dashboard</a>
-                    <a href="/admin/patients" class="ghost-link">Patients</a>
-                    <a href="/admin/billings/create" class="primary-link">+ Create Billing</a>
+                <div class="actions">
+                    <a href="/admin/cashier" class="btn btn-primary">+ Kasir Checkout</a>
+                    <a href="/admin/billings/create" class="btn btn-soft">Create Manual Billing</a>
+                    <a href="/admin/promos" class="btn btn-soft">Promo Setting</a>
                 </div>
             </div>
+
+            @if(session('success'))
+                <div class="alert alert-success">{{ session('success') }}</div>
+            @endif
 
             <section class="hero">
                 <div class="hero-grid">
                     <div>
-                        <div class="hero-badge">Billing Overview</div>
-                        <h1 class="hero-title">Monitor invoices and payment status with a clearer and more premium financial view.</h1>
-                        <p class="hero-text">
-                            Halaman ini membantu admin memantau invoice patient, melihat status pembayaran,
-                            memperbarui data billing, dan mencetak invoice dengan tampilan yang lebih rapi,
-                            profesional, dan mudah dibaca.
+                        <span class="badge">Finance Overview</span>
+                        <h2 class="section-title">Ledger transaksi klinik dengan status pembayaran yang lebih jelas.</h2>
+                        <p class="section-subtitle">
+                            Gunakan filter untuk melihat transaksi berdasarkan tanggal, status, payment method, invoice, atau data pasien.
+                            Void transaction tetap disimpan sebagai arsip audit, tapi tidak dihitung sebagai revenue aktif.
                         </p>
-
-                        <div class="hero-tags">
-                            <span class="hero-tag">Invoice Monitoring</span>
-                            <span class="hero-tag">Payment Status</span>
-                            <span class="hero-tag">Print Ready</span>
-                            <span class="hero-tag">Admin Workflow</span>
-                        </div>
                     </div>
 
-                    <div class="hero-side">
-                        <div>
-                            <h3>Billing Snapshot</h3>
-                            <p>Ringkasan cepat agar admin bisa membaca kondisi pembayaran sistem secara instan.</p>
-                        </div>
+                    <aside class="hero-side">
+                        <h3>Current Filter Snapshot</h3>
+                        <p>Ringkasan cepat dari periode dan filter yang sedang aktif.</p>
 
                         <div class="snapshot-grid">
                             <div class="snapshot-card">
-                                <div class="snapshot-label">Latest Invoice</div>
-                                <div class="snapshot-value">{{ optional($billings->first())->invoice_number ?: 'No invoice yet' }}</div>
+                                <div class="snapshot-label">Date Range</div>
+                                <div class="snapshot-value">
+                                    {{ $dateFrom ?: 'All' }} → {{ $dateTo ?: 'All' }}
+                                </div>
                             </div>
 
                             <div class="snapshot-card">
-                                <div class="snapshot-label">Paid Amount</div>
-                                <div class="snapshot-value">Rp {{ number_format($paidAmount, 0, ',', '.') }}</div>
+                                <div class="snapshot-label">Status</div>
+                                <div class="snapshot-value">{{ $status ? ucfirst($status) : 'All Status' }}</div>
                             </div>
 
                             <div class="snapshot-card">
-                                <div class="snapshot-label">Total Amount</div>
-                                <div class="snapshot-value">Rp {{ number_format($totalAmount, 0, ',', '.') }}</div>
+                                <div class="snapshot-label">Method</div>
+                                <div class="snapshot-value">{{ $paymentMethod ? ucwords(str_replace('_', ' ', $paymentMethod)) : 'All Methods' }}</div>
+                            </div>
+
+                            <div class="snapshot-card">
+                                <div class="snapshot-label">Search</div>
+                                <div class="snapshot-value">{{ $search ?: 'No keyword' }}</div>
                             </div>
                         </div>
-                    </div>
+                    </aside>
                 </div>
             </section>
 
             <section class="stats-grid">
                 <div class="stat-card">
-                    <div class="stat-label">Total Billings</div>
-                    <div class="stat-value">{{ $totalBillings }}</div>
-                    <div class="stat-sub">Semua invoice yang tercatat di sistem saat ini.</div>
+                    <div class="stat-label">Net Revenue</div>
+                    <div class="stat-value">Rp {{ number_format($netRevenue, 0, ',', '.') }}</div>
+                    <div class="stat-sub">Grand total non-void.</div>
                 </div>
 
                 <div class="stat-card">
-                    <div class="stat-label">Paid</div>
-                    <div class="stat-value">{{ $paidCount }}</div>
-                    <div class="stat-sub">Invoice yang sudah tercatat lunas.</div>
+                    <div class="stat-label">Gross Sales</div>
+                    <div class="stat-value">Rp {{ number_format($grossRevenue, 0, ',', '.') }}</div>
+                    <div class="stat-sub">Subtotal sebelum diskon.</div>
                 </div>
 
                 <div class="stat-card">
-                    <div class="stat-label">Partial</div>
-                    <div class="stat-value">{{ $partialCount }}</div>
-                    <div class="stat-sub">Invoice yang sudah dibayar sebagian.</div>
+                    <div class="stat-label">Discount</div>
+                    <div class="stat-value">Rp {{ number_format($totalDiscount, 0, ',', '.') }}</div>
+                    <div class="stat-sub">Total promo / potongan.</div>
                 </div>
 
                 <div class="stat-card">
-                    <div class="stat-label">Unpaid</div>
-                    <div class="stat-value">{{ $unpaidCount }}</div>
-                    <div class="stat-sub">Invoice yang masih menunggu pembayaran.</div>
+                    <div class="stat-label">Paid Amount</div>
+                    <div class="stat-value">Rp {{ number_format($paidAmount, 0, ',', '.') }}</div>
+                    <div class="stat-sub">{{ $paidCount }} paid transaction.</div>
                 </div>
-            </section>
 
-            <section class="dashboard-grid">
-                <section class="section-card">
-                    <h2 class="section-title">Payment Distribution</h2>
-                    <p class="section-subtitle">Diagram ringkas untuk membaca proporsi status pembayaran invoice.</p>
+                <div class="stat-card">
+                    <div class="stat-label">Outstanding</div>
+                    <div class="stat-value">Rp {{ number_format($remainingAmount, 0, ',', '.') }}</div>
+                    <div class="stat-sub">{{ $unpaidCount }} unpaid · {{ $partialCount }} partial.</div>
+                </div>
 
-                    <div class="chart-grid">
-                        <div class="donut-wrap">
-                            <div class="donut" style="{{ $donutStyle }}">
-                                <div class="donut-center">
-                                    <div class="donut-total">{{ $totalBillings }}</div>
-                                    <div class="donut-label">Total Invoices</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="legend">
-                            <div class="legend-item">
-                                <div class="legend-left">
-                                    <span class="legend-dot" style="background:#3f8b89;"></span>
-                                    <span class="legend-name">Paid</span>
-                                </div>
-                                <span class="legend-value">{{ $paidCount }} ({{ $paidPct }}%)</span>
-                            </div>
-
-                            <div class="legend-item">
-                                <div class="legend-left">
-                                    <span class="legend-dot" style="background:#eab308;"></span>
-                                    <span class="legend-name">Partial</span>
-                                </div>
-                                <span class="legend-value">{{ $partialCount }} ({{ $partialPct }}%)</span>
-                            </div>
-
-                            <div class="legend-item">
-                                <div class="legend-left">
-                                    <span class="legend-dot" style="background:#ef4444;"></span>
-                                    <span class="legend-name">Unpaid</span>
-                                </div>
-                                <span class="legend-value">{{ $unpaidCount }} ({{ $unpaidPct }}%)</span>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <section class="section-card">
-                    <h2 class="section-title">Billing Value Trend</h2>
-                    <p class="section-subtitle">Grafik ringkas untuk melihat komposisi jumlah dan nilai billing saat ini.</p>
-
-                    <div class="spark-card">
-                        <div class="spark-top">
-                            <div>
-                                <div class="spark-title">Current Billing Composition</div>
-                                <div class="spark-note">Visual ini membantu membaca distribusi volume billing dan nilai pembayaran secara cepat.</div>
-                            </div>
-                            <div class="spark-total">Rp {{ number_format($totalAmount, 0, ',', '.') }}</div>
-                        </div>
-
-                        <svg class="spark-svg" viewBox="0 0 520 180" preserveAspectRatio="none">
-                            <defs>
-                                <linearGradient id="areaFillBillings" x1="0" x2="0" y1="0" y2="1">
-                                    <stop offset="0%" stop-color="rgba(63,139,137,0.28)"/>
-                                    <stop offset="100%" stop-color="rgba(63,139,137,0.02)"/>
-                                </linearGradient>
-                                <linearGradient id="lineStrokeBillings" x1="0" x2="1" y1="0" y2="0">
-                                    <stop offset="0%" stop-color="#4a8b8a"/>
-                                    <stop offset="100%" stop-color="#2f7c7a"/>
-                                </linearGradient>
-                            </defs>
-
-                            <line x1="20" y1="160" x2="500" y2="160" stroke="#e8efee" stroke-width="1"/>
-                            <line x1="20" y1="120" x2="500" y2="120" stroke="#f2f5f5" stroke-width="1"/>
-                            <line x1="20" y1="80" x2="500" y2="80" stroke="#f2f5f5" stroke-width="1"/>
-                            <line x1="20" y1="40" x2="500" y2="40" stroke="#f2f5f5" stroke-width="1"/>
-
-                            <polygon points="{{ $sparkArea }}" fill="url(#areaFillBillings)"></polygon>
-                            <polyline points="{{ $sparkPolyline }}" fill="none" stroke="url(#lineStrokeBillings)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></polyline>
-
-                            @foreach($sparkPoints as $point)
-                                @php [$cx, $cy] = explode(',', $point); @endphp
-                                <circle cx="{{ $cx }}" cy="{{ $cy }}" r="5" fill="#ffffff" stroke="#2f7c7a" stroke-width="3"></circle>
-                            @endforeach
-                        </svg>
-                    </div>
-                </section>
+                <div class="stat-card">
+                    <div class="stat-label">Void</div>
+                    <div class="stat-value">{{ $voidCount }}</div>
+                    <div class="stat-sub">{{ $totalTransactions }} total transaction in period.</div>
+                </div>
             </section>
 
             <section class="section-card">
-                <h2 class="section-title">Filter Billings</h2>
-                <p class="section-subtitle">Cari invoice berdasarkan nomor invoice, nama patient, atau status pembayaran.</p>
-
-                <form method="GET" action="/admin/billings" class="filter-grid">
-                    <div class="field">
-                        <label>Search</label>
-                        <input
-                            type="text"
-                            name="search"
-                            value="{{ request('search') }}"
-                            placeholder="Cari invoice number atau nama patient"
-                        >
+                <div class="section-head">
+                    <div>
+                        <h2 class="section-title">Filter Ledger</h2>
+                        <p class="section-subtitle">Cari invoice, nama pasien, nomor MR, WhatsApp, status pembayaran, metode bayar, dan periode transaksi.</p>
                     </div>
+                </div>
 
-                    <div class="field">
-                        <label>Status</label>
-                        <select name="status">
-                            <option value="">Semua Status</option>
-                            <option value="paid" {{ request('status') == 'paid' ? 'selected' : '' }}>Paid</option>
-                            <option value="unpaid" {{ request('status') == 'unpaid' ? 'selected' : '' }}>Unpaid</option>
-                            <option value="partial" {{ request('status') == 'partial' ? 'selected' : '' }}>Partial</option>
-                        </select>
-                    </div>
+                <form method="GET" action="/admin/billings">
+                    <div class="filter-grid">
+                        <div class="field">
+                            <label>Search</label>
+                            <input type="text" name="search" value="{{ $search }}" placeholder="Invoice / nama pasien / MR / WhatsApp">
+                        </div>
 
-                    <div class="field">
-                        <button type="submit" class="filter-btn">Terapkan Filter</button>
+                        <div class="field">
+                            <label>Status</label>
+                            <select name="status">
+                                <option value="">All Status</option>
+                                <option value="paid" {{ $status === 'paid' ? 'selected' : '' }}>Paid</option>
+                                <option value="unpaid" {{ $status === 'unpaid' ? 'selected' : '' }}>Unpaid</option>
+                                <option value="partial" {{ $status === 'partial' ? 'selected' : '' }}>Partial</option>
+                                <option value="void" {{ $status === 'void' ? 'selected' : '' }}>Void</option>
+                            </select>
+                        </div>
+
+                        <div class="field">
+                            <label>Payment Method</label>
+                            <select name="payment_method">
+                                <option value="">All Methods</option>
+                                @foreach($paymentMethods as $method)
+                                    <option value="{{ $method }}" {{ $paymentMethod === $method ? 'selected' : '' }}>
+                                        {{ ucwords(str_replace('_', ' ', $method)) }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="field">
+                            <label>Date From</label>
+                            <input type="date" name="date_from" value="{{ $dateFrom }}">
+                        </div>
+
+                        <div class="field">
+                            <label>Date To</label>
+                            <input type="date" name="date_to" value="{{ $dateTo }}">
+                        </div>
+
+                        <button type="submit" class="btn btn-dark">Apply Filter</button>
+                        <a href="/admin/billings" class="btn btn-soft">Reset</a>
                     </div>
                 </form>
             </section>
 
             <section class="section-card">
-                <h2 class="section-title">Billing List</h2>
-                <p class="section-subtitle">Daftar invoice patient beserta status pembayaran, nominal, dan aksi admin.</p>
+                <div class="section-head">
+                    <div>
+                        <h2 class="section-title">Transaction List</h2>
+                        <p class="section-subtitle">
+                            Daftar invoice terbaru. Transaksi void tetap muncul untuk audit, tapi tampil beda dan tidak dihitung sebagai revenue aktif.
+                        </p>
+                    </div>
 
-                @if($billings->count() > 0)
-                    <div class="table-wrap">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Invoice</th>
-                                    <th>Patient</th>
-                                    <th>Visit</th>
-                                    <th>Invoice Date</th>
-                                    <th>Amount</th>
-                                    <th>Status</th>
-                                    <th>Payment Method</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($billings as $billing)
-                                    <tr>
-                                        <td>
-                                            <div class="primary-text">{{ $billing->invoice_number ?: '-' }}</div>
-                                            <div class="secondary-text">Billing ID #{{ $billing->id }}</div>
-                                        </td>
-                                        <td>
-                                            <div class="primary-text">{{ optional($billing->patient)->full_name ?: '-' }}</div>
-                                        </td>
-                                        <td>
-                                            @if($billing->visit)
-                                                <div class="primary-text">#{{ $billing->visit->id }}</div>
-                                                <div class="secondary-text">{{ $billing->visit->visit_date ?: 'No visit date' }}</div>
-                                            @else
-                                                -
+                    <a href="/admin/cashier" class="btn btn-primary">+ New Checkout</a>
+                </div>
+
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Invoice</th>
+                                <th>Patient</th>
+                                <th>Date</th>
+                                <th>Subtotal</th>
+                                <th>Discount</th>
+                                <th>Grand Total</th>
+                                <th>Paid</th>
+                                <th>Remaining</th>
+                                <th>Method</th>
+                                <th>Status</th>
+                                <th>Promo</th>
+                                <th>Items</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($billings as $billing)
+                                <tr class="{{ $billing->payment_status === 'void' ? 'void-row' : '' }}">
+                                    <td>
+                                        <div class="primary-text">{{ $billing->invoice_number ?: 'Billing #' . $billing->id }}</div>
+                                        <div class="secondary-text">ID: {{ $billing->id }}</div>
+                                        @if($billing->voided_at)
+                                            <div class="secondary-text">Void at {{ $billing->voided_at->format('Y-m-d H:i') }}</div>
+                                        @endif
+                                    </td>
+
+                                    <td>
+                                        <div class="primary-text">{{ optional($billing->patient)->full_name ?: '-' }}</div>
+                                        <div class="secondary-text">
+                                            MR: {{ optional($billing->patient)->medical_record_number ?: '-' }}
+                                            @if(optional($billing->patient)->whatsapp)
+                                                · WA: {{ optional($billing->patient)->whatsapp }}
                                             @endif
-                                        </td>
-                                        <td>{{ $billing->invoice_date ?: '-' }}</td>
-                                        <td>
-                                            <div class="amount-text">Rp {{ number_format($billing->amount, 0, ',', '.') }}</div>
-                                        </td>
-                                        <td>
-                                            <span class="status-pill billing-{{ $billing->payment_status }}">
-                                                {{ $billing->payment_status ?: '-' }}
-                                            </span>
-                                        </td>
-                                        <td>{{ $billing->payment_method ?: '-' }}</td>
-                                        <td>
-                                            <div class="action-stack">
-                                                <a href="/admin/billings/{{ $billing->id }}" class="action-link btn-detail">Detail</a>
-                                                <a href="/admin/billings/{{ $billing->id }}/edit" class="action-link btn-edit">Edit</a>
-                                                <a href="/admin/billings/{{ $billing->id }}/print" class="action-link btn-print" target="_blank">Print</a>
+                                        </div>
+                                    </td>
 
-                                                <form method="POST" action="/admin/billings/{{ $billing->id }}/delete" style="display:inline;">
-                                                    @csrf
-                                                    <button type="submit" class="action-link btn-delete" onclick="return confirm('Hapus billing ini?')" style="background:#fff1f2;">Delete</button>
-                                                </form>
-                                            </div>
+                                    <td>
+                                        <div class="primary-text">{{ $billing->invoice_date ? $billing->invoice_date->format('Y-m-d') : '-' }}</div>
+                                        <div class="secondary-text">{{ $billing->created_at ? $billing->created_at->format('H:i') : '-' }}</div>
+                                    </td>
 
-                                            <form method="POST" action="/admin/billings/{{ $billing->id }}/status" class="status-form">
-                                                @csrf
-                                                <select name="payment_status">
-                                                    <option value="paid" {{ $billing->payment_status == 'paid' ? 'selected' : '' }}>Paid</option>
-                                                    <option value="unpaid" {{ $billing->payment_status == 'unpaid' ? 'selected' : '' }}>Unpaid</option>
-                                                    <option value="partial" {{ $billing->payment_status == 'partial' ? 'selected' : '' }}>Partial</option>
-                                                </select>
-                                                <button type="submit" class="mini-submit">Update</button>
-                                            </form>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                @else
-                    <div class="empty-state">
-                        Belum ada data billing yang cocok dengan filter saat ini.
-                    </div>
-                @endif
+                                    <td class="money">
+                                        Rp {{ number_format($billing->subtotal_amount ?: $billing->amount, 0, ',', '.') }}
+                                    </td>
+
+                                    <td class="money">
+                                        Rp {{ number_format($billing->discount_amount ?: 0, 0, ',', '.') }}
+                                    </td>
+
+                                    <td class="money">
+                                        Rp {{ number_format($billing->amount, 0, ',', '.') }}
+                                    </td>
+
+                                    <td class="money">
+                                        Rp {{ number_format($billing->paid_amount ?: 0, 0, ',', '.') }}
+                                        @if(($billing->change_amount ?: 0) > 0)
+                                            <div class="secondary-text">Change: Rp {{ number_format($billing->change_amount, 0, ',', '.') }}</div>
+                                        @endif
+                                    </td>
+
+                                    <td class="money">
+                                        Rp {{ number_format($billing->remaining_amount ?: 0, 0, ',', '.') }}
+                                    </td>
+
+                                    <td>
+                                        <span class="method-pill">{{ $billing->payment_method_label }}</span>
+                                    </td>
+
+                                    <td>
+                                        <span class="status-pill {{ $billing->payment_status }}">{{ $billing->payment_status }}</span>
+                                        @if($billing->original_payment_status)
+                                            <div class="secondary-text">Before: {{ $billing->original_payment_status }}</div>
+                                        @endif
+                                    </td>
+
+                                    <td>
+                                        @if($billing->promo_code)
+                                            <span class="promo-pill">{{ $billing->promo_code }}</span>
+                                        @else
+                                            <span class="secondary-text">No promo</span>
+                                        @endif
+                                    </td>
+
+                                    <td>
+                                        <div class="primary-text">{{ $billing->items->count() }} item</div>
+                                        <div class="secondary-text">
+                                            {{ $billing->items->where('item_type', 'service')->count() }} service ·
+                                            {{ $billing->items->where('item_type', 'inventory')->count() }} inventory
+                                        </div>
+                                    </td>
+
+                                    <td>
+                                        <div class="action-stack">
+                                            <a href="/admin/billings/{{ $billing->id }}" class="mini-btn mini-detail">Detail</a>
+                                            <a href="/admin/billings/{{ $billing->id }}/print" target="_blank" class="mini-btn mini-print">Print</a>
+
+                                            @if($billing->payment_status !== 'void')
+                                                <a href="/admin/billings/{{ $billing->id }}/edit" class="mini-btn mini-edit">Edit</a>
+                                                <a href="/admin/billings/{{ $billing->id }}" class="mini-btn mini-void">Void</a>
+                                            @else
+                                                <span class="mini-btn mini-void">Voided</span>
+                                            @endif
+                                        </div>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="13">
+                                        <div class="empty-state">
+                                            Belum ada transaksi yang sesuai filter ini.<br>
+                                            Coba reset filter atau buat transaksi baru dari Kasir Checkout.
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
             </section>
         </div>
     </main>

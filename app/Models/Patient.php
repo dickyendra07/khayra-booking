@@ -73,4 +73,10 @@ class Patient extends Model
 
         return "KP-{$genderCode}-{$runningNumber}-{$birthYearTwoDigits}";
     }
+    public function bookings()
+    {
+        return $this->hasMany(Booking::class);
+    }
+
+
 }

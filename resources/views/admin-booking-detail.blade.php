@@ -258,6 +258,9 @@
 
             <div class="topbar-actions">
                 <a href="/admin/bookings/{{ $booking->id }}/edit" class="edit-link">Edit Booking</a>
+                @if($booking->patient)
+                    <a href="/admin/visits/create?booking_id={{ $booking->id }}" class="patient-link">Buat Visit & Rekam Medis</a>
+                @endif
 
                 @if(!$booking->patient_id)
                     <form method="POST" action="/admin/bookings/{{ $booking->id }}/create-patient" style="margin:0;">

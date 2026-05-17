@@ -764,7 +764,7 @@
                     <div class="grid-3 spacer">
                         <div class="data-box">
                             <div class="data-label">Date of Control</div>
-                            <div class="data-value">{{ $record->date_of_control ? $record->date_of_control->format('Y-m-d') : '-' }}</div>
+                            <div class="data-value">{{ optional($record->date_of_control)->format('Y-m-d') ?: '-' }}</div>
                         </div>
 
                         <div class="data-box">

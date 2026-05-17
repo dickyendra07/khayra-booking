@@ -445,6 +445,201 @@
                 font-size: 24px;
             }
         }
+    
+        .clinical-summary-grid {
+            display: grid;
+            grid-template-columns: 1.1fr .9fr;
+            gap: 18px;
+            margin-bottom: 20px;
+        }
+
+        .clinical-summary-card {
+            background: white;
+            border-radius: 24px;
+            padding: 24px;
+            box-shadow: 0 16px 40px rgba(15,118,110,.08);
+            border: 1px solid #edf5f3;
+        }
+
+        .clinical-summary-title {
+            margin: 0;
+            font-size: 24px;
+            color: #0f766e;
+            font-weight: 900;
+        }
+
+        .clinical-summary-subtitle {
+            margin: 8px 0 18px;
+            color: #6b7280;
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        .summary-metrics {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .summary-metric {
+            background: #f9fdfc;
+            border: 1px solid #e5efec;
+            border-radius: 18px;
+            padding: 15px;
+        }
+
+        .summary-label {
+            font-size: 11px;
+            font-weight: 800;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: .45px;
+            margin-bottom: 7px;
+        }
+
+        .summary-value {
+            font-size: 18px;
+            font-weight: 900;
+            color: #111827;
+            line-height: 1.45;
+            word-break: break-word;
+        }
+
+        .completion-wrap {
+            margin-top: 12px;
+        }
+
+        .completion-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 9px;
+            font-size: 13px;
+            color: #374151;
+            font-weight: 800;
+        }
+
+        .completion-bar {
+            height: 14px;
+            border-radius: 999px;
+            background: #e8f1ef;
+            overflow: hidden;
+        }
+
+        .completion-fill {
+            height: 100%;
+            border-radius: 999px;
+            background: linear-gradient(135deg, #0f766e 0%, #2f7f74 100%);
+        }
+
+        .pain-meter {
+            margin-top: 12px;
+        }
+
+        .pain-scale-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 6px;
+            margin-top: 7px;
+            color: #94a3b8;
+            font-size: 11px;
+            font-weight: 800;
+        }
+
+        .pain-bar {
+            height: 16px;
+            border-radius: 999px;
+            background: linear-gradient(90deg, #dcfce7 0%, #fef3c7 50%, #fee2e2 100%);
+            overflow: hidden;
+            border: 1px solid #e5efec;
+        }
+
+        .pain-indicator {
+            height: 100%;
+            background: rgba(17,24,39,.20);
+            border-radius: 999px;
+        }
+
+        .issue-list {
+            display: grid;
+            gap: 10px;
+        }
+
+        .issue-item {
+            padding: 12px 14px;
+            border-radius: 16px;
+            background: #fff7ed;
+            border: 1px solid #fed7aa;
+            color: #9a3412;
+            font-size: 13px;
+            line-height: 1.6;
+            font-weight: 800;
+        }
+
+        .issue-ok {
+            padding: 14px 16px;
+            border-radius: 16px;
+            background: #ecfdf5;
+            border: 1px solid #bbf7d0;
+            color: #166534;
+            font-size: 14px;
+            line-height: 1.7;
+            font-weight: 800;
+        }
+
+        .clinical-action-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 18px;
+        }
+
+        .primary-action,
+        .soft-action,
+        .blue-action {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            padding: 11px 14px;
+            border-radius: 13px;
+            font-size: 13px;
+            font-weight: 900;
+            border: 1px solid transparent;
+        }
+
+        .primary-action {
+            background: #0f766e;
+            color: #ffffff;
+            box-shadow: 0 12px 26px rgba(15,118,110,.16);
+        }
+
+        .soft-action {
+            background: #ffffff;
+            color: #0f766e;
+            border-color: #d7ebe6;
+        }
+
+        .blue-action {
+            background: #eff6ff;
+            color: #1d4ed8;
+            border-color: #cfe0ff;
+        }
+
+        @media (max-width: 1180px) {
+            .clinical-summary-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .summary-metrics {
+                grid-template-columns: 1fr;
+            }
+        }
+
     </style>
 </head>
 <body>
@@ -484,6 +679,53 @@
             'dosage' => '',
             'note_caution' => '',
         ]]);
+
+    $clinicalRequiredFields = [
+        'complaint',
+        'pain_scale',
+        'subjective_examination',
+        'objective_examination',
+        'physiotherapy_diagnosis',
+        'impairment',
+        'patient_goal',
+        'program_patient',
+        'treatment_given',
+        'response_to_treatment',
+        'next_session_plan',
+    ];
+
+    $completedClinicalFields = collect($clinicalRequiredFields)->filter(function ($field) use ($record) {
+        return $record && !blank($record->{$field});
+    })->count();
+
+    $clinicalCompletion = count($clinicalRequiredFields) > 0
+        ? round(($completedClinicalFields / count($clinicalRequiredFields)) * 100)
+        : 0;
+
+    $painScale = $record && $record->pain_scale !== null ? (int) $record->pain_scale : null;
+    $painWidth = $painScale !== null ? min(max($painScale, 0), 10) * 10 : 0;
+
+    $summaryIssues = collect();
+
+    if (!$record || blank($record->complaint)) {
+        $summaryIssues->push('Complaint belum diisi');
+    }
+
+    if (!$record || blank($record->pain_scale)) {
+        $summaryIssues->push('Pain scale belum diisi');
+    }
+
+    if (!$record || blank($record->physiotherapy_diagnosis)) {
+        $summaryIssues->push('Diagnosis fisioterapi belum diisi');
+    }
+
+    if (!$record || blank($record->program_patient)) {
+        $summaryIssues->push('Program patient belum diisi');
+    }
+
+    if (!$record || blank($record->next_session_plan)) {
+        $summaryIssues->push('Next session plan belum diisi');
+    }
 @endphp
 
 <div class="page">
@@ -491,6 +733,8 @@
         <div class="topbar">
             <div class="brand">Khayra Therapist Dashboard</div>
             <div class="topbar-actions">
+                <a href="/therapist/visits/{{ $visit->id }}/report" class="ghost-link">View Report</a>
+                <a href="/therapist/visits/{{ $visit->id }}/report/print" target="_blank" class="ghost-link">Print Report</a>
                 <a href="/therapist/dashboard" class="ghost-link">← Kembali ke Dashboard</a>
             </div>
         </div>
@@ -531,6 +775,84 @@
                         <div class="mini-value">{{ $visit->therapistRelation->full_name ?? $visit->therapist ?? '-' }}</div>
                     </div>
                 </div>
+            </div>
+        </section>
+
+        <section class="clinical-summary-grid">
+            <div class="clinical-summary-card">
+                <h2 class="clinical-summary-title">Clinical Summary & Completeness</h2>
+                <p class="clinical-summary-subtitle">
+                    Ringkasan otomatis untuk membantu therapist mengecek apakah dokumentasi klinis sudah cukup lengkap sebelum disimpan atau diprint.
+                </p>
+
+                <div class="summary-metrics">
+                    <div class="summary-metric">
+                        <div class="summary-label">Completeness</div>
+                        <div class="summary-value">{{ $clinicalCompletion }}%</div>
+                    </div>
+
+                    <div class="summary-metric">
+                        <div class="summary-label">Pain Scale</div>
+                        <div class="summary-value">{{ $painScale !== null ? $painScale . '/10' : '-' }}</div>
+                    </div>
+
+                    <div class="summary-metric">
+                        <div class="summary-label">Home Exercise</div>
+                        <div class="summary-value">{{ $record && $record->homeExercises ? $record->homeExercises->count() : 0 }} item</div>
+                    </div>
+                </div>
+
+                <div class="completion-wrap">
+                    <div class="completion-head">
+                        <span>Clinical documentation progress</span>
+                        <span>{{ $completedClinicalFields }} / {{ count($clinicalRequiredFields) }} fields</span>
+                    </div>
+                    <div class="completion-bar">
+                        <div class="completion-fill" style="width: {{ $clinicalCompletion }}%;"></div>
+                    </div>
+                </div>
+
+                <div class="pain-meter">
+                    <div class="completion-head">
+                        <span>Pain visual scale</span>
+                        <span>{{ $painScale !== null ? $painScale . '/10' : 'Belum diisi' }}</span>
+                    </div>
+                    <div class="pain-bar">
+                        <div class="pain-indicator" style="width: {{ $painWidth }}%;"></div>
+                    </div>
+                    <div class="pain-scale-row">
+                        <span>0</span>
+                        <span>2</span>
+                        <span>4</span>
+                        <span>6</span>
+                        <span>8</span>
+                        <span>10</span>
+                    </div>
+                </div>
+
+                <div class="clinical-action-row">
+                    <a href="/therapist/visits/{{ $visit->id }}/report" class="blue-action">View Clinical Report</a>
+                    <a href="/therapist/visits/{{ $visit->id }}/report/print" target="_blank" class="soft-action">Print / Save PDF</a>
+                </div>
+            </div>
+
+            <div class="clinical-summary-card">
+                <h2 class="clinical-summary-title">Clinical Checklist</h2>
+                <p class="clinical-summary-subtitle">
+                    Item yang perlu dilengkapi agar rekam medis lebih siap untuk report, follow-up, dan patient portal.
+                </p>
+
+                @if($summaryIssues->count())
+                    <div class="issue-list">
+                        @foreach($summaryIssues as $issue)
+                            <div class="issue-item">{{ $issue }}</div>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="issue-ok">
+                        Rekam medis utama sudah terlihat lengkap. Therapist bisa lanjut review report atau print bila diperlukan.
+                    </div>
+                @endif
             </div>
         </section>
 
@@ -957,6 +1279,18 @@
 
                                     <div class="grid-3">
                                         <div class="field">
+                                            <label>Pilih dari Exercise Library</label>
+                                            <select onchange="applyHomeExerciseTemplate(this)">
+                                                <option value="">Manual / pilih template</option>
+                                                @foreach(($homeExerciseTemplates ?? collect()) as $template)
+                                                    <option value="{{ $template->id }}">
+                                                        {{ $template->name }}{{ $template->category ? ' · ' . $template->category : '' }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+
+                                        <div class="field">
                                             <label>Exercise</label>
                                             <input type="text" name="home_exercise_name[]" value="{{ old('home_exercise_name.' . $index, $exercise->exercise ?? '') }}" placeholder="Nama latihan">
                                         </div>
@@ -966,7 +1300,7 @@
                                             <input type="text" name="home_exercise_dosage[]" value="{{ old('home_exercise_dosage.' . $index, $exercise->dosage ?? '') }}" placeholder="Contoh: 10 reps x 3 set">
                                         </div>
 
-                                        <div class="field">
+                                        <div class="field" style="grid-column:1/-1;">
                                             <label>Note / Caution</label>
                                             <input type="text" name="home_exercise_note[]" value="{{ old('home_exercise_note.' . $index, $exercise->note_caution ?? '') }}" placeholder="Catatan kehati-hatian">
                                         </div>
@@ -1024,6 +1358,49 @@
                         </div>
                     </div>
 
+                    <div class="form-section">
+                        <h3 class="form-section-title">11. Medical Record Update History</h3>
+                        <p class="form-section-text">Setiap kali Medical Record disimpan, sistem mencatat snapshot update untuk audit internal dan timeline pasien.</p>
+
+                        @php
+                            $medicalRecordUpdateLogs = collect();
+                            if ($record && class_exists(\App\Models\MedicalRecordUpdateLog::class)) {
+                                $medicalRecordUpdateLogs = \App\Models\MedicalRecordUpdateLog::where('medical_record_id', $record->id)
+                                    ->latest('snapshot_date')
+                                    ->take(8)
+                                    ->get();
+                            }
+                        @endphp
+
+                        @if($medicalRecordUpdateLogs->count())
+                            <div style="display:grid;gap:12px;">
+                                @foreach($medicalRecordUpdateLogs as $log)
+                                    <div class="inline-card">
+                                        <div class="inline-head">
+                                            <div class="inline-title">
+                                                {{ $log->snapshot_date ? $log->snapshot_date->format('Y-m-d H:i') : '-' }}
+                                                · {{ $log->updated_by_name ?: 'Therapist' }}
+                                            </div>
+                                            <span class="summary-pill">Pain {{ is_null($log->pain_scale) ? '-' : $log->pain_scale . '/10' }}</span>
+                                        </div>
+                                        <div style="font-size:13px;line-height:1.8;color:#475569;">
+                                            <strong>Response:</strong> {{ $log->response_to_treatment ?: '-' }}<br>
+                                            <strong>Next Plan:</strong> {{ $log->next_session_plan ?: '-' }}<br>
+                                            <strong>Next Control:</strong> {{ $log->date_of_control ? $log->date_of_control->format('Y-m-d') : '-' }} ·
+                                            <strong>Frequency:</strong> {{ $log->frequency_per_week ?: '-' }} ·
+                                            <strong>Total Session:</strong> {{ $log->total_session ?: '-' }}
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @else
+                            <div class="inline-card">
+                                <div class="inline-title">Belum ada update history.</div>
+                                <div style="font-size:13px;color:#64748b;margin-top:6px;">History akan tercatat setelah Medical Record ini disimpan.</div>
+                            </div>
+                        @endif
+                    </div>
+
                     <div class="submit-row">
                         <button type="submit" class="submit-btn">Simpan Medical Record V2</button>
                     </div>
@@ -1034,6 +1411,24 @@
 </div>
 
 <script>
+
+    @php
+        $homeExerciseTemplateData = ($homeExerciseTemplates ?? collect())->map(function ($template) {
+            return [
+                'id' => $template->id,
+                'name' => $template->name,
+                'category' => $template->category,
+                'target_area' => $template->target_area,
+                'difficulty' => $template->difficulty,
+                'instructions' => $template->instructions,
+                'dosage' => $template->dosage,
+                'video_url' => $template->video_url,
+            ];
+        })->values();
+    @endphp
+
+    const homeExerciseTemplates = @json($homeExerciseTemplateData);
+
     function removeRow(button) {
         const row = button.closest('.inline-card');
         if (row) row.remove();
@@ -1134,6 +1529,63 @@
         wrapper.appendChild(div);
     }
 
+    function homeExerciseTemplateOptionsHtml() {
+        let html = '<option value="">Manual / pilih template</option>';
+
+        homeExerciseTemplates.forEach(template => {
+            const labelParts = [template.name];
+
+            if (template.category) {
+                labelParts.push(template.category);
+            }
+
+            html += `<option value="${template.id}">${labelParts.join(' · ')}</option>`;
+        });
+
+        return html;
+    }
+
+    function applyHomeExerciseTemplate(select) {
+        const selectedId = String(select.value || '');
+        if (!selectedId) return;
+
+        const template = homeExerciseTemplates.find(item => String(item.id) === selectedId);
+        if (!template) return;
+
+        const row = select.closest('.home-exercise-row');
+        if (!row) return;
+
+        const nameInput = row.querySelector('input[name="home_exercise_name[]"]');
+        const dosageInput = row.querySelector('input[name="home_exercise_dosage[]"]');
+        const noteInput = row.querySelector('input[name="home_exercise_note[]"]');
+
+        if (nameInput) {
+            nameInput.value = template.name || '';
+        }
+
+        if (dosageInput) {
+            dosageInput.value = template.dosage || '';
+        }
+
+        if (noteInput) {
+            let note = template.instructions || '';
+
+            if (template.target_area) {
+                note += (note ? ' | ' : '') + 'Target area: ' + template.target_area;
+            }
+
+            if (template.difficulty) {
+                note += (note ? ' | ' : '') + 'Difficulty: ' + template.difficulty;
+            }
+
+            if (template.video_url) {
+                note += (note ? ' | ' : '') + 'Video: ' + template.video_url;
+            }
+
+            noteInput.value = note;
+        }
+    }
+
     function addHomeExerciseRow() {
         const wrapper = document.getElementById('home-exercise-wrapper');
         const div = document.createElement('div');
@@ -1145,6 +1597,12 @@
             </div>
             <div class="grid-3">
                 <div class="field">
+                    <label>Pilih dari Exercise Library</label>
+                    <select onchange="applyHomeExerciseTemplate(this)">
+                        ${homeExerciseTemplateOptionsHtml()}
+                    </select>
+                </div>
+                <div class="field">
                     <label>Exercise</label>
                     <input type="text" name="home_exercise_name[]" placeholder="Nama latihan">
                 </div>
@@ -1152,7 +1610,7 @@
                     <label>Dosage</label>
                     <input type="text" name="home_exercise_dosage[]" placeholder="Contoh: 10 reps x 3 set">
                 </div>
-                <div class="field">
+                <div class="field" style="grid-column:1/-1;">
                     <label>Note / Caution</label>
                     <input type="text" name="home_exercise_note[]" placeholder="Catatan kehati-hatian">
                 </div>

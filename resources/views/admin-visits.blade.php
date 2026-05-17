@@ -142,6 +142,8 @@
         }
         .btn-edit { background: #eef2ff; color: #3457d5; border-color: #dde5ff; }
         .btn-record { background: #eef7f5; color: #2f7c7a; border-color: #d8ebe7; }
+        .btn-billing { background: #fff7ed; color: #c2410c; border-color: #fed7aa; }
+        .btn-referral { background: #f5f3ff; color: #6d28d9; border-color: #ddd6fe; }
 
         @media (max-width: 900px) {
             .layout { display: block; }
@@ -227,6 +229,8 @@
                                         <div class="action-stack">
                                             <a href="/admin/visits/{{ $visit->id }}/edit" class="action-link btn-edit">Edit</a>
                                             <a href="/admin/visits/{{ $visit->id }}/medical-record" class="action-link btn-record">Medical Record</a>
+                                            <a href="/admin/billings/create?visit_id={{ $visit->id }}" class="action-link btn-billing">Buat Invoice</a>
+                                            <a href="/admin/referral-letters/create?visit_id={{ $visit->id }}" class="action-link btn-referral">Buat Surat Rujukan</a>
                                         </div>
                                     </td>
                                 </tr>

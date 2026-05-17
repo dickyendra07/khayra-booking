@@ -22,7 +22,7 @@
         }
 
         .container {
-            max-width: 1280px;
+            max-width: 1380px;
             margin: 0 auto;
         }
 
@@ -36,7 +36,7 @@
 
         .brand {
             font-size: 28px;
-            font-weight: 800;
+            font-weight: 900;
             color: #0f766e;
         }
 
@@ -48,12 +48,14 @@
 
         .ghost-link,
         .logout-btn {
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
             text-decoration: none;
-            padding: 10px 14px;
-            border-radius: 12px;
+            padding: 11px 14px;
+            border-radius: 13px;
             font-size: 14px;
-            font-weight: 700;
+            font-weight: 800;
         }
 
         .ghost-link {
@@ -67,26 +69,43 @@
             background: #111827;
             color: white;
             cursor: pointer;
+            font-family: Arial, sans-serif;
         }
 
         .hero {
             display: grid;
-            grid-template-columns: 1.35fr .85fr;
+            grid-template-columns: 1.28fr .72fr;
             gap: 18px;
             margin-bottom: 20px;
         }
 
         .hero-main,
         .hero-side {
-            border-radius: 28px;
-            padding: 26px;
+            border-radius: 30px;
+            padding: 28px;
             box-shadow: 0 18px 42px rgba(15,118,110,.08);
         }
 
         .hero-main {
             background: linear-gradient(135deg, #0f766e 0%, #2f7f74 100%);
             color: white;
+            position: relative;
+            overflow: hidden;
         }
+
+        .hero-main::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(circle at top right, rgba(255,255,255,.13), transparent 28%),
+                linear-gradient(rgba(255,255,255,.06) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,.06) 1px, transparent 1px);
+            background-size: auto, 56px 56px, 56px 56px;
+            pointer-events: none;
+        }
+
+        .hero-main > * { position: relative; z-index: 1; }
 
         .hero-side {
             background: white;
@@ -94,29 +113,29 @@
         }
 
         .hero-badge {
-            display: inline-block;
+            display: inline-flex;
             padding: 8px 14px;
             border-radius: 999px;
             background: rgba(255,255,255,.16);
             color: white;
             font-size: 13px;
-            font-weight: 700;
+            font-weight: 800;
             margin-bottom: 16px;
         }
 
         .hero-title {
             margin: 0;
-            font-size: 40px;
-            line-height: 1.08;
-            font-weight: 800;
+            font-size: 42px;
+            line-height: 1.06;
+            font-weight: 900;
         }
 
         .hero-text {
             margin: 14px 0 0;
-            line-height: 1.8;
+            line-height: 1.85;
             font-size: 15px;
             color: rgba(255,255,255,.92);
-            max-width: 720px;
+            max-width: 760px;
         }
 
         .hero-tags {
@@ -127,20 +146,21 @@
         }
 
         .hero-tag {
-            display: inline-block;
+            display: inline-flex;
             padding: 9px 14px;
             border-radius: 999px;
             background: rgba(255,255,255,.14);
             border: 1px solid rgba(255,255,255,.18);
             color: white;
             font-size: 13px;
-            font-weight: 700;
+            font-weight: 800;
         }
 
         .side-title {
             margin: 0;
-            font-size: 22px;
+            font-size: 24px;
             color: #0f766e;
+            font-weight: 900;
         }
 
         .side-subtitle {
@@ -164,7 +184,7 @@
 
         .mini-label {
             font-size: 12px;
-            font-weight: 700;
+            font-weight: 800;
             color: #6b7280;
             text-transform: uppercase;
             letter-spacing: .4px;
@@ -172,37 +192,38 @@
         }
 
         .mini-value {
-            font-size: 16px;
-            font-weight: 700;
+            font-size: 17px;
+            font-weight: 900;
             color: #111827;
-            line-height: 1.6;
+            line-height: 1.5;
         }
 
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(4, minmax(0,1fr));
-            gap: 18px;
+            grid-template-columns: repeat(5, minmax(0,1fr));
+            gap: 16px;
             margin-bottom: 20px;
         }
 
         .stat-card {
             background: white;
             border-radius: 22px;
-            padding: 22px;
+            padding: 21px;
             box-shadow: 0 14px 35px rgba(15,118,110,.08);
             border: 1px solid #edf5f3;
         }
 
         .stat-label {
-            font-size: 13px;
+            font-size: 12px;
             color: #6b7280;
             text-transform: uppercase;
             letter-spacing: .5px;
+            font-weight: 800;
         }
 
         .stat-value {
             font-size: 34px;
-            font-weight: 800;
+            font-weight: 900;
             color: #0f766e;
             margin-top: 10px;
         }
@@ -214,24 +235,170 @@
             line-height: 1.6;
         }
 
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+            align-items: start;
+        }
+
         .section-card {
             background: white;
             border-radius: 24px;
             padding: 24px;
             box-shadow: 0 16px 40px rgba(15,118,110,.08);
             border: 1px solid #edf5f3;
+            margin-bottom: 18px;
+        }
+
+        .section-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 14px;
+            margin-bottom: 18px;
+            flex-wrap: wrap;
         }
 
         .section-title {
             margin: 0;
             font-size: 24px;
             color: #0f766e;
+            font-weight: 900;
         }
 
         .section-subtitle {
-            margin: 8px 0 18px;
+            margin: 8px 0 0;
             color: #6b7280;
             font-size: 14px;
+            line-height: 1.7;
+        }
+
+        .visit-card-grid {
+            display: grid;
+            gap: 14px;
+        }
+
+        .visit-card {
+            background: #f9fdfc;
+            border: 1px solid #e5efec;
+            border-radius: 20px;
+            padding: 18px;
+        }
+
+        .visit-top {
+            display: flex;
+            justify-content: space-between;
+            gap: 14px;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .patient-name {
+            font-weight: 900;
+            font-size: 17px;
+            color: #111827;
+            line-height: 1.4;
+        }
+
+        .patient-sub {
+            margin-top: 5px;
+            font-size: 12px;
+            color: #94a3b8;
+            line-height: 1.6;
+        }
+
+        .status-pill {
+            display: inline-flex;
+            padding: 8px 12px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 900;
+            white-space: nowrap;
+            text-transform: uppercase;
+        }
+
+        .status-scheduled { background: #dbeafe; color: #1d4ed8; }
+        .status-in_progress { background: #fef3c7; color: #92400e; }
+        .status-completed { background: #dcfce7; color: #166534; }
+        .status-cancelled { background: #fee2e2; color: #b91c1c; }
+
+        .record-complete { background: #dcfce7; color: #166534; }
+        .record-progress { background: #fef3c7; color: #92400e; }
+        .record-empty { background: #fee2e2; color: #b91c1c; }
+
+        .completion-wrap {
+            margin-top: 12px;
+        }
+
+        .completion-head {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 8px;
+            font-size: 12px;
+            color: #4b5563;
+            font-weight: 800;
+        }
+
+        .completion-bar {
+            height: 12px;
+            background: #e8f1ef;
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        .completion-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #0f766e 0%, #2f7f74 100%);
+            border-radius: 999px;
+        }
+
+        .action-stack {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 14px;
+        }
+
+        .record-link,
+        .report-link,
+        .print-link {
+            display: inline-flex;
+            align-items: center;
+            text-decoration: none;
+            padding: 9px 12px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 900;
+            white-space: nowrap;
+        }
+
+        .record-link {
+            background: #0f766e;
+            color: #ffffff;
+            border: 1px solid #0f766e;
+        }
+
+        .report-link {
+            background: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #cfe0ff;
+        }
+
+        .print-link {
+            background: #ffffff;
+            color: #0f766e;
+            border: 1px solid #d7ebe6;
+        }
+
+        .empty-state {
+            background: #f8fafc;
+            border: 1px dashed #cbd5e1;
+            border-radius: 18px;
+            padding: 28px;
+            color: #64748b;
+            text-align: center;
             line-height: 1.7;
         }
 
@@ -244,7 +411,7 @@
         table {
             width: 100%;
             border-collapse: collapse;
-            min-width: 1280px;
+            min-width: 1080px;
         }
 
         th {
@@ -252,8 +419,10 @@
             color: #0f766e;
             text-align: left;
             padding: 16px;
-            font-size: 14px;
+            font-size: 13px;
             border-bottom: 1px solid #e5efec;
+            text-transform: uppercase;
+            letter-spacing: .03em;
         }
 
         td {
@@ -264,282 +433,280 @@
             vertical-align: top;
         }
 
-        tr:hover td {
-            background: #fafefd;
-        }
-
-        .patient-name {
-            font-weight: 800;
-            font-size: 15px;
-            color: #111827;
-        }
-
-        .patient-sub {
-            margin-top: 4px;
-            font-size: 12px;
-            color: #94a3b8;
-        }
-
-        .date-main {
-            font-weight: 800;
-            color: #111827;
-        }
+        tr:hover td { background: #fafefd; }
 
         .notes-box {
-            max-width: 240px;
+            max-width: 260px;
             line-height: 1.7;
             color: #4b5563;
         }
 
-        .status-pill {
-            display: inline-block;
-            padding: 8px 12px;
-            border-radius: 999px;
-            font-size: 13px;
-            font-weight: 700;
-            white-space: nowrap;
-            text-transform: capitalize;
-        }
-
-        .status-scheduled { background: #dbeafe; color: #1d4ed8; }
-        .status-in_progress { background: #fef3c7; color: #92400e; }
-        .status-completed { background: #dcfce7; color: #166534; }
-        .status-cancelled { background: #fee2e2; color: #b91c1c; }
-
-        .action-stack {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-
-        .record-link,
-        .report-link {
-            display: inline-block;
-            text-decoration: none;
-            padding: 8px 12px;
-            border-radius: 10px;
-            font-size: 13px;
-            font-weight: 700;
-            white-space: nowrap;
-        }
-
-        .record-link {
-            background: #f0fdfa;
-            color: #0f766e;
-            border: 1px solid #cfe8e2;
-        }
-
-        .report-link {
-            background: #eff6ff;
-            color: #1d4ed8;
-            border: 1px solid #cfe0ff;
-        }
-
-        .empty-state {
-            background: #f8fafc;
-            border: 1px dashed #cbd5e1;
-            border-radius: 16px;
-            padding: 28px;
-            color: #64748b;
-            text-align: center;
-            line-height: 1.7;
-        }
-
         @media (max-width: 1180px) {
-            .hero {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        @media (max-width: 980px) {
-            .stats-grid {
-                grid-template-columns: 1fr 1fr;
-            }
+            .hero,
+            .grid-2 { grid-template-columns: 1fr; }
+            .stats-grid { grid-template-columns: repeat(3, 1fr); }
         }
 
         @media (max-width: 768px) {
-            .page {
-                padding: 16px 14px 32px;
-            }
-
-            .topbar {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-
-            .hero-title {
-                font-size: 30px;
-            }
-
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .hero-main,
-            .hero-side,
-            .section-card,
-            .stat-card {
-                padding: 20px;
-                border-radius: 22px;
-            }
-
-            .brand {
-                font-size: 24px;
-            }
+            .page { padding: 16px 14px 32px; }
+            .topbar { flex-direction: column; align-items: flex-start; }
+            .hero-title { font-size: 30px; }
+            .stats-grid { grid-template-columns: 1fr; }
+            .hero-main, .hero-side, .section-card, .stat-card { padding: 20px; border-radius: 22px; }
+            .brand { font-size: 24px; }
         }
     </style>
 </head>
 <body>
-    <div class="page">
-        <div class="container">
-            <div class="topbar">
-                <div class="brand">Khayra Therapist Dashboard</div>
+@php
+    $latestVisit = $visits->first();
+@endphp
 
-                <div class="topbar-actions">
-                    <a href="/" class="ghost-link">Home</a>
-                    <form method="POST" action="/therapist/logout" style="margin:0;">
-                        @csrf
-                        <button type="submit" class="logout-btn">Logout</button>
-                    </form>
+<div class="page">
+    <div class="container">
+        <div class="topbar">
+            <div class="brand">Khayra Therapist Dashboard</div>
+
+            <div class="topbar-actions">
+                <a href="/" class="ghost-link">Home</a>
+                <form method="POST" action="/therapist/logout" style="margin:0;">
+                    @csrf
+                    <button type="submit" class="logout-btn">Logout</button>
+                </form>
+            </div>
+        </div>
+
+        <section class="hero">
+            <div class="hero-main">
+                <div class="hero-badge">Therapist Workspace</div>
+                <h1 class="hero-title">Halo, {{ session('therapist_name') }}. Fokus hari ini: visit, rekam medis, dan progress pasien.</h1>
+                <p class="hero-text">
+                    Dashboard ini membantu therapist melihat visit yang perlu ditangani, rekam medis yang belum lengkap,
+                    serta akses cepat ke clinical report dan print PDF.
+                </p>
+
+                <div class="hero-tags">
+                    <span class="hero-tag">{{ $totalVisits }} total visits</span>
+                    <span class="hero-tag">{{ $todayVisits->count() }} visit today</span>
+                    <span class="hero-tag">{{ $needCompletionVisits->count() }} need completion</span>
+                    <span class="hero-tag">{{ $completedRecordVisits }} complete records</span>
                 </div>
             </div>
 
-            @php
-                $latestVisit = $visits->first();
-            @endphp
+            <div class="hero-side">
+                <h2 class="side-title">Ringkasan Terkini</h2>
+                <p class="side-subtitle">Informasi singkat therapist berdasarkan data visit terbaru.</p>
 
-            <section class="hero">
-                <div class="hero-main">
-                    <div class="hero-badge">Therapist Overview</div>
-                    <h1 class="hero-title">Halo, {{ session('therapist_name') }}. Dashboard visit Anda siap dipakai.</h1>
-                    <p class="hero-text">
-                        Gunakan halaman ini untuk memantau visit yang menjadi tanggung jawab Anda,
-                        membuka medical record, dan melihat progress visit harian dengan lebih cepat.
-                    </p>
+                <div class="mini-grid">
+                    <div class="mini-box">
+                        <div class="mini-label">Therapist</div>
+                        <div class="mini-value">{{ session('therapist_name') }}</div>
+                    </div>
 
-                    <div class="hero-tags">
-                        <span class="hero-tag">{{ $totalVisits }} total visits</span>
-                        <span class="hero-tag">{{ $scheduledVisits }} scheduled</span>
-                        <span class="hero-tag">{{ $inProgressVisits }} in progress</span>
-                        <span class="hero-tag">{{ $completedVisits }} completed</span>
+                    <div class="mini-box">
+                        <div class="mini-label">Latest Visit</div>
+                        <div class="mini-value">{{ $latestVisit ? $latestVisit->visit_date : '-' }}</div>
+                    </div>
+
+                    <div class="mini-box">
+                        <div class="mini-label">Latest Patient</div>
+                        <div class="mini-value">{{ $latestVisit && $latestVisit->patient ? $latestVisit->patient->full_name : '-' }}</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Total Visits</div>
+                <div class="stat-value">{{ $totalVisits }}</div>
+                <div class="stat-sub">Semua visit yang menjadi tanggung jawab therapist ini.</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">Visit Today</div>
+                <div class="stat-value">{{ $todayVisits->count() }}</div>
+                <div class="stat-sub">Visit yang dijadwalkan hari ini.</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">Need Completion</div>
+                <div class="stat-value">{{ $needCompletionVisits->count() }}</div>
+                <div class="stat-sub">Rekam medis belum mencapai 90% kelengkapan.</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">Completed Visits</div>
+                <div class="stat-value">{{ $completedVisits }}</div>
+                <div class="stat-sub">Visit dengan status completed.</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">Complete Records</div>
+                <div class="stat-value">{{ $completedRecordVisits }}</div>
+                <div class="stat-sub">Rekam medis utama sudah lengkap.</div>
+            </div>
+        </section>
+
+        <div class="grid-2">
+            <section class="section-card">
+                <div class="section-head">
+                    <div>
+                        <h2 class="section-title">Today Visits</h2>
+                        <p class="section-subtitle">Visit hari ini untuk therapist ini.</p>
                     </div>
                 </div>
 
-                <div class="hero-side">
-                    <h2 class="side-title">Ringkasan Terkini</h2>
-                    <p class="side-subtitle">Informasi singkat therapist berdasarkan data visit terbaru.</p>
+                <div class="visit-card-grid">
+                    @forelse($todayVisits as $visit)
+                        <div class="visit-card">
+                            <div class="visit-top">
+                                <div>
+                                    <div class="patient-name">{{ optional($visit->patient)->full_name ?: '-' }}</div>
+                                    <div class="patient-sub">Visit #{{ $visit->id }} · {{ $visit->visit_date ?: '-' }}</div>
+                                </div>
+                                <span class="status-pill status-{{ $visit->status }}">{{ str_replace('_', ' ', $visit->status ?: '-') }}</span>
+                            </div>
 
-                    <div class="mini-grid">
-                        <div class="mini-box">
-                            <div class="mini-label">Therapist</div>
-                            <div class="mini-value">{{ session('therapist_name') }}</div>
+                            <div class="completion-wrap">
+                                <div class="completion-head">
+                                    <span>Record completeness</span>
+                                    <span>{{ $visit->record_completion }}%</span>
+                                </div>
+                                <div class="completion-bar">
+                                    <div class="completion-fill" style="width: {{ $visit->record_completion }}%;"></div>
+                                </div>
+                            </div>
+
+                            <div class="action-stack">
+                                <a href="/therapist/visits/{{ $visit->id }}/medical-record" class="record-link">Medical Record</a>
+                                <a href="/therapist/visits/{{ $visit->id }}/report" class="report-link">Report</a>
+                                <a href="/therapist/visits/{{ $visit->id }}/report/print" target="_blank" class="print-link">Print</a>
+                            </div>
                         </div>
-
-                        <div class="mini-box">
-                            <div class="mini-label">Latest Visit</div>
-                            <div class="mini-value">{{ $latestVisit ? $latestVisit->visit_date : '-' }}</div>
-                        </div>
-
-                        <div class="mini-box">
-                            <div class="mini-label">Latest Patient</div>
-                            <div class="mini-value">{{ $latestVisit && $latestVisit->patient ? $latestVisit->patient->full_name : '-' }}</div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <section class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-label">Total Visits</div>
-                    <div class="stat-value">{{ $totalVisits }}</div>
-                    <div class="stat-sub">Semua visit yang menjadi tanggung jawab therapist ini.</div>
-                </div>
-
-                <div class="stat-card">
-                    <div class="stat-label">Scheduled</div>
-                    <div class="stat-value">{{ $scheduledVisits }}</div>
-                    <div class="stat-sub">Visit yang sudah dijadwalkan.</div>
-                </div>
-
-                <div class="stat-card">
-                    <div class="stat-label">In Progress</div>
-                    <div class="stat-value">{{ $inProgressVisits }}</div>
-                    <div class="stat-sub">Visit yang sedang berjalan.</div>
-                </div>
-
-                <div class="stat-card">
-                    <div class="stat-label">Completed</div>
-                    <div class="stat-value">{{ $completedVisits }}</div>
-                    <div class="stat-sub">Visit yang sudah selesai.</div>
+                    @empty
+                        <div class="empty-state">Belum ada visit untuk hari ini.</div>
+                    @endforelse
                 </div>
             </section>
 
             <section class="section-card">
-                <h2 class="section-title">My Visit List</h2>
-                <p class="section-subtitle">
-                    Buka medical record atau report dari tabel di bawah untuk melihat atau mengisi dokumentasi terapi.
-                </p>
-
-                @if($visits->count() > 0)
-                    <div class="table-wrap">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Patient</th>
-                                    <th>Visit Date</th>
-                                    <th>Status</th>
-                                    <th>Notes</th>
-                                    <th>Medical Record</th>
-                                    <th>Report</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($visits as $visit)
-                                    <tr>
-                                        <td>
-                                            <div class="patient-name">{{ $visit->patient->full_name ?? '-' }}</div>
-                                            <div class="patient-sub">Visit ID #{{ $visit->id }}</div>
-                                        </td>
-
-                                        <td>
-                                            <div class="date-main">{{ $visit->visit_date ?: '-' }}</div>
-                                        </td>
-
-                                        <td>
-                                            <span class="status-pill status-{{ $visit->status }}">
-                                                {{ str_replace('_', ' ', $visit->status) }}
-                                            </span>
-                                        </td>
-
-                                        <td>
-                                            <div class="notes-box">{{ $visit->notes ?: '-' }}</div>
-                                        </td>
-
-                                        <td>
-                                            <div class="action-stack">
-                                                <a href="/therapist/visits/{{ $visit->id }}/medical-record" class="record-link">
-                                                    {{ $visit->medicalRecord ? 'View / Edit Record' : 'Add Record' }}
-                                                </a>
-                                            </div>
-                                        </td>
-
-                                        <td>
-                                            <div class="action-stack">
-                                                <a href="/therapist/visits/{{ $visit->id }}/report" class="report-link">Open Report</a>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
+                <div class="section-head">
+                    <div>
+                        <h2 class="section-title">Need Record Completion</h2>
+                        <p class="section-subtitle">Visit yang rekam medisnya masih perlu dilengkapi.</p>
                     </div>
-                @else
-                    <div class="empty-state">
-                        Belum ada visit yang di-assign ke Anda. Nanti visit akan muncul di dashboard ini setelah admin melakukan assignment.
-                    </div>
-                @endif
+                </div>
+
+                <div class="visit-card-grid">
+                    @forelse($needCompletionVisits as $visit)
+                        <div class="visit-card">
+                            <div class="visit-top">
+                                <div>
+                                    <div class="patient-name">{{ optional($visit->patient)->full_name ?: '-' }}</div>
+                                    <div class="patient-sub">Visit #{{ $visit->id }} · {{ $visit->visit_date ?: '-' }}</div>
+                                </div>
+
+                                @if($visit->record_completion >= 90)
+                                    <span class="status-pill record-complete">Complete</span>
+                                @elseif($visit->record_completion > 0)
+                                    <span class="status-pill record-progress">In Progress</span>
+                                @else
+                                    <span class="status-pill record-empty">Not Started</span>
+                                @endif
+                            </div>
+
+                            <div class="completion-wrap">
+                                <div class="completion-head">
+                                    <span>{{ $visit->record_completed_fields }} / {{ $visit->record_total_fields }} clinical fields</span>
+                                    <span>{{ $visit->record_completion }}%</span>
+                                </div>
+                                <div class="completion-bar">
+                                    <div class="completion-fill" style="width: {{ $visit->record_completion }}%;"></div>
+                                </div>
+                            </div>
+
+                            <div class="action-stack">
+                                <a href="/therapist/visits/{{ $visit->id }}/medical-record" class="record-link">Continue Record</a>
+                                <a href="/therapist/visits/{{ $visit->id }}/report" class="report-link">Preview Report</a>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="empty-state">Semua rekam medis utama sudah terlihat lengkap.</div>
+                    @endforelse
+                </div>
             </section>
         </div>
+
+        <section class="section-card">
+            <div class="section-head">
+                <div>
+                    <h2 class="section-title">All Assigned Visits</h2>
+                    <p class="section-subtitle">Daftar lengkap visit yang menjadi tanggung jawab therapist ini.</p>
+                </div>
+            </div>
+
+            @if($visits->count() > 0)
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Patient</th>
+                                <th>Visit Date</th>
+                                <th>Visit Status</th>
+                                <th>Record</th>
+                                <th>Notes</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($visits as $visit)
+                                <tr>
+                                    <td>
+                                        <div class="patient-name">{{ optional($visit->patient)->full_name ?: '-' }}</div>
+                                        <div class="patient-sub">Visit ID #{{ $visit->id }}</div>
+                                    </td>
+
+                                    <td>{{ $visit->visit_date ?: '-' }}</td>
+
+                                    <td>
+                                        <span class="status-pill status-{{ $visit->status }}">
+                                            {{ str_replace('_', ' ', $visit->status ?: '-') }}
+                                        </span>
+                                    </td>
+
+                                    <td>
+                                        <div style="font-weight:900;color:#0f766e;">{{ $visit->record_completion }}%</div>
+                                        <div class="completion-wrap">
+                                            <div class="completion-bar">
+                                                <div class="completion-fill" style="width: {{ $visit->record_completion }}%;"></div>
+                                            </div>
+                                        </div>
+                                    </td>
+
+                                    <td>
+                                        <div class="notes-box">{{ $visit->notes ?: '-' }}</div>
+                                    </td>
+
+                                    <td>
+                                        <div class="action-stack">
+                                            <a href="/therapist/visits/{{ $visit->id }}/medical-record" class="record-link">Medical Record</a>
+                                            <a href="/therapist/visits/{{ $visit->id }}/report" class="report-link">Report</a>
+                                            <a href="/therapist/visits/{{ $visit->id }}/report/print" target="_blank" class="print-link">Print</a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @else
+                <div class="empty-state">
+                    Belum ada visit yang ditugaskan kepada therapist ini.
+                </div>
+            @endif
+        </section>
     </div>
+</div>
 </body>
 </html>

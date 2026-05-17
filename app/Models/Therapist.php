@@ -33,4 +33,9 @@ class Therapist extends Model
     {
         return $this->hasMany(MedicalRecord::class, 'updated_by_therapist_id');
     }
+
+    public function availabilities()
+    {
+        return $this->hasMany(TherapistAvailability::class);
+    }
 }
