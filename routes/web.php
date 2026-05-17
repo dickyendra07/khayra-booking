@@ -51,6 +51,58 @@ Route::get('/admin', function () {
     return redirect('/admin/login');
 });
 
+
+/*
+|--------------------------------------------------------------------------
+| Admin Authentication
+|--------------------------------------------------------------------------
+*/
+
+Route::get('/admin/login', function () {
+    if (session('admin_logged_in')) {
+        return redirect('/admin/dashboard');
+    }
+
+    return view('admin-login');
+});
+
+Route::post('/admin/login', function (Request $request) {
+    $request->validate([
+        'email' => 'required|string',
+        'password' => 'required|string',
+    ]);
+
+    $adminEmail = env('ADMIN_EMAIL', 'admin@khayraphysio.com');
+    $adminPassword = env('ADMIN_PASSWORD', 'password');
+
+    if ($request->email !== $adminEmail || $request->password !== $adminPassword) {
+        return back()
+            ->withInput()
+            ->withErrors(['email' => 'Email atau password admin salah.']);
+    }
+
+    session([
+        'admin_logged_in' => true,
+        'admin_email' => $request->email,
+    ]);
+
+    return redirect('/admin/dashboard');
+});
+
+Route::post('/admin/logout', function () {
+    session()->forget([
+        'admin_logged_in',
+        'admin_email',
+    ]);
+
+    return redirect('/admin/login')->with('success', 'Anda berhasil logout.');
+});
+
+Route::get('/admin', function () {
+    return redirect('/admin/dashboard');
+});
+
+
 Route::get('/admin/dashboard', function () {
     if (!session('admin_logged_in')) {
         return redirect('/admin/login');
