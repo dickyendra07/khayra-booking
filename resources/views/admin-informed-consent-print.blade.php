@@ -543,6 +543,26 @@
             </div>
 
             <div class="section-box full">
+                <div class="section-head">Emergency Contact</div>
+                <div class="section-body">
+                    <div class="field-grid">
+                        <div class="field">
+                            <div class="field-label">Nama Kontak Darurat</div>
+                            <div class="field-value">{{ $consent->emergency_contact_name ?: '-' }}</div>
+                        </div>
+                        <div class="field">
+                            <div class="field-label">Nomor Kontak Darurat</div>
+                            <div class="field-value">{{ $consent->emergency_contact_phone ?: '-' }}</div>
+                        </div>
+                        <div class="field full">
+                            <div class="field-label">Hubungan</div>
+                            <div class="field-value">{{ $consent->emergency_contact_relation ?: '-' }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-box full">
                 <div class="section-head">Pernyataan Persetujuan</div>
                 <div class="section-body">
                     <div class="agreement-text">{{ $consent->agreement_text ?: '-' }}</div>

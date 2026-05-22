@@ -707,7 +707,493 @@
                 </div>
             </section>
         </div>
-    </main>
+            <section class="section-card">
+                <div class="section-header" style="align-items: flex-start;">
+                    <div>
+                        <h2 class="section-title">Appointment Arrival Reminder</h2>
+                        <p class="section-subtitle">
+                            Reminder kedatangan untuk booking hari ini dan besok. Admin bisa langsung kirim WhatsApp pengingat jadwal terapi.
+                        </p>
+                    </div>
+
+                    <div style="
+                        padding: 10px 14px;
+                        border-radius: 999px;
+                        background: #eef7f5;
+                        color: #2f7c7a;
+                        font-size: 12px;
+                        font-weight: 900;
+                        white-space: nowrap;
+                    ">
+                        {{ ($arrivalReminderBookings ?? collect())->count() }} Reminder
+                    </div>
+                </div>
+
+                @if(($arrivalReminderBookings ?? collect())->count())
+                    <div style="
+                        display: grid;
+                        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                        gap: 14px;
+                        margin-top: 18px;
+                    ">
+                        @foreach($arrivalReminderBookings as $booking)
+                            @php
+                                $patient = $booking->patient;
+                                $rawWa = $patient->whatsapp ?? $booking->whatsapp ?? null;
+                                $waNumber = $rawWa ? preg_replace('/[^0-9]/', '', $rawWa) : null;
+
+                                if ($waNumber && str_starts_with($waNumber, '0')) {
+                                    $waNumber = '62' . substr($waNumber, 1);
+                                } elseif ($waNumber && str_starts_with($waNumber, '8')) {
+                                    $waNumber = '62' . $waNumber;
+                                }
+
+                                $bookingDateLabel = \Carbon\Carbon::parse($booking->booking_date)->isToday()
+                                    ? 'Hari ini'
+                                    : (\Carbon\Carbon::parse($booking->booking_date)->isTomorrow() ? 'Besok' : \Carbon\Carbon::parse($booking->booking_date)->format('d M Y'));
+
+                                $bookingTimeLabel = $booking->booking_time ? \Carbon\Carbon::parse($booking->booking_time)->format('H:i') : '-';
+                                $patientName = $patient->full_name ?? $booking->full_name ?? 'Patient';
+                                $serviceName = $booking->service ?? $booking->service_name ?? 'Fisioterapi';
+                                $statusLabel = ucfirst(str_replace('_', ' ', $booking->status ?? '-'));
+                                $waMessage = 'Halo Kak ' . $patientName . ', Khayra Physio ingin mengingatkan jadwal terapi ' . strtolower($bookingDateLabel) . ' pukul ' . $bookingTimeLabel . '. Mohon hadir tepat waktu ya. Jika ada perubahan jadwal, silakan hubungi admin. Terima kasih.';
+                            @endphp
+
+                            <div style="
+                                border: 1px solid #edf1f0;
+                                border-radius: 20px;
+                                background: linear-gradient(145deg, #ffffff 0%, #f7fbfa 100%);
+                                padding: 18px;
+                                box-shadow: 0 10px 22px rgba(15, 23, 42, 0.035);
+                            ">
+                                <div style="
+                                    display: flex;
+                                    justify-content: space-between;
+                                    align-items: flex-start;
+                                    gap: 12px;
+                                    margin-bottom: 14px;
+                                ">
+                                    <div>
+                                        <div style="
+                                            font-size: 18px;
+                                            line-height: 1.3;
+                                            color: #22343a;
+                                            font-weight: 900;
+                                        ">
+                                            {{ $patientName }}
+                                        </div>
+                                        <div style="
+                                            margin-top: 5px;
+                                            font-size: 12px;
+                                            color: #7b8794;
+                                            font-weight: 700;
+                                        ">
+                                            {{ $serviceName }}
+                                        </div>
+                                    </div>
+
+                                    <div style="
+                                        padding: 8px 11px;
+                                        border-radius: 999px;
+                                        background: {{ \Carbon\Carbon::parse($booking->booking_date)->isToday() ? '#dcfce7' : '#e0f2fe' }};
+                                        color: {{ \Carbon\Carbon::parse($booking->booking_date)->isToday() ? '#15803d' : '#0369a1' }};
+                                        font-size: 11px;
+                                        font-weight: 900;
+                                        white-space: nowrap;
+                                    ">
+                                        {{ $bookingDateLabel }}
+                                    </div>
+                                </div>
+
+                                <div style="
+                                    display: grid;
+                                    grid-template-columns: 1fr 1fr;
+                                    gap: 10px;
+                                    margin-top: 12px;
+                                ">
+                                    <div style="border: 1px solid #f1f5f9; border-radius: 14px; padding: 12px; background: #ffffff;">
+                                        <div style="font-size: 10px; letter-spacing: .45px; text-transform: uppercase; color: #94a3b8; font-weight: 900;">Jam</div>
+                                        <div style="margin-top: 5px; font-size: 15px; color: #22343a; font-weight: 900;">
+                                            {{ $bookingTimeLabel }}
+                                        </div>
+                                    </div>
+
+                                    <div style="border: 1px solid #f1f5f9; border-radius: 14px; padding: 12px; background: #ffffff;">
+                                        <div style="font-size: 10px; letter-spacing: .45px; text-transform: uppercase; color: #94a3b8; font-weight: 900;">Status</div>
+                                        <div style="margin-top: 5px; font-size: 15px; color: #22343a; font-weight: 900;">
+                                            {{ $statusLabel }}
+                                        </div>
+                                    </div>
+
+                                    <div style="border: 1px solid #f1f5f9; border-radius: 14px; padding: 12px; background: #ffffff;">
+                                        <div style="font-size: 10px; letter-spacing: .45px; text-transform: uppercase; color: #94a3b8; font-weight: 900;">WhatsApp</div>
+                                        <div style="margin-top: 5px; font-size: 13px; color: #22343a; font-weight: 900;">
+                                            {{ $rawWa ?: '-' }}
+                                        </div>
+                                    </div>
+
+                                    <div style="border: 1px solid #f1f5f9; border-radius: 14px; padding: 12px; background: #ffffff;">
+                                        <div style="font-size: 10px; letter-spacing: .45px; text-transform: uppercase; color: #94a3b8; font-weight: 900;">Booking ID</div>
+                                        <div style="margin-top: 5px; font-size: 13px; color: #22343a; font-weight: 900;">
+                                            #{{ $booking->id }}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div style="
+                                    display: flex;
+                                    justify-content: flex-end;
+                                    gap: 8px;
+                                    margin-top: 14px;
+                                    flex-wrap: wrap;
+                                ">
+                                    <a href="/admin/bookings/{{ $booking->id }}" style="
+                                        display: inline-flex;
+                                        align-items: center;
+                                        text-decoration: none;
+                                        padding: 10px 12px;
+                                        border-radius: 12px;
+                                        background: #eef7f5;
+                                        border: 1px solid #d8ebe7;
+                                        color: #2f7c7a;
+                                        font-size: 12px;
+                                        font-weight: 900;
+                                    ">Detail Booking</a>
+
+                                    @if($waNumber)
+                                        <a href="https://wa.me/{{ $waNumber }}?text={{ urlencode($waMessage) }}" target="_blank" style="
+                                            display: inline-flex;
+                                            align-items: center;
+                                            text-decoration: none;
+                                            padding: 10px 12px;
+                                            border-radius: 12px;
+                                            background: #2f7c7a;
+                                            border: 1px solid #2f7c7a;
+                                            color: #ffffff;
+                                            font-size: 12px;
+                                            font-weight: 900;
+                                        ">Kirim Reminder WA</a>
+                                    @endif
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="empty-state">Tidak ada booking hari ini atau besok yang perlu reminder.</div>
+                @endif
+            </section>
+
+            <section class="section-card">
+                <div class="section-header" style="align-items: flex-start;">
+                    <div>
+                        <h2 class="section-title">Birthday Promo Reminder</h2>
+                        <p class="section-subtitle">
+                            Pasien yang ulang tahun dalam 30 hari ke depan. Bisa dipakai untuk follow-up WhatsApp dan promo khusus ulang tahun.
+                        </p>
+                    </div>
+
+                    <div style="
+                        padding: 10px 14px;
+                        border-radius: 999px;
+                        background: #fff7ed;
+                        color: #c2410c;
+                        font-size: 12px;
+                        font-weight: 900;
+                        white-space: nowrap;
+                    ">
+                        {{ ($upcomingBirthdayPatients ?? collect())->count() }} Upcoming
+                    </div>
+                </div>
+
+                @if(($upcomingBirthdayPatients ?? collect())->count())
+                    <div style="
+                        display: grid;
+                        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+                        gap: 14px;
+                        margin-top: 18px;
+                    ">
+                        @foreach($upcomingBirthdayPatients as $patient)
+                            @php
+                                $daysLeft = (int) ($patient->birthday_days_left ?? 0);
+                                $badgeText = $daysLeft === 0 ? 'Hari ini' : $daysLeft . ' hari lagi';
+                            @endphp
+
+                            <div style="
+                                border: 1px solid #edf1f0;
+                                border-radius: 20px;
+                                background: linear-gradient(145deg, #ffffff 0%, #fffaf5 100%);
+                                padding: 18px;
+                                box-shadow: 0 10px 22px rgba(15, 23, 42, 0.035);
+                            ">
+                                <div style="
+                                    display: flex;
+                                    align-items: flex-start;
+                                    justify-content: space-between;
+                                    gap: 12px;
+                                    margin-bottom: 14px;
+                                ">
+                                    <div>
+                                        <div style="
+                                            font-size: 18px;
+                                            line-height: 1.3;
+                                            color: #22343a;
+                                            font-weight: 900;
+                                        ">
+                                            {{ $patient->full_name }}
+                                        </div>
+                                        <div style="
+                                            margin-top: 5px;
+                                            font-size: 12px;
+                                            color: #7b8794;
+                                            font-weight: 700;
+                                        ">
+                                            MR: {{ $patient->medical_record_number ?: '-' }}
+                                        </div>
+                                    </div>
+
+                                    <div style="
+                                        padding: 8px 11px;
+                                        border-radius: 999px;
+                                        background: {{ $daysLeft === 0 ? '#dcfce7' : '#ffedd5' }};
+                                        color: {{ $daysLeft === 0 ? '#15803d' : '#c2410c' }};
+                                        font-size: 11px;
+                                        font-weight: 900;
+                                        white-space: nowrap;
+                                    ">
+                                        {{ $badgeText }}
+                                    </div>
+                                </div>
+
+                                <div style="
+                                    display: grid;
+                                    grid-template-columns: 1fr 1fr;
+                                    gap: 10px;
+                                    margin-top: 12px;
+                                ">
+                                    <div style="border: 1px solid #f1f5f9; border-radius: 14px; padding: 12px; background: #ffffff;">
+                                        <div style="font-size: 10px; letter-spacing: .45px; text-transform: uppercase; color: #94a3b8; font-weight: 900;">Tanggal Lahir</div>
+                                        <div style="margin-top: 5px; font-size: 13px; color: #22343a; font-weight: 900;">
+                                            {{ optional($patient->birth_date)->format('Y-m-d') ?: '-' }}
+                                        </div>
+                                    </div>
+
+                                    <div style="border: 1px solid #f1f5f9; border-radius: 14px; padding: 12px; background: #ffffff;">
+                                        <div style="font-size: 10px; letter-spacing: .45px; text-transform: uppercase; color: #94a3b8; font-weight: 900;">Usia Baru</div>
+                                        <div style="margin-top: 5px; font-size: 13px; color: #22343a; font-weight: 900;">
+                                            {{ $patient->birthday_age ?? '-' }} tahun
+                                        </div>
+                                    </div>
+
+                                    <div style="border: 1px solid #f1f5f9; border-radius: 14px; padding: 12px; background: #ffffff;">
+                                        <div style="font-size: 10px; letter-spacing: .45px; text-transform: uppercase; color: #94a3b8; font-weight: 900;">WhatsApp</div>
+                                        <div style="margin-top: 5px; font-size: 13px; color: #22343a; font-weight: 900;">
+                                            {{ $patient->whatsapp ?: '-' }}
+                                        </div>
+                                    </div>
+
+                                    <div style="border: 1px solid #f1f5f9; border-radius: 14px; padding: 12px; background: #ffffff;">
+                                        <div style="font-size: 10px; letter-spacing: .45px; text-transform: uppercase; color: #94a3b8; font-weight: 900;">Source</div>
+                                        <div style="margin-top: 5px; font-size: 13px; color: #22343a; font-weight: 900;">
+                                            {{ $patient->referral_source ?: '-' }}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div style="
+                                    display: flex;
+                                    justify-content: flex-end;
+                                    gap: 8px;
+                                    margin-top: 14px;
+                                    flex-wrap: wrap;
+                                ">
+                                    <a href="/admin/patients/{{ $patient->id }}" style="
+                                        display: inline-flex;
+                                        align-items: center;
+                                        text-decoration: none;
+                                        padding: 10px 12px;
+                                        border-radius: 12px;
+                                        background: #eef7f5;
+                                        border: 1px solid #d8ebe7;
+                                        color: #2f7c7a;
+                                        font-size: 12px;
+                                        font-weight: 900;
+                                    ">Detail Patient</a>
+
+                                    @if($patient->whatsapp)
+                                        @php
+                                            $waNumber = preg_replace('/[^0-9]/', '', $patient->whatsapp);
+
+                                            if (str_starts_with($waNumber, '0')) {
+                                                $waNumber = '62' . substr($waNumber, 1);
+                                            } elseif (str_starts_with($waNumber, '8')) {
+                                                $waNumber = '62' . $waNumber;
+                                            }
+                                        @endphp
+
+                                        <a href="https://wa.me/{{ $waNumber }}?text={{ urlencode('Halo ' . $patient->full_name . ', Khayra Physio ingin mengucapkan selamat ulang tahun. Ada promo khusus ulang tahun untuk Anda. Silakan hubungi admin untuk info lebih lanjut ya.') }}" target="_blank" style="
+                                            display: inline-flex;
+                                            align-items: center;
+                                            text-decoration: none;
+                                            padding: 10px 12px;
+                                            border-radius: 12px;
+                                            background: #2f7c7a;
+                                            border: 1px solid #2f7c7a;
+                                            color: #ffffff;
+                                            font-size: 12px;
+                                            font-weight: 900;
+                                        ">Kirim Promo WA</a>
+                                    @endif
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="empty-state">Tidak ada pasien yang ulang tahun dalam 30 hari ke depan.</div>
+                @endif
+            </section>
+
+            <section class="section-card">
+                <div class="section-header" style="align-items: flex-start;">
+                    <div>
+                        <h2 class="section-title">Marketing Source Analytics</h2>
+                        <p class="section-subtitle">
+                            Ringkasan channel pasien mengetahui Khayra. Data ini membantu owner melihat channel marketing yang paling efektif.
+                        </p>
+                    </div>
+
+                    <div style="
+                        padding: 10px 14px;
+                        border-radius: 999px;
+                        background: #eef7f5;
+                        color: #2f7c7a;
+                        font-size: 12px;
+                        font-weight: 800;
+                        white-space: nowrap;
+                    ">
+                        {{ ($patientSourceTotal ?? 0) }} Total Patient
+                    </div>
+                </div>
+
+                @if(($patientSourceStats ?? collect())->count())
+                    <div style="
+                        display: grid;
+                        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+                        gap: 14px;
+                        margin-top: 18px;
+                    ">
+                        @foreach($patientSourceStats as $source)
+                            @php
+                                $percent = ($patientSourceTotal ?? 0) > 0 ? round(($source->total / $patientSourceTotal) * 100, 1) : 0;
+                                $isEmptySource = $source->source === 'Belum diisi';
+                            @endphp
+
+                            <div style="
+                                border: 1px solid #edf1f0;
+                                border-radius: 20px;
+                                background: {{ $isEmptySource ? '#fbfcfc' : 'linear-gradient(145deg, #ffffff 0%, #f7fbfa 100%)' }};
+                                padding: 18px;
+                                box-shadow: 0 10px 22px rgba(15, 23, 42, 0.035);
+                            ">
+                                <div style="
+                                    display: flex;
+                                    align-items: flex-start;
+                                    justify-content: space-between;
+                                    gap: 12px;
+                                    margin-bottom: 16px;
+                                ">
+                                    <div>
+                                        <div style="
+                                            font-size: 11px;
+                                            letter-spacing: .55px;
+                                            text-transform: uppercase;
+                                            color: #7b8794;
+                                            font-weight: 800;
+                                            margin-bottom: 7px;
+                                        ">
+                                            Sumber Informasi
+                                        </div>
+
+                                        <div style="
+                                            font-size: 20px;
+                                            line-height: 1.25;
+                                            color: #22343a;
+                                            font-weight: 900;
+                                        ">
+                                            {{ $source->source }}
+                                        </div>
+                                    </div>
+
+                                    <div style="
+                                        min-width: 54px;
+                                        height: 54px;
+                                        border-radius: 18px;
+                                        display: flex;
+                                        align-items: center;
+                                        justify-content: center;
+                                        background: {{ $isEmptySource ? '#f1f5f9' : '#e8f6f2' }};
+                                        color: {{ $isEmptySource ? '#64748b' : '#20766f' }};
+                                        font-size: 24px;
+                                        font-weight: 900;
+                                    ">
+                                        {{ $source->total }}
+                                    </div>
+                                </div>
+
+                                <div style="
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: space-between;
+                                    gap: 12px;
+                                    margin-bottom: 8px;
+                                ">
+                                    <span style="font-size: 12px; color: #64748b; font-weight: 800;">Persentase</span>
+                                    <span style="font-size: 13px; color: #22343a; font-weight: 900;">{{ $percent }}%</span>
+                                </div>
+
+                                <div style="
+                                    height: 10px;
+                                    background: #edf5f3;
+                                    border-radius: 999px;
+                                    overflow: hidden;
+                                ">
+                                    <div style="
+                                        height: 100%;
+                                        width: {{ $percent }}%;
+                                        background: {{ $isEmptySource ? '#94a3b8' : 'linear-gradient(135deg, #3f8f8c, #286d70)' }};
+                                        border-radius: 999px;
+                                    "></div>
+                                </div>
+
+                                <div style="
+                                    margin-top: 12px;
+                                    font-size: 12px;
+                                    line-height: 1.6;
+                                    color: #7b8794;
+                                ">
+                                    {{ $isEmptySource ? 'Data source belum diisi di biodata patient.' : 'Channel akuisisi patient yang sudah tercatat.' }}
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+
+                    <div style="
+                        margin-top: 16px;
+                        padding: 14px 16px;
+                        border-radius: 16px;
+                        background: #f8fbfa;
+                        border: 1px solid #edf1f0;
+                        color: #64748b;
+                        font-size: 13px;
+                        line-height: 1.7;
+                    ">
+                        Insight: channel dengan persentase tertinggi bisa dijadikan prioritas evaluasi konten, promo, atau campaign digital marketing.
+                    </div>
+                @else
+                    <div class="empty-state">Belum ada data sumber informasi patient.</div>
+                @endif
+            </section>
+
+</main>
 </div>
 </body>
 </html>

@@ -573,7 +573,17 @@
 <div class="page">
     <div class="top-actions">
         <a href="/admin/billings/{{ $billing->id }}" class="action-link">← Kembali</a>
-        <button onclick="window.print()" class="print-btn">Print / Save PDF</button>
+        
+        @php
+            $hasPackageItem = ($billing->items ?? collect())->contains(function ($item) {
+                return preg_match('/paket\s*(3x|6x|12x)/i', (string) $item->description);
+            });
+        @endphp
+
+        @if($hasPackageItem)
+            <a href="/admin/package-treatments/create?billing_id={{ $billing->id }}" class="btn btn-soft">Buat Dokumen Paket</a>
+        @endif
+<button onclick="window.print()" class="print-btn">Print / Save PDF</button>
     </div>
 
     <div class="invoice-sheet">

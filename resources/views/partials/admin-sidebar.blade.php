@@ -37,7 +37,12 @@
                 ['key' => 'billings', 'label' => 'Kasir / Billing', 'url' => '/admin/billings'],
                 ['key' => 'cashier', 'label' => 'Kasir Checkout', 'url' => '/admin/cashier'],
                 ['key' => 'promos', 'label' => 'Promo Setting', 'url' => '/admin/promos'],
-                ['key' => 'inventory', 'label' => 'Inventory / Stok Barang', 'url' => '/admin/inventory'],
+                ['key' => 'services', 'label' => 'Master Layanan', 'url' => '/admin/services'],
+                ['key' => 'package-treatments', 'label' => 'Dokumen Pembelian Paket', 'url' => '/admin/package-treatments'],
+                ['key' => 'rest-letter', 'label' => 'Surat Izin / Istirahat', 'url' => '/admin/rest-letter/create'],
+
+
+                    ['key' => 'inventory', 'label' => 'Inventory / Stok Barang', 'url' => '/admin/inventory'],
             ],
         ],
         [

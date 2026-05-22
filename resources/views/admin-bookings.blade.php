@@ -1321,7 +1321,7 @@
 
                                             <div class="action-stack">
                                                 @if($waLink)
-                                                    <a href="{{ $waLink }}" target="_blank" class="action-link btn-wa">Open WA</a>
+                                                    <a href="{{ $waLink }}" target="_blank" class="action-link btn-wa">Reminder WA</a>
                                                 @endif
                                                 <a href="/admin/bookings/{{ $booking->id }}" class="action-link btn-detail">Detail</a>
                                                 <a href="/admin/bookings/{{ $booking->id }}/edit" class="action-link btn-edit">Edit</a>

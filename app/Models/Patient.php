@@ -18,6 +18,10 @@ class Patient extends Model
         'occupation',
         'education',
         'marital_status',
+        'referral_source',
+        'referral_source_other',
+        'documentation_consent',
+        'documentation_consent_notes',
         'medical_record_number',
     ];
 
@@ -46,10 +50,11 @@ class Patient extends Model
             return $this->medical_record_number;
         }
 
-        if (empty($this->gender) || empty($this->birth_date)) {
+        if (empty($this->gender)) {
             return null;
         }
 
+        $branchCode = 'B'; // B = Bandung
         $gender = strtolower((string) $this->gender);
 
         $genderCode = match ($gender) {
@@ -62,16 +67,22 @@ class Patient extends Model
             return null;
         }
 
-        $birthYearTwoDigits = date('y', strtotime((string) $this->birth_date));
+        $lastNumber = self::whereNotNull('medical_record_number')
+            ->where('medical_record_number', 'like', "KP-{$branchCode}-{$genderCode}-%")
+            ->get()
+            ->map(function ($patient) {
+                if (preg_match('/^KP-[A-Z]+-[0-9]{2}-([0-9]+)$/', (string) $patient->medical_record_number, $matches)) {
+                    return (int) $matches[1];
+                }
 
-        $runningNumber = str_pad(
-            (string) (self::whereNotNull('medical_record_number')->count() + 1),
-            5,
-            '0',
-            STR_PAD_LEFT
-        );
+                return 0;
+            })
+            ->max();
 
-        return "KP-{$genderCode}-{$runningNumber}-{$birthYearTwoDigits}";
+        $nextNumber = ((int) $lastNumber) + 1;
+        $runningNumber = str_pad((string) $nextNumber, 5, '0', STR_PAD_LEFT);
+
+        return "KP-{$branchCode}-{$genderCode}-{$runningNumber}";
     }
     public function bookings()
     {

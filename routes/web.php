@@ -24,6 +24,8 @@ use App\Models\InventoryItem;
 use App\Models\InventoryStockMovement;
 use App\Models\PatientProgressEntry;
 use App\Models\HomeExerciseTemplate;
+use App\Models\ClinicService;
+use App\Models\PackageTreatmentDocument;
 
 Route::get('/', function (Request $request) {
     $host = $request->getHost();
@@ -194,6 +196,44 @@ Route::get('/admin/dashboard', function () {
         ->take(6)
         ->get();
 
+    $arrivalReminderBookings = Booking::with('patient')
+        ->whereIn('status', ['pending', 'confirmed', 'arrived', 'in_treatment'])
+        ->whereBetween('booking_date', [now()->toDateString(), now()->addDay()->toDateString()])
+        ->orderBy('booking_date')
+        ->orderBy('booking_time')
+        ->get();
+
+    $today = now()->startOfDay();
+
+    $upcomingBirthdayPatients = Patient::whereNotNull('birth_date')
+        ->get()
+        ->map(function ($patient) use ($today) {
+            $birthDate = \Carbon\Carbon::parse($patient->birth_date);
+            $nextBirthday = $birthDate->copy()->year($today->year);
+
+            if ($nextBirthday->lt($today)) {
+                $nextBirthday->addYear();
+            }
+
+            $patient->next_birthday_date = $nextBirthday;
+            $patient->birthday_days_left = $today->diffInDays($nextBirthday, false);
+            $patient->birthday_age = $nextBirthday->year - $birthDate->year;
+
+            return $patient;
+        })
+        ->filter(function ($patient) {
+            return $patient->birthday_days_left >= 0 && $patient->birthday_days_left <= 30;
+        })
+        ->sortBy('birthday_days_left')
+        ->values();
+
+    $patientSourceStats = Patient::selectRaw("COALESCE(NULLIF(referral_source, ''), 'Belum diisi') as source, COUNT(*) as total")
+        ->groupBy('source')
+        ->orderByDesc('total')
+        ->get();
+
+    $patientSourceTotal = $patientSourceStats->sum('total');
+
     return view('admin-dashboard', compact(
         'totalBookings',
         'totalPatients',
@@ -226,8 +266,7 @@ Route::get('/admin/dashboard', function () {
         'emptyStockItems',
         'needActionItems',
         'recentVisits',
-        'recentBillings'
-    ));
+        'recentBillings', 'patientSourceStats', 'patientSourceTotal', 'upcomingBirthdayPatients', 'arrivalReminderBookings'));
 });
 
 Route::get('/booking', function (Request $request) {
@@ -694,6 +733,10 @@ Route::post('/admin/patients', function (Request $request) {
     $patient->occupation = $request->occupation;
     $patient->education = $request->education;
     $patient->marital_status = $request->marital_status;
+    $patient->referral_source = $request->referral_source;
+    $patient->referral_source_other = $request->referral_source === 'Lainnya' ? $request->referral_source_other : null;
+    $patient->documentation_consent = $request->documentation_consent;
+    $patient->documentation_consent_notes = $request->documentation_consent_notes;
 
     if (empty($patient->medical_record_number)) {
         $patient->medical_record_number = $patient->generateMedicalRecordNumber();
@@ -854,6 +897,10 @@ Route::post('/admin/patients/{id}/update', function (Request $request, $id) {
     $patient->occupation = $request->occupation;
     $patient->education = $request->education;
     $patient->marital_status = $request->marital_status;
+    $patient->referral_source = $request->referral_source;
+    $patient->referral_source_other = $request->referral_source === 'Lainnya' ? $request->referral_source_other : null;
+    $patient->documentation_consent = $request->documentation_consent;
+    $patient->documentation_consent_notes = $request->documentation_consent_notes;
 
     if (empty($patient->medical_record_number)) {
         $patient->medical_record_number = $patient->generateMedicalRecordNumber();
@@ -898,6 +945,9 @@ Route::post('/admin/patients/{id}/informed-consent', function (Request $request,
         'treatment_location' => 'required|string|max:255',
         'representative_name' => 'nullable|string|max:255',
         'relationship_to_patient' => 'nullable|string|max:255',
+        'emergency_contact_name' => 'nullable|string|max:255',
+        'emergency_contact_phone' => 'nullable|string|max:50',
+        'emergency_contact_relation' => 'nullable|string|max:255',
         'agreement_text' => 'nullable|string',
         'notes' => 'nullable|string',
     ]);
@@ -911,6 +961,9 @@ Route::post('/admin/patients/{id}/informed-consent', function (Request $request,
         'treatment_location' => $request->treatment_location,
         'representative_name' => $request->representative_name,
         'relationship_to_patient' => $request->relationship_to_patient,
+        'emergency_contact_name' => $request->emergency_contact_name,
+        'emergency_contact_phone' => $request->emergency_contact_phone,
+        'emergency_contact_relation' => $request->emergency_contact_relation,
         'agreement_text' => $request->agreement_text,
         'notes' => $request->notes,
     ]);
@@ -2895,14 +2948,18 @@ Route::get('/admin/cashier', function (Request $request) {
     $selectedPatientId = $request->query('patient_id');
     $selectedVisitId = $request->query('visit_id');
 
-    return view('admin-cashier-create', compact(
+        $clinicServices = ClinicService::where('status', 'active')
+        ->orderByRaw("CASE WHEN category = 'Program' THEN 1 WHEN category = 'Specialist' THEN 2 WHEN category = 'Consultation' THEN 3 WHEN category = 'Add-on' THEN 4 ELSE 5 END")
+        ->orderBy('name')
+        ->get();
+
+return view('admin-cashier-create', compact(
         'patients',
         'visits',
         'inventoryItems',
         'promos',
         'selectedPatientId',
-        'selectedVisitId'
-    ));
+        'selectedVisitId', 'clinicServices'));
 });
 
 Route::post('/admin/cashier/checkout', function (Request $request) {
@@ -3080,6 +3137,112 @@ Route::post('/admin/cashier/checkout', function (Request $request) {
 */
 
 
+
+Route::get('/admin/services', function (Request $request) {
+    if (!session('admin_logged_in')) {
+        return redirect('/admin/login');
+    }
+
+    $search = $request->query('search');
+    $category = $request->query('category');
+
+    $servicesQuery = ClinicService::query();
+
+    if ($search) {
+        $servicesQuery->where(function ($query) use ($search) {
+            $query->where('name', 'like', '%' . $search . '%')
+                ->orWhere('category', 'like', '%' . $search . '%')
+                ->orWhere('notes', 'like', '%' . $search . '%');
+        });
+    }
+
+    if ($category) {
+        $servicesQuery->where('category', $category);
+    }
+
+    $services = $servicesQuery
+        ->orderByRaw("CASE WHEN category = 'Program' THEN 1 WHEN category = 'Specialist' THEN 2 WHEN category = 'Consultation' THEN 3 WHEN category = 'Add-on' THEN 4 ELSE 5 END")
+        ->orderBy('name')
+        ->get();
+
+    $categories = ClinicService::select('category')
+        ->whereNotNull('category')
+        ->distinct()
+        ->orderBy('category')
+        ->pluck('category');
+
+    $activeServices = ClinicService::where('status', 'active')->count();
+    $packageReadyServices = ClinicService::where(function ($query) {
+        $query->whereNotNull('package_3x_price')
+            ->orWhereNotNull('package_6x_price')
+            ->orWhereNotNull('package_12x_price');
+    })->count();
+
+    return view('admin-services', compact(
+        'services',
+        'categories',
+        'activeServices',
+        'packageReadyServices',
+        'search',
+        'category'
+    ));
+});
+
+Route::post('/admin/services', function (Request $request) {
+    if (!session('admin_logged_in')) {
+        return redirect('/admin/login');
+    }
+
+    $data = $request->validate([
+        'name' => 'required|string|max:255',
+        'price_per_visit' => 'required|integer|min:0',
+        'package_3x_price' => 'nullable|integer|min:0',
+        'package_6x_price' => 'nullable|integer|min:0',
+        'package_12x_price' => 'nullable|integer|min:0',
+        'category' => 'nullable|string|max:255',
+        'notes' => 'nullable|string',
+        'status' => 'required|in:active,inactive',
+    ]);
+
+    ClinicService::create($data);
+
+    return redirect('/admin/services')->with('success', 'Layanan berhasil ditambahkan.');
+});
+
+Route::post('/admin/services/{id}/update', function (Request $request, $id) {
+    if (!session('admin_logged_in')) {
+        return redirect('/admin/login');
+    }
+
+    $service = ClinicService::findOrFail($id);
+
+    $data = $request->validate([
+        'name' => 'required|string|max:255',
+        'price_per_visit' => 'required|integer|min:0',
+        'package_3x_price' => 'nullable|integer|min:0',
+        'package_6x_price' => 'nullable|integer|min:0',
+        'package_12x_price' => 'nullable|integer|min:0',
+        'category' => 'nullable|string|max:255',
+        'notes' => 'nullable|string',
+        'status' => 'required|in:active,inactive',
+    ]);
+
+    $service->update($data);
+
+    return redirect('/admin/services')->with('success', 'Layanan berhasil diperbarui.');
+});
+
+Route::post('/admin/services/{id}/delete', function ($id) {
+    if (!session('admin_logged_in')) {
+        return redirect('/admin/login');
+    }
+
+    ClinicService::findOrFail($id)->delete();
+
+    return redirect('/admin/services')->with('success', 'Layanan berhasil dihapus.');
+});
+
+
 Route::get('/admin/reports', function (Request $request) {
     if (!session('admin_logged_in')) {
         return redirect('/admin/login');
@@ -3165,23 +3328,19 @@ Route::get('/admin/reports/monthly-clinic', function (Request $request) {
     };
 
     $moneyOutstanding = function ($billing) {
-        if ($billing->payment_status === 'void') {
+        if (($billing->payment_status ?? null) === 'void') {
             return 0;
         }
 
-        $remaining = (float) ($billing->remaining_amount ?? 0);
-        $amount = (float) ($billing->amount ?? 0);
+        $total = (float) ($billing->grand_total ?? $billing->total_amount ?? $billing->amount ?? 0);
         $paid = (float) ($billing->paid_amount ?? 0);
+        $status = $billing->payment_status ?: 'unpaid';
 
-        if ($billing->payment_status === 'unpaid' && $remaining <= 0) {
-            return $amount;
+        if ($status === 'paid') {
+            return 0;
         }
 
-        if ($billing->payment_status === 'partial' && $remaining <= 0) {
-            return max($amount - $paid, 0);
-        }
-
-        return $remaining;
+        return max($total - $paid, 0);
     };
 
     $movements = InventoryStockMovement::with('item')
@@ -3339,23 +3498,19 @@ Route::get('/admin/reports/revenue', function (Request $request) {
     };
 
     $moneyOutstanding = function ($billing) {
-        if ($billing->payment_status === 'void') {
+        if (($billing->payment_status ?? null) === 'void') {
             return 0;
         }
 
-        $remaining = (float) ($billing->remaining_amount ?? 0);
-        $amount = (float) ($billing->amount ?? 0);
+        $total = (float) ($billing->grand_total ?? $billing->total_amount ?? $billing->amount ?? 0);
         $paid = (float) ($billing->paid_amount ?? 0);
+        $status = $billing->payment_status ?: 'unpaid';
 
-        if ($billing->payment_status === 'unpaid' && $remaining <= 0) {
-            return $amount;
+        if ($status === 'paid') {
+            return 0;
         }
 
-        if ($billing->payment_status === 'partial' && $remaining <= 0) {
-            return max($amount - $paid, 0);
-        }
-
-        return $remaining;
+        return max($total - $paid, 0);
     };
 
     $summary = [
@@ -3561,23 +3716,19 @@ Route::get('/admin/reports/therapist-performance', function (Request $request) {
     };
 
     $moneyOutstanding = function ($billing) {
-        if ($billing->payment_status === 'void') {
+        if (($billing->payment_status ?? null) === 'void') {
             return 0;
         }
 
-        $remaining = (float) ($billing->remaining_amount ?? 0);
-        $amount = (float) ($billing->amount ?? 0);
+        $total = (float) ($billing->grand_total ?? $billing->total_amount ?? $billing->amount ?? 0);
         $paid = (float) ($billing->paid_amount ?? 0);
+        $status = $billing->payment_status ?: 'unpaid';
 
-        if ($billing->payment_status === 'unpaid' && $remaining <= 0) {
-            return $amount;
+        if ($status === 'paid') {
+            return 0;
         }
 
-        if ($billing->payment_status === 'partial' && $remaining <= 0) {
-            return max($amount - $paid, 0);
-        }
-
-        return $remaining;
+        return max($total - $paid, 0);
     };
 
     $rows = $therapists->map(function ($therapist) use ($visits, $billings, $moneyPaid, $moneyOutstanding) {
@@ -3654,6 +3805,156 @@ Route::get('/admin/reports/therapist-performance', function (Request $request) {
 | Phase 6 — Surat & Dokumen Klinik
 |--------------------------------------------------------------------------
 */
+
+
+/*
+|--------------------------------------------------------------------------
+| Package Treatment Documents
+|--------------------------------------------------------------------------
+*/
+
+Route::get('/admin/package-treatments', function (Request $request) {
+    if (!session('admin_logged_in')) {
+        return redirect('/admin/login');
+    }
+
+    $search = trim((string) $request->query('search', ''));
+
+    $documents = PackageTreatmentDocument::with(['patient', 'therapist', 'billing'])
+        ->when($search, function ($query) use ($search) {
+            $query->where('document_number', 'like', '%' . $search . '%')
+                ->orWhere('package_name', 'like', '%' . $search . '%')
+                ->orWhereHas('patient', function ($patientQuery) use ($search) {
+                    $patientQuery->where('full_name', 'like', '%' . $search . '%')
+                        ->orWhere('medical_record_number', 'like', '%' . $search . '%')
+                        ->orWhere('whatsapp', 'like', '%' . $search . '%');
+                });
+        })
+        ->latest()
+        ->get();
+
+    return view('admin-package-treatments', compact('documents', 'search'));
+});
+
+Route::get('/admin/package-treatments/create', function (Request $request) {
+    if (!session('admin_logged_in')) {
+        return redirect('/admin/login');
+    }
+
+    $patients = Patient::orderBy('full_name')->get();
+    $therapists = Therapist::orderBy('name')->get();
+    $billings = Billing::with(['patient', 'items'])
+        ->where('payment_status', '!=', 'void')
+        ->latest()
+        ->limit(100)
+        ->get();
+
+    $selectedPatientId = $request->query('patient_id');
+    $selectedBillingId = $request->query('billing_id');
+
+    $prefill = [
+        'package_name' => '',
+        'package_type' => '',
+        'total_sessions' => 3,
+        'package_price' => 0,
+        'buying_date' => now()->format('Y-m-d'),
+        'valid_until' => now()->addMonths(3)->format('Y-m-d'),
+    ];
+
+    if ($selectedBillingId) {
+        $selectedBilling = Billing::with(['patient', 'items'])->find($selectedBillingId);
+
+        if ($selectedBilling) {
+            $selectedPatientId = $selectedBilling->patient_id;
+
+            $packageItem = $selectedBilling->items
+                ->first(function ($item) {
+                    return preg_match('/paket\\s*(3x|6x|12x)/i', (string) $item->description);
+                });
+
+            if ($packageItem) {
+                $description = (string) $packageItem->description;
+                $sessions = 3;
+
+                if (preg_match('/paket\\s*(3x|6x|12x)/i', $description, $matches)) {
+                    $sessions = (int) str_replace('x', '', strtolower($matches[1]));
+                }
+
+                $prefill['package_name'] = $description;
+                $prefill['package_type'] = $sessions === 3 ? 'Light Package' : ($sessions === 6 ? 'Medium Package' : ($sessions === 12 ? 'Full Package' : 'Custom Package'));
+                $prefill['total_sessions'] = $sessions;
+                $prefill['package_price'] = $packageItem->subtotal ?? (($packageItem->quantity ?? 1) * ($packageItem->unit_price ?? 0));
+                $prefill['buying_date'] = optional($selectedBilling->invoice_date)->format('Y-m-d') ?: now()->format('Y-m-d');
+                $prefill['valid_until'] = \Carbon\Carbon::parse($prefill['buying_date'])->addMonths($sessions >= 12 ? 6 : 3)->format('Y-m-d');
+            } else {
+                $prefill['package_price'] = $selectedBilling->grand_total ?? $selectedBilling->amount ?? 0;
+                $prefill['buying_date'] = optional($selectedBilling->invoice_date)->format('Y-m-d') ?: now()->format('Y-m-d');
+            }
+        }
+    }
+
+    return view('admin-package-treatment-create', compact(
+        'patients',
+        'therapists',
+        'billings',
+        'selectedPatientId',
+        'selectedBillingId',
+        'prefill'
+    ));
+});
+
+Route::post('/admin/package-treatments', function (Request $request) {
+    if (!session('admin_logged_in')) {
+        return redirect('/admin/login');
+    }
+
+    $data = $request->validate([
+        'patient_id' => 'required|exists:patients,id',
+        'billing_id' => 'nullable|exists:billings,id',
+        'therapist_id' => 'nullable|exists:therapists,id',
+        'document_date' => 'nullable|date',
+        'package_name' => 'required|string|max:255',
+        'package_type' => 'nullable|string|max:100',
+        'total_sessions' => 'required|integer|min:1|max:24',
+        'package_price' => 'required|numeric|min:0',
+        'buying_date' => 'nullable|date',
+        'valid_until' => 'nullable|date',
+        'terms' => 'nullable|string',
+        'notes' => 'nullable|string',
+    ]);
+
+    $documentNumber = 'PKG-' . now()->format('Ymd-His');
+
+    $document = PackageTreatmentDocument::create(array_merge($data, [
+        'document_number' => $documentNumber,
+        'document_date' => $data['document_date'] ?: now()->toDateString(),
+        'buying_date' => $data['buying_date'] ?: now()->toDateString(),
+    ]));
+
+    return redirect('/admin/package-treatments/' . $document->id . '/print')
+        ->with('success', 'Dokumen pembelian paket berhasil dibuat.');
+});
+
+Route::get('/admin/package-treatments/{id}/print', function ($id) {
+    if (!session('admin_logged_in')) {
+        return redirect('/admin/login');
+    }
+
+    $document = PackageTreatmentDocument::with(['patient', 'billing', 'therapist'])->findOrFail($id);
+
+    return view('admin-package-treatment-print', compact('document'));
+});
+
+Route::post('/admin/package-treatments/{id}/delete', function ($id) {
+    if (!session('admin_logged_in')) {
+        return redirect('/admin/login');
+    }
+
+    PackageTreatmentDocument::findOrFail($id)->delete();
+
+    return redirect('/admin/package-treatments')->with('success', 'Dokumen pembelian paket berhasil dihapus.');
+});
+
 
 Route::get('/admin/documents', function () {
     if (!session('admin_logged_in')) {
@@ -3744,6 +4045,75 @@ Route::post('/admin/control-letter/print', function (Request $request) {
         'payload'
     ));
 });
+
+
+/*
+|--------------------------------------------------------------------------
+| Patient Rest / Permission Letter
+|--------------------------------------------------------------------------
+*/
+
+Route::get('/admin/rest-letter/create', function (Request $request) {
+    if (!session('admin_logged_in')) {
+        return redirect('/admin/login');
+    }
+
+    $patients = Patient::orderBy('full_name')->get();
+    $therapists = Therapist::orderBy('name')->get();
+    $visits = Visit::with('patient')
+        ->latest()
+        ->limit(150)
+        ->get();
+
+    $selectedPatientId = $request->query('patient_id');
+    $selectedVisitId = $request->query('visit_id');
+
+    return view('admin-rest-letter-create', compact(
+        'patients',
+        'therapists',
+        'visits',
+        'selectedPatientId',
+        'selectedVisitId'
+    ));
+});
+
+Route::post('/admin/rest-letter/print', function (Request $request) {
+    if (!session('admin_logged_in')) {
+        return redirect('/admin/login');
+    }
+
+    $data = $request->validate([
+        'patient_id' => 'required|exists:patients,id',
+        'visit_id' => 'nullable|exists:visits,id',
+        'therapist_id' => 'nullable|exists:therapists,id',
+        'letter_date' => 'nullable|date',
+        'letter_type' => 'required|in:izin,istirahat',
+        'diagnosis' => 'nullable|string|max:255',
+        'activity_limitation' => 'nullable|string',
+        'rest_start_date' => 'nullable|date',
+        'rest_end_date' => 'nullable|date',
+        'rest_days' => 'nullable|integer|min:1|max:60',
+        'recipient' => 'nullable|string|max:255',
+        'notes' => 'nullable|string',
+    ]);
+
+    $patient = Patient::findOrFail($data['patient_id']);
+    $visit = !empty($data['visit_id']) ? Visit::with('therapist')->find($data['visit_id']) : null;
+    $therapist = !empty($data['therapist_id'])
+        ? Therapist::find($data['therapist_id'])
+        : null;
+
+    $letterNumber = 'SIP-' . now()->format('Ymd-His');
+
+    return view('admin-rest-letter-print', compact(
+        'data',
+        'patient',
+        'visit',
+        'therapist',
+        'letterNumber'
+    ));
+});
+
 
 Route::get('/admin/discharge-summary/create', function (Request $request) {
     if (!session('admin_logged_in')) {
@@ -4125,23 +4495,19 @@ Route::get('/patient/dashboard', function () {
     };
 
     $moneyOutstanding = function ($billing) {
-        if ($billing->payment_status === 'void') {
+        if (($billing->payment_status ?? null) === 'void') {
             return 0;
         }
 
-        $remaining = (float) ($billing->remaining_amount ?? 0);
-        $amount = (float) ($billing->amount ?? 0);
+        $total = (float) ($billing->grand_total ?? $billing->total_amount ?? $billing->amount ?? 0);
         $paid = (float) ($billing->paid_amount ?? 0);
+        $status = $billing->payment_status ?: 'unpaid';
 
-        if ($billing->payment_status === 'unpaid' && $remaining <= 0) {
-            return $amount;
+        if ($status === 'paid') {
+            return 0;
         }
 
-        if ($billing->payment_status === 'partial' && $remaining <= 0) {
-            return max($amount - $paid, 0);
-        }
-
-        return $remaining;
+        return max($total - $paid, 0);
     };
 
     $paidTotal = $validBillings->sum(fn ($billing) => $moneyPaid($billing));
@@ -4631,23 +4997,19 @@ Route::get('/admin/billings', function (Request $request) {
     };
 
     $moneyOutstanding = function ($billing) {
-        if ($billing->payment_status === 'void') {
+        if (($billing->payment_status ?? null) === 'void') {
             return 0;
         }
 
-        $remaining = (float) ($billing->remaining_amount ?? 0);
-        $amount = (float) ($billing->amount ?? 0);
+        $total = (float) ($billing->grand_total ?? $billing->total_amount ?? $billing->amount ?? 0);
         $paid = (float) ($billing->paid_amount ?? 0);
+        $status = $billing->payment_status ?: 'unpaid';
 
-        if ($billing->payment_status === 'unpaid' && $remaining <= 0) {
-            return $amount;
+        if ($status === 'paid') {
+            return 0;
         }
 
-        if ($billing->payment_status === 'partial' && $remaining <= 0) {
-            return max($amount - $paid, 0);
-        }
-
-        return $remaining;
+        return max($total - $paid, 0);
     };
 
     $totalTransactions = $summaryBillings->count();
@@ -4818,6 +5180,18 @@ Route::post('/admin/billings/{id}/status', function (Request $request, $id) {
 
     $billing = Billing::with(['patient', 'visit', 'items.inventoryItem'])->findOrFail($id);
     $billing->payment_status = $request->payment_status;
+
+    // AUTO_SYNC_PAID_AMOUNT_FROM_STATUS
+    $billingTotal = $billing->grand_total ?? $billing->total_amount ?? $billing->amount ?? 0;
+
+    if ($request->payment_status === 'paid') {
+        $billing->paid_amount = $billingTotal;
+    } elseif ($request->payment_status === 'unpaid') {
+        $billing->paid_amount = 0;
+    } elseif ($request->payment_status === 'partial') {
+        $billing->paid_amount = min((float) ($billing->paid_amount ?? 0), (float) $billingTotal);
+    }
+
     $billing->save();
 
     return redirect('/admin/billings')->with('success', 'Status billing berhasil diperbarui!');

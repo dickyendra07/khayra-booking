@@ -16,6 +16,9 @@ class InformedConsent extends Model
         'treatment_location',
         'representative_name',
         'relationship_to_patient',
+        'emergency_contact_name',
+        'emergency_contact_phone',
+        'emergency_contact_relation',
         'agreement_text',
         'notes',
     ];

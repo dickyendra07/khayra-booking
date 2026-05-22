@@ -2,42 +2,253 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Surat & Dokumen Klinik - Khayra Physio</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Surat & Dokumen Klinik - Khayra Physio</title>
     <style>
-        *{box-sizing:border-box}
-        body{margin:0;font-family:Arial,sans-serif;background:#f6f8f8;color:#17232b}
-        .layout{display:flex;min-height:100vh}
-        .main{flex:1;padding:28px;min-width:0}
-        .container{max-width:1320px;margin:0 auto}
-        .topbar{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap;margin-bottom:18px}
-        .badge{display:inline-flex;padding:8px 13px;border-radius:999px;background:#eef7f5;color:#2f7c7a;font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px}
-        h1{margin:0;font-size:42px;line-height:1.05;color:#22343a;letter-spacing:-.7px}
-        .subtitle{margin:12px 0 0;color:#64748b;line-height:1.85;font-size:14px;max-width:880px}
-        .hero{background:#fff;border:1px solid #ecefef;border-radius:28px;padding:28px;box-shadow:0 14px 34px rgba(15,23,42,.05);margin-bottom:18px}
-        .hero-grid{display:grid;grid-template-columns:1.08fr .92fr;gap:18px}
-        .hero-main{background:linear-gradient(135deg,#fff,#f7fbfa 58%,#eef7f5);border:1px solid #dfeae8;border-radius:24px;padding:24px}
-        .hero-side{background:linear-gradient(145deg,#467f83,#346d73 52%,#244f55);color:#fff;border-radius:24px;padding:24px}
-        .hero-side h2{margin:0 0 12px;font-size:28px;color:#fff}
-        .hero-side p{margin:0;color:rgba(255,255,255,.88);line-height:1.85;font-size:13px}
-        .stats{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:18px}
-        .stat{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.18);border-radius:18px;padding:16px}
-        .stat-label{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:rgba(255,255,255,.8);font-weight:900;margin-bottom:8px}
-        .stat-value{font-size:30px;font-weight:900;color:#fff}
-        .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
-        .card{background:#fff;border:1px solid #ecefef;border-radius:26px;padding:24px;box-shadow:0 10px 26px rgba(15,23,42,.04)}
-        .card-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:16px}
-        .icon{width:48px;height:48px;border-radius:16px;background:#eef7f5;color:#2f7c7a;display:flex;align-items:center;justify-content:center;font-weight:900}
-        .pill{display:inline-flex;padding:7px 11px;border-radius:999px;font-size:11px;font-weight:900;text-transform:uppercase}
-        .pill-medium{background:#fff1c7;color:#92400e}
-        .pill-premium{background:#eef2ff;color:#3157d8}
-        h2{margin:0;color:#22343a;font-size:25px}
-        .text{color:#64748b;line-height:1.8;font-size:13px;margin:8px 0 18px}
-        .actions{display:flex;gap:10px;flex-wrap:wrap}
-        .btn{min-height:42px;padding:0 15px;border-radius:14px;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:13px}
-        .btn-primary{background:linear-gradient(135deg,#3d8a89,#2f7c7a);color:#fff}
-        .btn-soft{background:#fff;color:#2f7c7a;border:1px solid #dfe8e6}
-        @media(max-width:980px){.layout{display:block}.main{padding:16px}.hero-grid,.grid,.stats{grid-template-columns:1fr}h1{font-size:34px}}
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: Arial, sans-serif; background: #f6f8f8; color: #17232b; }
+        .layout { min-height: 100vh; display: flex; }
+        .main { flex: 1; min-width: 0; padding: 28px; }
+        .container { max-width: 1240px; margin: 0 auto; }
+
+        .hero {
+            background: #ffffff;
+            border: 1px solid #ecefef;
+            border-radius: 30px;
+            padding: 28px;
+            box-shadow: 0 14px 34px rgba(15,23,42,.05);
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .hero-grid {
+            display: grid;
+            grid-template-columns: 1.1fr .9fr;
+            gap: 20px;
+            align-items: stretch;
+        }
+
+        .badge {
+            display: inline-flex;
+            padding: 8px 13px;
+            border-radius: 999px;
+            background: #eef5f4;
+            color: #35565d;
+            font-size: 12px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            margin-bottom: 14px;
+        }
+
+        .title {
+            margin: 0;
+            font-size: 42px;
+            line-height: 1.05;
+            color: #22343a;
+            font-weight: 900;
+            letter-spacing: -1.2px;
+        }
+
+        .subtitle {
+            margin: 14px 0 0;
+            color: #6b7280;
+            font-size: 14px;
+            line-height: 1.85;
+            max-width: 760px;
+        }
+
+        .snapshot {
+            border-radius: 26px;
+            padding: 24px;
+            color: #ffffff;
+            background:
+                linear-gradient(135deg, rgba(255,255,255,.08) 1px, transparent 1px),
+                linear-gradient(135deg, #3d8a89 0%, #2f7c7a 52%, #244f55 100%);
+            background-size: 28px 28px, auto;
+        }
+
+        .snapshot h2 {
+            margin: 0 0 10px;
+            font-size: 26px;
+            line-height: 1.1;
+        }
+
+        .snapshot p {
+            margin: 0 0 18px;
+            color: rgba(255,255,255,.86);
+            font-size: 13px;
+            line-height: 1.75;
+        }
+
+        .snapshot-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .snapshot-card {
+            border: 1px solid rgba(255,255,255,.18);
+            background: rgba(255,255,255,.09);
+            border-radius: 18px;
+            padding: 16px;
+        }
+
+        .snapshot-label {
+            font-size: 11px;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,.78);
+            font-weight: 900;
+            margin-bottom: 8px;
+        }
+
+        .snapshot-value {
+            font-size: 30px;
+            font-weight: 900;
+        }
+
+        .section-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            gap: 14px;
+            flex-wrap: wrap;
+            margin: 22px 0 14px;
+        }
+
+        .section-title {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 900;
+            color: #22343a;
+            letter-spacing: -.5px;
+        }
+
+        .section-subtitle {
+            margin: 7px 0 0;
+            color: #7b8794;
+            font-size: 13px;
+            line-height: 1.7;
+        }
+
+        .doc-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 18px;
+        }
+
+        .doc-card {
+            background: #ffffff;
+            border: 1px solid #ecefef;
+            border-radius: 28px;
+            padding: 24px;
+            box-shadow: 0 14px 34px rgba(15,23,42,.05);
+            min-height: 220px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 18px;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .doc-top {
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+        }
+
+        .doc-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 16px;
+            background: #eef7f5;
+            color: #2f7c7a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            flex: 0 0 auto;
+            letter-spacing: .02em;
+        }
+
+        .doc-card h3 {
+            margin: 0;
+            font-size: 24px;
+            color: #22343a;
+            line-height: 1.15;
+            letter-spacing: -.4px;
+        }
+
+        .doc-card p {
+            margin: 10px 0 0;
+            color: #6b7280;
+            font-size: 13px;
+            line-height: 1.75;
+        }
+
+        .doc-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 7px 11px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+            background: #eef2ff;
+            color: #4f46e5;
+        }
+
+        .doc-badge.medium { background: #fff7ed; color: #b45309; }
+        .doc-badge.premium { background: #eef2ff; color: #4f46e5; }
+        .doc-badge.ready { background: #ecfdf5; color: #047857; }
+
+        .doc-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            min-height: 42px;
+            border: 0;
+            cursor: pointer;
+            padding: 0 16px;
+            border-radius: 14px;
+            font-size: 13px;
+            font-weight: 900;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-family: Arial, sans-serif;
+            white-space: nowrap;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3d8a89 0%, #2f7c7a 100%);
+            color: #ffffff;
+            box-shadow: 0 12px 24px rgba(47,124,122,.16);
+        }
+
+        .btn-soft {
+            color: #2f7c7a;
+            background: #eef7f5;
+            border: 1px solid #d8ebe7;
+        }
+
+        @media (max-width: 980px) {
+            .hero-grid, .doc-grid { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 900px) {
+            .layout { display: block; }
+            .main { padding: 16px; }
+            .title { font-size: 32px; }
+            .doc-card h3 { font-size: 21px; }
+        }
     </style>
 </head>
 <body>
@@ -46,79 +257,138 @@
 
     <main class="main">
         <div class="container">
-            <div class="topbar">
-                <div>
-                    <span class="badge">Phase 6</span>
-                    <h1>Surat & Dokumen Klinik</h1>
-                    <p class="subtitle">Pusat dokumen profesional: surat rujukan, surat kontrol/terapi, discharge summary, dan arsip informed consent.</p>
-                </div>
-            </div>
-
             <section class="hero">
                 <div class="hero-grid">
-                    <div class="hero-main">
+                    <div>
                         <span class="badge">Dokumen Profesional</span>
-                        <h2>Dokumen bisa langsung di-print atau disimpan sebagai PDF dari browser.</h2>
-                        <p class="subtitle">Modul ini membuat sistem terasa siap dipakai klinik sungguhan: semua dokumen mengambil data pasien, visit, dan rekam medis yang sudah ada.</p>
+                        <h1 class="title">Surat & Dokumen Klinik</h1>
+                        <p class="subtitle">
+                            Semua dokumen klinik dikumpulkan di satu tempat agar tidak tercecer:
+                            surat rujukan, surat kontrol, discharge summary, informed consent archive,
+                            pembelian paket, dan surat izin / istirahat pasien.
+                        </p>
                     </div>
-                    <aside class="hero-side">
+
+                    <div class="snapshot">
                         <h2>Document Snapshot</h2>
                         <p>Ringkasan jumlah dokumen yang sudah tersimpan di sistem.</p>
-                        <div class="stats">
-                            <div class="stat"><div class="stat-label">Surat Rujukan</div><div class="stat-value">{{ $totalReferralLetters }}</div></div>
-                            <div class="stat"><div class="stat-label">Consent Archive</div><div class="stat-value">{{ $totalConsents }}</div></div>
+                        <div class="snapshot-grid">
+                            <div class="snapshot-card">
+                                <div class="snapshot-label">Surat Rujukan</div>
+                                <div class="snapshot-value">{{ $referralLettersCount ?? 0 }}</div>
+                            </div>
+                            <div class="snapshot-card">
+                                <div class="snapshot-label">Consent Archive</div>
+                                <div class="snapshot-value">{{ $consentsCount ?? 0 }}</div>
+                            </div>
                         </div>
-                    </aside>
+                    </div>
                 </div>
             </section>
 
-            <section class="grid">
-                <div class="card">
-                    <div class="card-top">
-                        <div class="icon">REF</div>
-                        <span class="pill pill-medium">Medium</span>
+            <div class="section-head">
+                <div>
+                    <h2 class="section-title">Dokumen Utama</h2>
+                    <p class="section-subtitle">Pilih dokumen yang ingin dibuat, dibuka, atau dicetak.</p>
+                </div>
+            </div>
+
+            <section class="doc-grid">
+                <div class="doc-card">
+                    <div>
+                        <div class="doc-top">
+                            <div class="doc-icon">REF</div>
+                            <div>
+                                <span class="doc-badge medium">Medium</span>
+                                <h3>Surat Rujukan Profesional</h3>
+                                <p>Template rujukan klinik: tujuan, alasan, ringkasan klinis, rekomendasi, dan print PDF.</p>
+                            </div>
+                        </div>
                     </div>
-                    <h2>Surat Rujukan Profesional</h2>
-                    <p class="text">Template rujukan klinik: tujuan, alasan, ringkasan klinis, rekomendasi, dan print PDF.</p>
-                    <div class="actions">
+                    <div class="doc-actions">
                         <a href="/admin/referral-letters" class="btn btn-primary">Buka Surat Rujukan</a>
                         <a href="/admin/referral-letters/create" class="btn btn-soft">+ Buat Baru</a>
                     </div>
                 </div>
 
-                <div class="card">
-                    <div class="card-top">
-                        <div class="icon">CTRL</div>
-                        <span class="pill pill-premium">Premium</span>
+                <div class="doc-card">
+                    <div>
+                        <div class="doc-top">
+                            <div class="doc-icon">CTRL</div>
+                            <div>
+                                <span class="doc-badge premium">Premium</span>
+                                <h3>Surat Kontrol / Surat Terapi</h3>
+                                <p>Generate dokumen kontrol atau keterangan terapi dari data pasien, visit, dan rencana terapi.</p>
+                            </div>
+                        </div>
                     </div>
-                    <h2>Surat Kontrol / Surat Terapi</h2>
-                    <p class="text">Generate dokumen kontrol atau keterangan terapi dari medical record terbaru: jadwal kontrol, frekuensi, total sesi, dan rencana terapi.</p>
-                    <div class="actions">
+                    <div class="doc-actions">
                         <a href="/admin/control-letter/create" class="btn btn-primary">Buat Surat Kontrol</a>
                     </div>
                 </div>
 
-                <div class="card">
-                    <div class="card-top">
-                        <div class="icon">SUM</div>
-                        <span class="pill pill-premium">Premium</span>
+                <div class="doc-card">
+                    <div>
+                        <div class="doc-top">
+                            <div class="doc-icon">SUM</div>
+                            <div>
+                                <span class="doc-badge premium">Premium</span>
+                                <h3>Discharge Summary</h3>
+                                <p>Ringkasan selesai terapi: kondisi awal, kondisi akhir, program terapi, home exercise, dan rekomendasi lanjutan.</p>
+                            </div>
+                        </div>
                     </div>
-                    <h2>Discharge Summary</h2>
-                    <p class="text">Ringkasan selesai terapi: kondisi awal, kondisi akhir, program terapi, home exercise, dan rekomendasi lanjutan.</p>
-                    <div class="actions">
+                    <div class="doc-actions">
                         <a href="/admin/discharge-summary/create" class="btn btn-primary">Buat Discharge Summary</a>
                     </div>
                 </div>
 
-                <div class="card">
-                    <div class="card-top">
-                        <div class="icon">IC</div>
-                        <span class="pill pill-medium">Medium</span>
+                <div class="doc-card">
+                    <div>
+                        <div class="doc-top">
+                            <div class="doc-icon">IC</div>
+                            <div>
+                                <span class="doc-badge medium">Medium</span>
+                                <h3>Digital Consent Archive</h3>
+                                <p>Arsip informed consent per pasien. Bisa dicari, dibuka ulang, dan dicetak kembali kapan pun dibutuhkan.</p>
+                            </div>
+                        </div>
                     </div>
-                    <h2>Digital Consent Archive</h2>
-                    <p class="text">Arsip informed consent per pasien. Bisa dicari, dibuka ulang, dan dicetak kembali kapan pun dibutuhkan.</p>
-                    <div class="actions">
+                    <div class="doc-actions">
                         <a href="/admin/consent-archive" class="btn btn-primary">Buka Consent Archive</a>
+                    </div>
+                </div>
+
+                <div class="doc-card">
+                    <div>
+                        <div class="doc-top">
+                            <div class="doc-icon">PKG</div>
+                            <div>
+                                <span class="doc-badge ready">Ready</span>
+                                <h3>Dokumen Pembelian Paket</h3>
+                                <p>Surat pembelian paket treatment dengan harga paket, masa berlaku, dan tabel rekap session/kedatangan.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="doc-actions">
+                        <a href="/admin/package-treatments" class="btn btn-primary">Buka Dokumen Paket</a>
+                        <a href="/admin/package-treatments/create" class="btn btn-soft">+ Buat Baru</a>
+                    </div>
+                </div>
+
+                <div class="doc-card">
+                    <div>
+                        <div class="doc-top">
+                            <div class="doc-icon">SI</div>
+                            <div>
+                                <span class="doc-badge ready">Ready</span>
+                                <h3>Surat Izin / Surat Istirahat Pasien</h3>
+                                <p>Buat surat izin atau surat istirahat pasien berdasarkan kondisi fisioterapi, diagnosis, tanggal izin, dan pembatasan aktivitas.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="doc-actions">
+                        <a href="/admin/rest-letter/create" class="btn btn-primary">Buat Surat Izin</a>
                     </div>
                 </div>
             </section>

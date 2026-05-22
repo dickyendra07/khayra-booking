@@ -51,7 +51,7 @@
         .items-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
 
         .line-item { border: 1px solid #edf1f0; background: #fbfcfc; border-radius: 20px; padding: 16px; margin-bottom: 12px; }
-        .line-grid { display: grid; grid-template-columns: 150px 1.2fr 1fr 110px 150px 150px auto; gap: 12px; align-items: end; }
+        .line-grid { display: grid; grid-template-columns: 120px 1.15fr 135px 1.15fr 90px 130px 130px auto; gap: 12px; align-items: end; }
 
         .inventory-select-wrap { display: none; }
         .line-item[data-type="inventory"] .inventory-select-wrap { display: block; }
@@ -85,6 +85,18 @@
             .main { padding: 16px; }
             .title { font-size: 32px; }
         }
+    
+        .service-master-wrap { display: block; }
+        .line-item[data-type="inventory"] .service-master-wrap { display: none; }
+        .service-master-select {
+            border-color: #cfe6e1;
+            background: #fbfefd;
+        }
+
+    
+        .package-price-wrap { display: block; }
+        .line-item[data-type="inventory"] .package-price-wrap { display: none; }
+        .booking-fee-box { margin-top: 12px; border: 1px solid #d8ebe7; background: #f7fbfa; border-radius: 18px; padding: 14px 16px; }
     </style>
 </head>
 <body>
@@ -198,7 +210,10 @@
                             <p class="section-subtitle">Tambahkan layanan manual atau produk inventory.</p>
                         </div>
 
-                        <button type="button" class="btn btn-primary" onclick="addLineItem()">+ Tambah Item</button>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <button type="button" class="btn btn-soft" onclick="addBookingFeeItem()">+ Booking Fee Rp50.000</button>
+                            <button type="button" class="btn btn-primary" onclick="addLineItem()">+ Tambah Item</button>
+                        </div>
                     </div>
 
                     <div id="lineItems"></div>
@@ -307,6 +322,35 @@
                 </select>
             </div>
 
+            <div class="field service-master-wrap">
+                <label>Master Layanan</label>
+                <select class="service-master-select" onchange="handleClinicServiceChange(this)">
+                    <option value="">Manual / pilih layanan</option>
+                    @foreach(($clinicServices ?? collect()) as $service)
+                        <option
+                            value="{{ $service->id }}"
+                            data-name="{{ $service->name }}"
+                            data-price="{{ $service->price_per_visit }}"
+                            data-package-3x="{{ $service->package_3x_price }}"
+                            data-package-6x="{{ $service->package_6x_price }}"
+                            data-package-12x="{{ $service->package_12x_price }}"
+                        >
+                            {{ $service->name }} - Rp {{ number_format($service->price_per_visit, 0, ',', '.') }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div class="field package-price-wrap">
+                <label>Jenis Harga</label>
+                <select class="package-price-select" onchange="handlePackagePriceChange(this)">
+                    <option value="visit">Per Visit</option>
+                    <option value="3x">Paket 3X</option>
+                    <option value="6x">Paket 6X</option>
+                    <option value="12x">Paket 12X</option>
+                </select>
+            </div>
+
             <div class="field description-wrap">
                 <label>Deskripsi Layanan</label>
                 <input type="text" name="description[]" class="description-input" value="Fisioterapi Umum">
@@ -385,9 +429,13 @@
 
         const descriptionInput = row.querySelector('.description-input');
         const inventorySelect = row.querySelector('.inventory-select');
+        const serviceSelect = row.querySelector('.service-master-select');
         const priceInput = row.querySelector('.price-input');
 
         if (type === 'inventory') {
+            if (serviceSelect) {
+                serviceSelect.value = '';
+            }
             descriptionInput.value = '';
             priceInput.value = 0;
             handleInventoryChange(inventorySelect);
@@ -399,6 +447,141 @@
             }
             row.querySelector('.inventory-hint').innerText = '';
         }
+
+        calculateTotals();
+    }
+
+    function syncPackageOptions(row) {
+        const serviceSelect = row.querySelector('.service-master-select');
+        const packageSelect = row.querySelector('.package-price-select');
+
+        if (!serviceSelect || !packageSelect) {
+            return;
+        }
+
+        const selected = serviceSelect.options[serviceSelect.selectedIndex];
+
+        Array.from(packageSelect.options).forEach(option => {
+            option.disabled = false;
+        });
+
+        if (!selected || !selected.value) {
+            packageSelect.value = 'visit';
+            return;
+        }
+
+        const packageMap = {
+            '3x': selected.getAttribute('data-package-3x'),
+            '6x': selected.getAttribute('data-package-6x'),
+            '12x': selected.getAttribute('data-package-12x'),
+        };
+
+        Array.from(packageSelect.options).forEach(option => {
+            if (option.value === 'visit') {
+                option.disabled = false;
+                return;
+            }
+
+            option.disabled = !Number(packageMap[option.value] || 0);
+        });
+
+        if (packageSelect.options[packageSelect.selectedIndex]?.disabled) {
+            packageSelect.value = 'visit';
+        }
+    }
+
+    function handleClinicServiceChange(select) {
+        const row = select.closest('.line-item');
+        const selected = select.options[select.selectedIndex];
+        const descriptionInput = row.querySelector('.description-input');
+        const priceInput = row.querySelector('.price-input');
+        const packageSelect = row.querySelector('.package-price-select');
+
+        if (!selected || !selected.value) {
+            return;
+        }
+
+        syncPackageOptions(row);
+
+        const packageType = packageSelect ? packageSelect.value : 'visit';
+        let selectedPrice = selected.dataset.price || 0;
+        let suffix = '';
+
+        if (packageType === '3x') {
+            selectedPrice = selected.getAttribute('data-package-3x') || 0;
+            suffix = ' - Paket 3X';
+        } else if (packageType === '6x') {
+            selectedPrice = selected.getAttribute('data-package-6x') || 0;
+            suffix = ' - Paket 6X';
+        } else if (packageType === '12x') {
+            selectedPrice = selected.getAttribute('data-package-12x') || 0;
+            suffix = ' - Paket 12X';
+        }
+
+        if (!Number(selectedPrice || 0)) {
+            if (packageSelect) {
+                packageSelect.value = 'visit';
+            }
+
+            selectedPrice = selected.dataset.price || 0;
+            suffix = '';
+        }
+
+        descriptionInput.value = (selected.dataset.name || selected.textContent.trim()) + suffix;
+        priceInput.value = selectedPrice || 0;
+
+        calculateTotals();
+    }
+
+    function handlePackagePriceChange(select) {
+        const row = select.closest('.line-item');
+        const serviceSelect = row.querySelector('.service-master-select');
+
+        syncPackageOptions(row);
+
+        if (!serviceSelect || !serviceSelect.value) {
+            select.value = 'visit';
+            return;
+        }
+
+        if (select.options[select.selectedIndex]?.disabled) {
+            select.value = 'visit';
+        }
+
+        handleClinicServiceChange(serviceSelect);
+    }
+
+    function addBookingFeeItem() {
+        const existing = Array.from(document.querySelectorAll('.description-input')).some(input => {
+            return (input.value || '').toLowerCase().includes('booking fee');
+        });
+
+        if (existing) {
+            alert('Booking fee sudah ada di item checkout.');
+            return;
+        }
+
+        addLineItem();
+
+        const rows = document.querySelectorAll('.line-item');
+        const row = rows[rows.length - 1];
+
+        row.dataset.type = 'service';
+
+        const typeSelect = row.querySelector('.line-type');
+        const serviceSelect = row.querySelector('.service-master-select');
+        const packageSelect = row.querySelector('.package-price-select');
+        const descriptionInput = row.querySelector('.description-input');
+        const qtyInput = row.querySelector('.qty-input');
+        const priceInput = row.querySelector('.price-input');
+
+        if (typeSelect) typeSelect.value = 'service';
+        if (serviceSelect) serviceSelect.value = '';
+        if (packageSelect) packageSelect.value = 'visit';
+
+        descriptionInput.value = 'Booking Fee Non-Paket';
+        qtyInput.value = 1;
+        priceInput.value = 50000;
 
         calculateTotals();
     }

@@ -1042,7 +1042,29 @@
                                 <div class="identity-value">{{ $patient->marital_status ?: '-' }}</div>
                             </div>
 
-                            <div class="identity-item full">
+                                                        <div class="identity-item">
+                                <div class="identity-key">Sumber Informasi</div>
+                                <div class="identity-value">
+                                    {{ $patient->referral_source ?: '-' }}
+                                    @if($patient->referral_source === 'Lainnya' && $patient->referral_source_other)
+                                        — {{ $patient->referral_source_other }}
+                                    @endif
+                                </div>
+                            </div>
+
+                            <div class="identity-item">
+                                <div class="identity-key">Consent Dokumentasi</div>
+                                <div class="identity-value">
+                                    {{ $patient->documentation_consent ?: '-' }}
+                                    @if($patient->documentation_consent_notes)
+                                        <div style="margin-top: 6px; color: #7b8794; font-size: 12px; line-height: 1.6; font-weight: 600;">
+                                            {{ $patient->documentation_consent_notes }}
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+
+<div class="identity-item full">
                                 <div class="identity-key">Alamat</div>
                                 <div class="identity-value">{{ $patient->address ?: '-' }}</div>
                             </div>
@@ -1213,7 +1235,7 @@
             <section class="section-card">
                 <div class="section-head">
                     <div>
-                        <h2 class="section-title">Informed Consent History</h2>
+<h2 class="section-title">Informed Consent History</h2>
                         <p class="section-subtitle">Dokumen consent yang tersimpan untuk pasien.</p>
                     </div>
                     <a href="/admin/patients/{{ $patient->id }}/informed-consent" class="btn btn-soft">+ Create Consent</a>

@@ -132,6 +132,20 @@
             .main { padding: 16px; }
             .form-grid { grid-template-columns: 1fr; }
         }
+    
+        .field-pair {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+            grid-column: 1 / -1;
+            align-items: start;
+        }
+        @media (max-width: 900px) {
+            .field-pair {
+                grid-template-columns: 1fr;
+            }
+        }
+
     </style>
 </head>
 <body>
@@ -229,6 +243,64 @@
                             <textarea name="address" rows="4">{{ old('address') }}</textarea>
                         </div>
                     </div>
+
+                                                <div class="field-pair">
+                            <div class="field">
+                                <label>Tahu Khayra dari mana?</label>
+                                <select name="referral_source">
+                                    @php
+                                        $selectedReferralSource = old('referral_source', '');
+                                        $referralSourceOptions = [
+                                            'Instagram' => 'Instagram',
+                                            'Google Maps' => 'Google Maps',
+                                            'TikTok' => 'TikTok',
+                                            'Referral teman/keluarga' => 'Referral teman/keluarga',
+                                            'Dokter / tenaga kesehatan' => 'Dokter / tenaga kesehatan',
+                                            'Walk-in' => 'Walk-in',
+                                            'Website' => 'Website',
+                                            'Lainnya' => 'Lainnya',
+                                        ];
+                                    @endphp
+                                    <option value="">Pilih sumber informasi</option>
+                                    @foreach($referralSourceOptions as $value => $label)
+                                        <option value="{{ $value }}" {{ $selectedReferralSource === $value ? 'selected' : '' }}>{{ $label }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="field">
+                                <label>Jika lainnya</label>
+                                <input type="text" name="referral_source_other" value="{{ old('referral_source_other', '') }}" placeholder="Contoh: event, komunitas, corporate, dll">
+                            </div>
+                        </div>
+
+                        <div class="field-pair">
+                            <div class="field">
+                                <label>Consent Dokumentasi / Publish</label>
+                                <select name="documentation_consent">
+                                    @php
+                                        $selectedDocumentationConsent = old('documentation_consent', '');
+                                        $documentationConsentOptions = [
+                                            'Bersedia dipublish' => 'Bersedia dipublish',
+                                            'Dokumentasi internal saja' => 'Dokumentasi internal saja',
+                                            'Tidak bersedia' => 'Tidak bersedia',
+                                        ];
+                                    @endphp
+                                    <option value="">Pilih consent dokumentasi</option>
+                                    @foreach($documentationConsentOptions as $value => $label)
+                                        <option value="{{ $value }}" {{ $selectedDocumentationConsent === $value ? 'selected' : '' }}>{{ $label }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="field">
+                                <label>Catatan Consent Dokumentasi</label>
+                                <input type="text" name="documentation_consent_notes" value="{{ old('documentation_consent_notes', '') }}" placeholder="Contoh: boleh foto tanpa wajah / hanya testimoni tertulis">
+                            </div>
+                        </div>
+
+
+
 
                     <div class="actions">
                         <button type="submit" class="submit-btn">Simpan Patient</button>

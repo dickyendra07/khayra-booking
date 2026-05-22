@@ -363,6 +363,21 @@
                             <input type="text" name="relationship_to_patient" value="{{ old('relationship_to_patient') }}">
                         </div>
 
+                        <div class="field">
+                            <label>Nama Emergency Contact</label>
+                            <input type="text" name="emergency_contact_name" value="{{ old('emergency_contact_name') }}" placeholder="Contoh: Ibu / Suami / Anak pasien">
+                        </div>
+
+                        <div class="field">
+                            <label>Nomor Emergency Contact</label>
+                            <input type="text" name="emergency_contact_phone" value="{{ old('emergency_contact_phone') }}" placeholder="Contoh: 081234567890">
+                        </div>
+
+                        <div class="field">
+                            <label>Hubungan Emergency Contact</label>
+                            <input type="text" name="emergency_contact_relation" value="{{ old('emergency_contact_relation') }}" placeholder="Contoh: Orang tua / Pasangan / Saudara">
+                        </div>
+
                         <div class="field full">
                             <label>Teks Persetujuan</label>
                             <textarea name="agreement_text" rows="8">{{ old('agreement_text', 'Saya menyatakan telah menerima penjelasan mengenai tindakan fisioterapi yang akan dilakukan, tujuan terapi, manfaat, serta kemungkinan respons selama proses penanganan. Dengan ini saya memberikan persetujuan untuk dilakukan tindakan fisioterapi sesuai kebutuhan klinis patient.') }}</textarea>

@@ -384,7 +384,19 @@
                 <div class="actions">
                     <a href="/admin/billings" class="btn btn-soft">← Billing List</a>
                     <a href="/admin/billings/{{ $billing->id }}/edit" class="btn btn-blue">Edit Billing</a>
-                    <a href="/admin/billings/{{ $billing->id }}/print" class="btn btn-primary" target="_blank">Print / Save PDF</a>
+                    
+                    @php
+                        $hasPackageItem = ($billing->items ?? collect())->contains(function ($item) {
+                            return preg_match('/paket\s*(3x|6x|12x)/i', (string) $item->description);
+                        });
+                    @endphp
+
+                    @if($hasPackageItem)
+                        <a href="/admin/package-treatments/create?billing_id={{ $billing->id }}" class="btn btn-soft">
+                            Buat Dokumen Paket
+                        </a>
+                    @endif
+<a href="/admin/billings/{{ $billing->id }}/print" class="btn btn-primary" target="_blank">Print / Save PDF</a>
                 </div>
             </div>
 
