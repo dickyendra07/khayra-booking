@@ -194,6 +194,119 @@
                 align-items: flex-start;
             }
         }
+    
+        .report-pain-body {
+            margin-top: 16px;
+            border: 1px solid #dbecea;
+            border-radius: 18px;
+            padding: 16px;
+            background: #fbfffe;
+            page-break-inside: avoid;
+        }
+
+        .report-pain-body-title {
+            margin: 0 0 6px;
+            color: #1f4f4d;
+            font-size: 18px;
+            font-weight: 900;
+        }
+
+        .report-pain-body-subtitle {
+            margin: 0 0 12px;
+            color: #64748b;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .report-pain-area-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .report-pain-area-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 12px;
+            background: #ffffff;
+            page-break-inside: avoid;
+        }
+
+        .report-pain-area-name {
+            color: #20343a;
+            font-size: 13px;
+            font-weight: 900;
+            margin-bottom: 8px;
+        }
+
+        .report-pain-pill-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .report-pain-pill {
+            border: 1px solid #dbecea;
+            border-radius: 999px;
+            padding: 4px 8px;
+            font-size: 10px;
+            font-weight: 800;
+            color: #334155;
+            background: #f8fafc;
+        }
+
+        .report-pain-pill.strong {
+            color: #c2410c;
+            background: #fff7ed;
+            border-color: #fed7aa;
+        }
+
+        .report-pain-notes {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .report-pain-note-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 12px;
+            background: #ffffff;
+        }
+
+        .report-pain-note-card.full {
+            grid-column: 1 / -1;
+        }
+
+        .report-pain-label {
+            color: #64748b;
+            font-size: 10px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: .4px;
+            margin-bottom: 6px;
+        }
+
+        .report-pain-value {
+            color: #20343a;
+            font-size: 12px;
+            line-height: 1.65;
+            white-space: pre-line;
+        }
+
+        @media print {
+            .report-pain-area-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .report-pain-body,
+            .report-pain-area-card,
+            .report-pain-note-card {
+                box-shadow: none !important;
+            }
+        }
+
     </style>
     <!-- Khayra PWA -->
     <link rel="manifest" href="/manifest.webmanifest">
@@ -212,6 +325,18 @@
     $comorbidities = $record && $record->comorbidities ? $record->comorbidities : collect();
     $supportingData = $record && $record->supportingData ? $record->supportingData : collect();
     $homeExercises = $record && $record->homeExercises ? $record->homeExercises : collect();
+    $reportPainBodyAreas = collect(json_decode($record->pain_body_areas ?? '[]', true) ?: []);
+
+    if ($reportPainBodyAreas->isEmpty() && $record && !blank($record->pain_body_area)) {
+        $reportPainBodyAreas = collect([[
+            'area' => $record->pain_body_area,
+            'intensity' => $record->pain_body_intensity,
+            'type' => $record->pain_body_type,
+        ]]);
+    }
+
+    $reportPainQualityTags = collect(json_decode($record->pain_quality_tags ?? '[]', true) ?: []);
+
 @endphp
 
 <div class="page">
@@ -357,7 +482,106 @@
     </section>
 
     <section class="section">
-        <h2 class="section-title">Diagnosis & Clinical Decision</h2>
+        <h2 class="section-title">Pain Body Mapping</h2>
+
+        <div class="report-pain-body">
+
+            <h3 class="report-pain-body-title">Pain Body Chart</h3>
+
+            <p class="report-pain-body-subtitle">Area nyeri, intensity per area, tipe nyeri, trigger, relief, dan catatan klinis.</p>
+
+            @if($reportPainBodyAreas->count())
+
+                <div class="report-pain-area-grid">
+
+                    @foreach($reportPainBodyAreas as $painArea)
+
+                        @php
+
+                            $painAreaName = is_array($painArea) ? ($painArea['area'] ?? '-') : $painArea;
+
+                            $painAreaIntensity = is_array($painArea) ? ($painArea['intensity'] ?? null) : null;
+
+                            $painAreaType = is_array($painArea) ? ($painArea['type'] ?? null) : null;
+
+                        @endphp
+
+                        <div class="report-pain-area-card">
+
+                            <div class="report-pain-area-name">{{ $painAreaName ?: '-' }}</div>
+
+                            <div class="report-pain-pill-row">
+
+                                <span class="report-pain-pill strong">Intensity {{ $painAreaIntensity !== null && $painAreaIntensity !== '' ? $painAreaIntensity . '/10' : '-' }}</span>
+
+                                <span class="report-pain-pill">Type {{ $painAreaType ?: '-' }}</span>
+
+                            </div>
+
+                        </div>
+
+                    @endforeach
+
+                </div>
+
+            @else
+
+                <div class="report-pain-value">Belum ada area nyeri terstruktur.</div>
+
+            @endif
+
+            @if($reportPainQualityTags->count())
+
+                <div class="report-pain-note-card full" style="margin-top:12px;">
+
+                    <div class="report-pain-label">Pain Quality Tags</div>
+
+                    <div class="report-pain-pill-row">
+
+                        @foreach($reportPainQualityTags as $qualityTag)
+
+                            <span class="report-pain-pill">{{ $qualityTag }}</span>
+
+                        @endforeach
+
+                    </div>
+
+                </div>
+
+            @endif
+
+            <div class="report-pain-notes">
+
+                <div class="report-pain-note-card">
+
+                    <div class="report-pain-label">Trigger / Memburuk Saat</div>
+
+                    <div class="report-pain-value">{{ $record->pain_aggravating_activity ?? '-' }}</div>
+
+                </div>
+
+                <div class="report-pain-note-card">
+
+                    <div class="report-pain-label">Relief / Membaik Saat</div>
+
+                    <div class="report-pain-value">{{ $record->pain_easing_activity ?? '-' }}</div>
+
+                </div>
+
+                <div class="report-pain-note-card full">
+
+                    <div class="report-pain-label">Catatan Nyeri</div>
+
+                    <div class="report-pain-value">{{ $record->pain_body_chart_note ?? '-' }}</div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+<h2 class="section-title">Diagnosis & Clinical Decision</h2>
         <div class="grid-2">
             <div class="item">
                 <div class="item-label">Physiotherapy Diagnosis</div>

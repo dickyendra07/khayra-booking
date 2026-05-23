@@ -387,6 +387,100 @@
             .stats-grid { grid-template-columns: 1fr; }
             .hero, .section-card { padding: 20px; border-radius: 22px; }
         }
+    
+        .vital-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+            gap: 14px;
+        }
+
+        .vital-card {
+            border: 1px solid #dfecea;
+            border-radius: 22px;
+            padding: 18px;
+            background: linear-gradient(135deg, #ffffff 0%, #f8fffd 100%);
+            box-shadow: 0 12px 28px rgba(30, 74, 73, .06);
+        }
+
+        .vital-top {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            align-items: flex-start;
+            margin-bottom: 14px;
+        }
+
+        .vital-patient {
+            margin: 0;
+            color: #22343a;
+            font-size: 16px;
+            font-weight: 900;
+            line-height: 1.35;
+        }
+
+        .vital-meta {
+            margin-top: 4px;
+            color: #64748b;
+            font-size: 12px;
+            font-weight: 700;
+            line-height: 1.5;
+        }
+
+        .pain-badge {
+            flex: 0 0 auto;
+            border-radius: 999px;
+            padding: 8px 10px;
+            background: #f5f3ff;
+            color: #7c3aed;
+            font-size: 12px;
+            font-weight: 900;
+        }
+
+        .vital-mini-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .vital-mini {
+            border: 1px solid #eef2f1;
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 11px 12px;
+        }
+
+        .vital-label {
+            color: #94a3b8;
+            font-size: 10px;
+            letter-spacing: .55px;
+            text-transform: uppercase;
+            font-weight: 900;
+        }
+
+        .vital-value {
+            margin-top: 5px;
+            color: #22343a;
+            font-size: 14px;
+            font-weight: 900;
+            line-height: 1.35;
+        }
+
+        .vital-action {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 14px;
+            min-height: 38px;
+            padding: 0 14px;
+            border-radius: 999px;
+            background: #2f7c7a;
+            color: white;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 900;
+        }
+
     </style>
     <!-- Khayra PWA -->
     <link rel="manifest" href="/manifest.webmanifest">
@@ -534,6 +628,81 @@
                         <a href="/admin/billings" class="workflow-link">Open Ledger</a>
                     </div>
                 </div>
+            </section>
+
+
+            <section class="section-card">
+                <div class="section-head">
+                    <div>
+                        <h2 class="section-title">Vital Sign Snapshot</h2>
+                        <p class="section-subtitle">Latest vital sign dan pain scale dari rekam medis therapist untuk monitoring admin.</p>
+                    </div>
+                    <a href="/admin/visits" class="btn btn-soft">Open Visits</a>
+                </div>
+
+                @if(($latestVitalSigns ?? collect())->count())
+                    <div class="vital-grid">
+                        @foreach($latestVitalSigns as $record)
+                            @php
+                                $visit = $record->visit;
+                                $patient = optional($visit)->patient;
+                                $therapist = optional($visit)->therapistRelation;
+                            @endphp
+
+                            <div class="vital-card">
+                                <div class="vital-top">
+                                    <div>
+                                        <h3 class="vital-patient">{{ optional($patient)->full_name ?: 'Patient' }}</h3>
+                                        <div class="vital-meta">
+                                            Visit: {{ optional($visit)->visit_date ?: '-' }}<br>
+                                            Therapist: {{ optional($therapist)->full_name ?: optional($visit)->therapist ?: '-' }}
+                                        </div>
+                                    </div>
+
+                                    <div class="pain-badge">Pain {{ is_null($record->pain_scale) ? '-' : $record->pain_scale . '/10' }}</div>
+                                </div>
+
+                                <div class="vital-mini-grid">
+                                    <div class="vital-mini">
+                                        <div class="vital-label">Blood Pressure</div>
+                                        <div class="vital-value">{{ $record->blood_pressure ?: '-' }}</div>
+                                    </div>
+
+                                    <div class="vital-mini">
+                                        <div class="vital-label">Heart Rate</div>
+                                        <div class="vital-value">{{ $record->heart_rate ?: '-' }}</div>
+                                    </div>
+
+                                    <div class="vital-mini">
+                                        <div class="vital-label">Temperature</div>
+                                        <div class="vital-value">{{ $record->temperature ?: '-' }}</div>
+                                    </div>
+
+                                    <div class="vital-mini">
+                                        <div class="vital-label">Respiration</div>
+                                        <div class="vital-value">{{ $record->respiration_rate ?: '-' }}</div>
+                                    </div>
+
+                                    <div class="vital-mini">
+                                        <div class="vital-label">Weight / Height</div>
+                                        <div class="vital-value">{{ $record->weight ?: '-' }} / {{ $record->height ?: '-' }}</div>
+                                    </div>
+
+                                    <div class="vital-mini">
+                                        <div class="vital-label">BMI</div>
+                                        <div class="vital-value">{{ $record->bmi ?: '-' }}</div>
+                                    </div>
+                                </div>
+
+                                @if($visit)
+                                    <a href="/admin/visits/{{ $visit->id }}/medical-record" class="vital-action">Open Medical Record</a>
+                                @endif
+                            </div>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="empty-state">Belum ada vital sign yang tercatat dari rekam medis.</div>
+                @endif
             </section>
 
             <div class="grid-2">

@@ -464,6 +464,323 @@
             }
         }
 
+    
+        .supporting-attachment-card {
+            border: 1px solid #dbeafe;
+            background: linear-gradient(135deg, #f8fbff 0%, #ffffff 100%);
+            border-radius: 16px;
+            padding: 12px;
+        }
+
+        .supporting-file-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-height: 38px;
+            padding: 0 14px;
+            border-radius: 999px;
+            background: #2f7c7a;
+            color: #ffffff !important;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 900;
+            box-shadow: 0 10px 24px rgba(47,124,122,.16);
+        }
+
+        .supporting-file-name {
+            margin-top: 8px;
+            color: #64748b;
+            font-size: 12px;
+            line-height: 1.45;
+            overflow-wrap: anywhere;
+        }
+
+    
+        .pain-tracking-card {
+            border: 1px solid #e4efed;
+            border-radius: 24px;
+            padding: 18px;
+            background: linear-gradient(135deg, #ffffff 0%, #f8fffd 100%);
+            margin-bottom: 18px;
+        }
+
+        .pain-tracking-head {
+            display: flex;
+            justify-content: space-between;
+            gap: 14px;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+
+        .pain-tracking-title {
+            margin: 0;
+            color: #22343a;
+            font-size: 18px;
+            font-weight: 900;
+        }
+
+        .pain-tracking-subtitle {
+            margin: 5px 0 0;
+            color: #64748b;
+            font-size: 13px;
+            line-height: 1.7;
+        }
+
+        .pain-summary-pill {
+            flex: 0 0 auto;
+            border-radius: 999px;
+            padding: 9px 12px;
+            background: #f5f3ff;
+            color: #7c3aed;
+            font-size: 12px;
+            font-weight: 900;
+        }
+
+        .pain-chart-grid {
+            display: grid;
+            gap: 12px;
+        }
+
+        .pain-chart-row {
+            display: grid;
+            grid-template-columns: 110px 1fr 54px;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .pain-date {
+            color: #64748b;
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .pain-bar-track {
+            height: 14px;
+            border-radius: 999px;
+            background: #eef2f7;
+            overflow: hidden;
+        }
+
+        .pain-bar-fill {
+            height: 100%;
+            border-radius: 999px;
+            background: linear-gradient(90deg, #2f7c7a, #8b5cf6);
+            min-width: 4px;
+        }
+
+        .pain-score {
+            color: #22343a;
+            font-size: 13px;
+            font-weight: 900;
+            text-align: right;
+        }
+
+        .pain-note-list {
+            margin-top: 14px;
+            display: grid;
+            gap: 8px;
+        }
+
+        .pain-note-item {
+            border: 1px solid #eef2f1;
+            border-radius: 16px;
+            padding: 10px 12px;
+            background: #ffffff;
+            color: #475569;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 720px) {
+            .pain-chart-row {
+                grid-template-columns: 1fr;
+                gap: 6px;
+            }
+
+            .pain-score {
+                text-align: left;
+            }
+
+            .pain-tracking-head {
+                flex-direction: column;
+            }
+        }
+
+    
+        .body-chart-view-card {
+            border: 1px solid #e3efed;
+            border-radius: 22px;
+            padding: 16px;
+            background: linear-gradient(135deg, #ffffff 0%, #f8fffd 100%);
+            margin-top: 14px;
+        }
+
+        .body-chart-view-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        @media (max-width: 920px) {
+            .body-chart-view-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .body-chart-view-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+    
+        .pain-body-pro-card {
+            margin-top: 16px;
+            border: 1px solid #dbecea;
+            border-radius: 24px;
+            background: linear-gradient(135deg, #fbfffe 0%, #ffffff 55%, #f7fffc 100%);
+            padding: 18px;
+            box-shadow: 0 18px 45px rgba(31, 79, 77, .07);
+        }
+
+        .pain-body-pro-head {
+            display: flex;
+            justify-content: space-between;
+            gap: 14px;
+            align-items: flex-start;
+            margin-bottom: 14px;
+        }
+
+        .pain-body-pro-title {
+            margin: 0;
+            color: #1f4f4d;
+            font-size: 18px;
+            font-weight: 950;
+            letter-spacing: -.02em;
+        }
+
+        .pain-body-pro-subtitle {
+            margin: 5px 0 0;
+            color: #64748b;
+            font-size: 12px;
+            line-height: 1.7;
+            font-weight: 750;
+        }
+
+        .pain-body-pro-badge {
+            flex: 0 0 auto;
+            display: inline-flex;
+            align-items: center;
+            min-height: 32px;
+            padding: 0 12px;
+            border-radius: 999px;
+            background: #eefcf8;
+            color: #1f4f4d;
+            font-size: 11px;
+            font-weight: 950;
+            border: 1px solid #c9ebe4;
+        }
+
+        .pain-body-pro-areas {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+            gap: 12px;
+            margin-top: 14px;
+        }
+
+        .pain-body-pro-area {
+            border: 1px solid #dbecea;
+            border-radius: 18px;
+            background: #ffffff;
+            padding: 14px;
+            min-height: 108px;
+        }
+
+        .pain-body-pro-area-name {
+            color: #20343a;
+            font-size: 14px;
+            font-weight: 950;
+            margin-bottom: 10px;
+            line-height: 1.35;
+        }
+
+        .pain-body-pro-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .pain-body-pro-pill {
+            display: inline-flex;
+            align-items: center;
+            min-height: 28px;
+            padding: 0 10px;
+            border-radius: 999px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            color: #334155;
+            font-size: 11px;
+            font-weight: 900;
+        }
+
+        .pain-body-pro-pill.strong {
+            background: #fff7ed;
+            border-color: #fed7aa;
+            color: #c2410c;
+        }
+
+        .pain-body-pro-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 14px;
+        }
+
+        .pain-body-pro-note {
+            border: 1px solid #dbecea;
+            border-radius: 18px;
+            background: #ffffff;
+            padding: 14px;
+        }
+
+        .pain-body-pro-note.full {
+            grid-column: 1 / -1;
+        }
+
+        .pain-body-pro-label {
+            color: #64748b;
+            font-size: 10px;
+            font-weight: 950;
+            letter-spacing: .5px;
+            text-transform: uppercase;
+            margin-bottom: 7px;
+        }
+
+        .pain-body-pro-value {
+            color: #20343a;
+            font-size: 14px;
+            line-height: 1.7;
+            font-weight: 800;
+            white-space: pre-line;
+        }
+
+        @media (max-width: 760px) {
+            .pain-body-pro-head {
+                flex-direction: column;
+            }
+
+            .pain-body-pro-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+    
+        .pain-body-pro-card.admin-full-width {
+            grid-column: 1 / -1;
+        }
+
     </style>
     <!-- Khayra PWA -->
     <link rel="manifest" href="/manifest.webmanifest">
@@ -494,6 +811,41 @@
     $homeExercises = $record && $record->homeExercises && $record->homeExercises->count()
         ? $record->homeExercises
         : collect();
+
+    $painTrackingRecords = $visit->patient
+        ? $visit->patient->visits()
+            ->with('medicalRecord')
+            ->whereHas('medicalRecord', function ($query) {
+                $query->whereNotNull('pain_scale');
+            })
+            ->orderBy('visit_date')
+            ->get()
+            ->map(function ($painVisit) {
+                return (object) [
+                    'visit_id' => $painVisit->id,
+                    'visit_date' => $painVisit->visit_date,
+                    'pain_scale' => optional($painVisit->medicalRecord)->pain_scale,
+                    'pain_type' => optional($painVisit->medicalRecord)->pain_type,
+                    'note' => optional($painVisit->medicalRecord)->pain_body_chart_note,
+                ];
+            })
+        : collect();
+
+    $painStart = optional($painTrackingRecords->first())->pain_scale;
+    $painLatest = optional($painTrackingRecords->last())->pain_scale;
+    $painDelta = (!is_null($painStart) && !is_null($painLatest)) ? ((int) $painLatest - (int) $painStart) : null;
+    $adminPainBodyAreas = collect(json_decode($record->pain_body_areas ?? '[]', true) ?: []);
+
+    if ($adminPainBodyAreas->isEmpty() && $record && !blank($record->pain_body_area)) {
+        $adminPainBodyAreas = collect([[
+            'area' => $record->pain_body_area,
+            'intensity' => $record->pain_body_intensity,
+            'type' => $record->pain_body_type,
+        ]]);
+    }
+
+    $adminPainQualityTags = collect(json_decode($record->pain_quality_tags ?? '[]', true) ?: []);
+
 @endphp
 
 <div class="layout">
@@ -595,6 +947,63 @@
                     Tampilan lengkap hasil clinical assessment therapist untuk kebutuhan koordinasi dan monitoring admin.
                 </p>
 
+
+                <div class="pain-tracking-card">
+                    <div class="pain-tracking-head">
+                        <div>
+                            <h3 class="pain-tracking-title">Pain Tracking per Session</h3>
+                            <p class="pain-tracking-subtitle">Grafik sederhana pain scale 0-10 dari setiap visit pasien yang sudah punya rekam medis.</p>
+                        </div>
+
+                        <div class="pain-summary-pill">
+                            @if(is_null($painDelta))
+                                Trend -
+                            @elseif($painDelta < 0)
+                                Turun {{ abs($painDelta) }} poin
+                            @elseif($painDelta > 0)
+                                Naik {{ $painDelta }} poin
+                            @else
+                                Stabil
+                            @endif
+                        </div>
+                    </div>
+
+                    @if($painTrackingRecords->count())
+                        <div class="pain-chart-grid">
+                            @foreach($painTrackingRecords as $painItem)
+                                @php
+                                    $painScore = is_null($painItem->pain_scale) ? 0 : min(max((int) $painItem->pain_scale, 0), 10);
+                                    $painPercent = $painScore * 10;
+                                @endphp
+
+                                <div class="pain-chart-row">
+                                    <div class="pain-date">{{ $painItem->visit_date ?: '-' }}</div>
+                                    <div class="pain-bar-track">
+                                        <div class="pain-bar-fill" style="width: {{ $painPercent }}%;"></div>
+                                    </div>
+                                    <div class="pain-score">{{ $painScore }}/10</div>
+                                </div>
+                            @endforeach
+                        </div>
+
+                        <div class="pain-note-list">
+                            @foreach($painTrackingRecords->take(-3) as $painItem)
+                                @if($painItem->pain_type || $painItem->note)
+                                    <div class="pain-note-item">
+                                        <strong>{{ $painItem->visit_date ?: '-' }}</strong>
+                                        · Type: {{ $painItem->pain_type ?: '-' }}
+                                        @if($painItem->note)
+                                            <br>{{ $painItem->note }}
+                                        @endif
+                                    </div>
+                                @endif
+                            @endforeach
+                        </div>
+                    @else
+                        <div class="empty-block">Belum ada pain scale antar sesi.</div>
+                    @endif
+                </div>
+
                 <div class="viewer-section">
                     <h3 class="viewer-title">1. Chief Complaint & Pain Profile</h3>
                     <p class="viewer-text">Keluhan utama, onset, nyeri, dan keterbatasan fungsi awal.</p>
@@ -638,175 +1047,64 @@
                             <div class="data-label">Pain Body Chart Note</div>
                             <div class="data-value">{{ $record->pain_body_chart_note ?? '-' }}</div>
                         </div>
-                    </div>
-                </div>
 
-                <div class="viewer-section">
-                    <h3 class="viewer-title">2. Medical History</h3>
-                    <p class="viewer-text">Riwayat injury, surgery, fracture, stroke, malignancy, dan riwayat lain.</p>
+                    <div class="pain-body-pro-card admin-full-width">
+                        <div class="pain-body-pro-head">
+                            <div>
+                                <h4 class="pain-body-pro-title">Pain Body Chart</h4>
+                                <p class="pain-body-pro-subtitle">Ringkasan area nyeri, intensitas per area, tipe nyeri, trigger, relief, dan catatan klinis.</p>
+                            </div>
+                            <div class="pain-body-pro-badge">Pro Anatomy Map</div>
+                        </div>
 
-                    @if($histories->count())
-                        <div class="repeat-wrap">
-                            @foreach($histories as $history)
-                                <div class="repeat-item">
-                                    <div class="repeat-head">{{ $history->history_type ?: 'History Item' }}</div>
-                                    <div class="grid-2">
-                                        <div class="data-box">
-                                            <div class="data-label">History Date</div>
-                                            <div class="data-value">{{ $history->history_date ?: '-' }}</div>
-                                        </div>
-                                        <div class="data-box">
-                                            <div class="data-label">History Note</div>
-                                            <div class="data-value">{{ $history->history_note ?: '-' }}</div>
+                        @if($adminPainBodyAreas->count())
+                            <div class="pain-body-pro-areas">
+                                @foreach($adminPainBodyAreas as $painArea)
+                                    @php
+                                        $painAreaName = is_array($painArea) ? ($painArea['area'] ?? '-') : $painArea;
+                                        $painAreaIntensity = is_array($painArea) ? ($painArea['intensity'] ?? null) : null;
+                                        $painAreaType = is_array($painArea) ? ($painArea['type'] ?? null) : null;
+                                    @endphp
+
+                                    <div class="pain-body-pro-area">
+                                        <div class="pain-body-pro-area-name">{{ $painAreaName ?: '-' }}</div>
+                                        <div class="pain-body-pro-meta">
+                                            <span class="pain-body-pro-pill strong">Intensity {{ $painAreaIntensity !== null && $painAreaIntensity !== '' ? $painAreaIntensity . '/10' : '-' }}</span>
+                                            <span class="pain-body-pro-pill">Type {{ $painAreaType ?: '-' }}</span>
                                         </div>
                                     </div>
+                                @endforeach
+                            </div>
+                        @else
+                            <div class="empty-block">Belum ada area nyeri terstruktur.</div>
+                        @endif
+
+                        @if($adminPainQualityTags->count())
+                            <div class="pain-body-pro-note full" style="margin-top:14px;">
+                                <div class="pain-body-pro-label">Pain Quality Tags</div>
+                                <div class="pain-body-pro-meta">
+                                    @foreach($adminPainQualityTags as $qualityTag)
+                                        <span class="pain-body-pro-pill">{{ $qualityTag }}</span>
+                                    @endforeach
                                 </div>
-                            @endforeach
-                        </div>
-                    @else
-                        <div class="empty-block">Belum ada data medical history.</div>
-                    @endif
-                </div>
+                            </div>
+                        @endif
 
-                <div class="viewer-section">
-                    <h3 class="viewer-title">3. Comorbidities</h3>
-                    <p class="viewer-text">Komorbid yang dicatat therapist berikut status dan hasil pengukuran.</p>
+                        <div class="pain-body-pro-grid">
+                            <div class="pain-body-pro-note">
+                                <div class="pain-body-pro-label">Trigger / Memburuk Saat</div>
+                                <div class="pain-body-pro-value">{{ $record->pain_aggravating_activity ?? '-' }}</div>
+                            </div>
 
-                    @if($comorbidities->count())
-                        <div class="repeat-wrap">
-                            @foreach($comorbidities as $comorbidity)
-                                <div class="repeat-item">
-                                    <div class="repeat-head">{{ $comorbidity->name ?: 'Comorbidity Item' }}</div>
-                                    <div class="grid-3">
-                                        <div class="data-box">
-                                            <div class="data-label">Checked</div>
-                                            <div class="data-value">{{ $comorbidity->is_checked ? 'Yes' : 'No' }}</div>
-                                        </div>
-                                        <div class="data-box">
-                                            <div class="data-label">Measurement Date</div>
-                                            <div class="data-value">{{ $comorbidity->measurement_date ?: '-' }}</div>
-                                        </div>
-                                        <div class="data-box">
-                                            <div class="data-label">Final Value</div>
-                                            <div class="data-value">{{ $comorbidity->final_value ?: '-' }}</div>
-                                        </div>
-                                    </div>
-                                    <div class="data-box spacer">
-                                        <div class="data-label">Note</div>
-                                        <div class="data-value">{{ $comorbidity->note ?: '-' }}</div>
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-                    @else
-                        <div class="empty-block">Belum ada data comorbidities.</div>
-                    @endif
-                </div>
+                            <div class="pain-body-pro-note">
+                                <div class="pain-body-pro-label">Relief / Membaik Saat</div>
+                                <div class="pain-body-pro-value">{{ $record->pain_easing_activity ?? '-' }}</div>
+                            </div>
 
-                <div class="viewer-section">
-                    <h3 class="viewer-title">4. Vital Signs</h3>
-                    <p class="viewer-text">Ringkasan vital signs patient pada assessment.</p>
-
-                    <div class="grid-3">
-                        <div class="data-box">
-                            <div class="data-label">Blood Pressure</div>
-                            <div class="data-value">{{ $record->blood_pressure ?? '-' }}</div>
-                        </div>
-
-                        <div class="data-box">
-                            <div class="data-label">Temperature</div>
-                            <div class="data-value">{{ $record->temperature ?? '-' }}</div>
-                        </div>
-
-                        <div class="data-box">
-                            <div class="data-label">Respiration Rate</div>
-                            <div class="data-value">{{ $record->respiration_rate ?? '-' }}</div>
-                        </div>
-
-                        <div class="data-box">
-                            <div class="data-label">Heart Rate</div>
-                            <div class="data-value">{{ $record->heart_rate ?? '-' }}</div>
-                        </div>
-
-                        <div class="data-box">
-                            <div class="data-label">Weight</div>
-                            <div class="data-value">{{ $record->weight ?? '-' }}</div>
-                        </div>
-
-                        <div class="data-box">
-                            <div class="data-label">Height</div>
-                            <div class="data-value">{{ $record->height ?? '-' }}</div>
-                        </div>
-                    </div>
-
-                    <div class="data-box spacer">
-                        <div class="data-label">BMI</div>
-                        <div class="data-value">{{ $record->bmi ?? '-' }}</div>
-                    </div>
-                </div>
-
-                <div class="viewer-section">
-                    <h3 class="viewer-title">5. Supporting Data Result</h3>
-                    <p class="viewer-text">Data penunjang seperti X-ray, MRI, lab, dan interpretasi singkat.</p>
-
-                    @if($supportingData->count())
-                        <div class="repeat-wrap">
-                            @foreach($supportingData as $item)
-                                <div class="repeat-item">
-                                    <div class="grid-3">
-                                        <div class="data-box">
-                                            <div class="data-label">Date</div>
-                                            <div class="data-value">{{ $item->data_date ?: '-' }}</div>
-                                        </div>
-
-                                        <div class="data-box">
-                                            <div class="data-label">Type of Data</div>
-                                            <div class="data-value">{{ $item->data_type ?: '-' }}</div>
-                                        </div>
-
-                                        <div class="data-box">
-                                            <div class="data-label">Interpretation</div>
-                                            <div class="data-value">{{ $item->interpretation ?: '-' }}</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-                    @else
-                        <div class="empty-block">Belum ada supporting data.</div>
-                    @endif
-                </div>
-
-                <div class="viewer-section">
-                    <h3 class="viewer-title">6. Subjective & Objective Examination</h3>
-                    <p class="viewer-text">Hasil subjective exam, objective exam, dan parameter klinis terkait.</p>
-
-                    <div class="grid-2">
-                        <div class="data-box">
-                            <div class="data-label">Subjective Examination</div>
-                            <div class="data-value">{{ $record->subjective_examination ?? '-' }}</div>
-                        </div>
-
-                        <div class="data-box">
-                            <div class="data-label">Objective Examination</div>
-                            <div class="data-value">{{ $record->objective_examination ?? '-' }}</div>
-                        </div>
-                    </div>
-
-                    <div class="grid-3 spacer">
-                        <div class="data-box">
-                            <div class="data-label">Severity Level</div>
-                            <div class="data-value">{{ $record->severity_level ?? '-' }}</div>
-                        </div>
-
-                        <div class="data-box">
-                            <div class="data-label">Irritability Level</div>
-                            <div class="data-value">{{ $record->irritability_level ?? '-' }}</div>
-                        </div>
-
-                        <div class="data-box">
-                            <div class="data-label">Nature Type</div>
-                            <div class="data-value">{{ $record->nature_type ?? '-' }}</div>
+                            <div class="pain-body-pro-note full">
+                                <div class="pain-body-pro-label">Catatan Nyeri</div>
+                                <div class="pain-body-pro-value">{{ $record->pain_body_chart_note ?? '-' }}</div>
+                            </div>
                         </div>
                     </div>
 

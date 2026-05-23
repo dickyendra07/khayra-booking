@@ -11,6 +11,10 @@ class MedicalRecordSupportingData extends Model
         'data_date',
         'data_type',
         'interpretation',
+        'file_size',
+        'file_mime',
+        'file_name',
+        'file_path',
     ];
 
     protected $casts = [

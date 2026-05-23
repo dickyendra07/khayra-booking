@@ -5,6 +5,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use App\Models\BillingItem;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use App\Models\Booking;
 use App\Models\Patient;
 use App\Models\Visit;
@@ -191,6 +192,21 @@ Route::get('/admin/dashboard', function () {
         ->take(6)
         ->get();
 
+    $latestVitalSigns = MedicalRecord::with(['visit.patient', 'visit.therapistRelation'])
+        ->where(function ($query) {
+            $query->whereNotNull('blood_pressure')
+                ->orWhereNotNull('temperature')
+                ->orWhereNotNull('respiration_rate')
+                ->orWhereNotNull('heart_rate')
+                ->orWhereNotNull('weight')
+                ->orWhereNotNull('height')
+                ->orWhereNotNull('bmi')
+                ->orWhereNotNull('pain_scale');
+        })
+        ->latest()
+        ->take(6)
+        ->get();
+
     $recentBillings = Billing::with('patient')
         ->latest()
         ->take(6)
@@ -266,6 +282,7 @@ Route::get('/admin/dashboard', function () {
         'emptyStockItems',
         'needActionItems',
         'recentVisits',
+        'latestVitalSigns',
         'recentBillings', 'patientSourceStats', 'patientSourceTotal', 'upcomingBirthdayPatients', 'arrivalReminderBookings'));
 });
 
@@ -2817,6 +2834,15 @@ Route::post('/therapist/visits/{id}/medical-record', function (Request $request,
         'pain_type' => 'nullable|string|max:255',
         'functional_limitation_initial' => 'nullable|string',
         'pain_body_chart_note' => 'nullable|string',
+        'pain_body_area' => 'nullable|string|max:255',
+        'pain_body_side' => 'nullable|string|max:50',
+        'pain_body_type' => 'nullable|string|max:255',
+        'pain_body_intensity' => 'nullable|integer|min:0|max:10',
+        'pain_body_areas' => 'nullable|string',
+        'pain_quality_tags' => 'nullable|array',
+        'pain_quality_tags.*' => 'nullable|string|max:100',
+        'pain_aggravating_activity' => 'nullable|string',
+        'pain_easing_activity' => 'nullable|string',
 
         'subjective_examination' => 'nullable|string',
         'objective_examination' => 'nullable|string',
@@ -2875,6 +2901,7 @@ Route::post('/therapist/visits/{id}/medical-record', function (Request $request,
         'supporting_data_date.*' => 'nullable|date',
         'supporting_data_type.*' => 'nullable|string|max:255',
         'supporting_data_interpretation.*' => 'nullable|string',
+        'supporting_data_file.*' => 'nullable|file|max:10240|mimes:jpg,jpeg,png,webp,pdf,doc,docx,xls,xlsx',
 
         'home_exercise_name.*' => 'nullable|string|max:255',
         'home_exercise_dosage.*' => 'nullable|string|max:255',
@@ -2903,6 +2930,14 @@ Route::post('/therapist/visits/{id}/medical-record', function (Request $request,
             'pain_type' => $request->pain_type,
             'functional_limitation_initial' => $request->functional_limitation_initial,
             'pain_body_chart_note' => $request->pain_body_chart_note,
+            'pain_body_area' => $request->pain_body_area,
+            'pain_body_side' => $request->pain_body_side,
+            'pain_body_type' => $request->pain_body_type,
+            'pain_body_intensity' => $request->pain_body_intensity,
+            'pain_body_areas' => $request->pain_body_areas,
+            'pain_quality_tags' => $request->has('pain_quality_tags') ? json_encode(array_values(array_filter($request->pain_quality_tags))) : null,
+            'pain_aggravating_activity' => $request->pain_aggravating_activity,
+            'pain_easing_activity' => $request->pain_easing_activity,
 
             'subjective_examination' => $request->subjective_examination,
             'objective_examination' => $request->objective_examination,
@@ -2952,6 +2987,10 @@ Route::post('/therapist/visits/{id}/medical-record', function (Request $request,
 
     MedicalRecordHistory::where('medical_record_id', $medicalRecord->id)->delete();
     MedicalRecordComorbidity::where('medical_record_id', $medicalRecord->id)->delete();
+    $existingSupportingData = MedicalRecordSupportingData::where('medical_record_id', $medicalRecord->id)
+        ->get()
+        ->keyBy('id');
+
     MedicalRecordSupportingData::where('medical_record_id', $medicalRecord->id)->delete();
     MedicalRecordHomeExercise::where('medical_record_id', $medicalRecord->id)->delete();
 
@@ -2995,13 +3034,34 @@ Route::post('/therapist/visits/{id}/medical-record', function (Request $request,
         foreach ($request->supporting_data_type as $index => $type) {
             $date = $request->supporting_data_date[$index] ?? null;
             $interpretation = $request->supporting_data_interpretation[$index] ?? null;
+            $existingId = $request->supporting_data_id[$index] ?? null;
+            $existingItem = $existingId ? ($existingSupportingData[$existingId] ?? null) : null;
 
-            if ($type || $date || $interpretation) {
+            $filePath = optional($existingItem)->file_path;
+            $fileName = optional($existingItem)->file_name;
+            $fileMime = optional($existingItem)->file_mime;
+            $fileSize = optional($existingItem)->file_size;
+
+            if ($request->hasFile("supporting_data_file.$index")) {
+                $file = $request->file("supporting_data_file.$index");
+                $storedPath = $file->store('medical-record-supporting-data', 'public');
+
+                $filePath = $storedPath;
+                $fileName = $file->getClientOriginalName();
+                $fileMime = $file->getClientMimeType();
+                $fileSize = $file->getSize();
+            }
+
+            if ($type || $date || $interpretation || $filePath) {
                 MedicalRecordSupportingData::create([
                     'medical_record_id' => $medicalRecord->id,
                     'data_date' => $date ?: null,
                     'data_type' => $type,
                     'interpretation' => $interpretation,
+                    'file_path' => $filePath,
+                    'file_name' => $fileName,
+                    'file_mime' => $fileMime,
+                    'file_size' => $fileSize,
                 ]);
             }
         }

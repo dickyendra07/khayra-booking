@@ -1,0 +1,40 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::table('medical_record_supporting_data', function (Blueprint $table) {
+            if (!Schema::hasColumn('medical_record_supporting_data', 'file_path')) {
+                $table->string('file_path')->nullable()->after('interpretation');
+            }
+
+            if (!Schema::hasColumn('medical_record_supporting_data', 'file_name')) {
+                $table->string('file_name')->nullable()->after('file_path');
+            }
+
+            if (!Schema::hasColumn('medical_record_supporting_data', 'file_mime')) {
+                $table->string('file_mime')->nullable()->after('file_name');
+            }
+
+            if (!Schema::hasColumn('medical_record_supporting_data', 'file_size')) {
+                $table->unsignedBigInteger('file_size')->nullable()->after('file_mime');
+            }
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::table('medical_record_supporting_data', function (Blueprint $table) {
+            foreach (['file_path', 'file_name', 'file_mime', 'file_size'] as $column) {
+                if (Schema::hasColumn('medical_record_supporting_data', $column)) {
+                    $table->dropColumn($column);
+                }
+            }
+        });
+    }
+};
