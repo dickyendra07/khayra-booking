@@ -1751,6 +1751,227 @@
             }
         }
 
+    
+        .goal-phase-card,
+        .session-advanced-card {
+            margin-top: 16px;
+            border: 1px solid #dbecea;
+            border-radius: 24px;
+            background: linear-gradient(135deg, #fbfffe 0%, #ffffff 58%, #f7fffc 100%);
+            padding: 18px;
+            box-shadow: 0 16px 38px rgba(31,79,77,.06);
+        }
+
+        .goal-phase-head,
+        .session-advanced-head {
+            display: flex;
+            justify-content: space-between;
+            gap: 14px;
+            align-items: flex-start;
+            margin-bottom: 14px;
+        }
+
+        .goal-phase-title,
+        .session-advanced-title {
+            margin: 0;
+            color: #1f4f4d;
+            font-size: 18px;
+            font-weight: 950;
+            letter-spacing: -.02em;
+        }
+
+        .goal-phase-subtitle,
+        .session-advanced-subtitle {
+            margin: 5px 0 0;
+            color: #64748b;
+            font-size: 12px;
+            line-height: 1.7;
+            font-weight: 750;
+        }
+
+        .goal-phase-pill {
+            flex: 0 0 auto;
+            display: inline-flex;
+            align-items: center;
+            min-height: 32px;
+            border-radius: 999px;
+            padding: 0 12px;
+            background: #eefcf8;
+            border: 1px solid #c9ebe4;
+            color: #1f4f4d;
+            font-size: 11px;
+            font-weight: 950;
+        }
+
+        .goal-phase-grid,
+        .session-advanced-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .goal-phase-grid .field.full,
+        .session-advanced-grid .field.full {
+            grid-column: 1 / -1;
+        }
+
+        .goal-phase-select-row {
+            display: grid;
+            grid-template-columns: minmax(0, 240px) 1fr;
+            gap: 14px;
+            margin-bottom: 14px;
+        }
+
+        @media (max-width: 900px) {
+            .goal-phase-grid,
+            .session-advanced-grid,
+            .goal-phase-select-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+    
+        /* 5D UI Polish */
+        .goal-phase-card {
+            grid-column: 1 / -1;
+            width: 100%;
+            margin: 18px 0;
+            padding: 22px;
+            border-radius: 26px;
+        }
+
+        .goal-phase-head {
+            align-items: center;
+            margin-bottom: 18px;
+        }
+
+        .goal-phase-select-row {
+            grid-template-columns: minmax(240px, 320px);
+            max-width: 340px;
+            margin-bottom: 18px;
+        }
+
+        .goal-phase-select-row .field:nth-child(2) {
+            display: none;
+        }
+
+        .goal-phase-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 16px;
+        }
+
+        .goal-phase-grid textarea {
+            min-height: 150px;
+            resize: vertical;
+            line-height: 1.65;
+        }
+
+        .session-advanced-card {
+            grid-column: 1 / -1;
+            width: 100%;
+            margin: 18px 0 0;
+            padding: 22px;
+            border-radius: 26px;
+        }
+
+        .session-advanced-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+            align-items: stretch;
+        }
+
+        .session-advanced-grid .field:nth-child(3),
+        .session-advanced-grid .field:nth-child(4) {
+            max-width: 360px;
+        }
+
+        .session-advanced-grid textarea {
+            min-height: 135px;
+            resize: vertical;
+            line-height: 1.65;
+        }
+
+        .session-advanced-grid select {
+            min-height: 48px;
+        }
+
+        @media (max-width: 980px) {
+            .goal-phase-grid,
+            .session-advanced-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .goal-phase-select-row {
+                grid-template-columns: 1fr;
+                max-width: none;
+            }
+
+            .session-advanced-grid .field:nth-child(3),
+            .session-advanced-grid .field:nth-child(4) {
+                max-width: none;
+            }
+        }
+
+    
+        .rom-progress-card {
+            grid-column: 1 / -1;
+            width: 100%;
+            margin: 18px 0 0;
+            padding: 22px;
+            border-radius: 26px;
+            border: 1px solid #dbecea;
+            background: linear-gradient(135deg, #fbfffe 0%, #ffffff 58%, #f7fffc 100%);
+            box-shadow: 0 16px 38px rgba(31,79,77,.06);
+        }
+
+        .rom-progress-head {
+            display: flex;
+            justify-content: space-between;
+            gap: 14px;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .rom-progress-title {
+            margin: 0;
+            color: #1f4f4d;
+            font-size: 18px;
+            font-weight: 950;
+            letter-spacing: -.02em;
+        }
+
+        .rom-progress-subtitle {
+            margin: 5px 0 0;
+            color: #64748b;
+            font-size: 12px;
+            line-height: 1.7;
+            font-weight: 750;
+        }
+
+        .rom-progress-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 14px;
+            align-items: end;
+        }
+
+        .rom-progress-grid input,
+        .rom-progress-grid select {
+            min-height: 48px;
+        }
+
+        @media (max-width: 980px) {
+            .rom-progress-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .rom-progress-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
     </style>
     <!-- Khayra PWA -->
     <link rel="manifest" href="/manifest.webmanifest">
@@ -2711,6 +2932,51 @@
                                 <textarea name="patient_goal" placeholder="Target patient / goal terapi">{{ old('patient_goal', $record->patient_goal ?? '') }}</textarea>
                             </div>
 
+                        <div class="goal-phase-card">
+                            <div class="goal-phase-head">
+                                <div>
+                                    <h4 class="goal-phase-title">Treatment Goal Phase</h4>
+                                    <p class="goal-phase-subtitle">Susun target terapi per fase agar progress pasien mudah dipantau di report.</p>
+                                </div>
+                                <div class="goal-phase-pill">Phase Plan</div>
+                            </div>
+
+                            <div class="goal-phase-select-row">
+                                <div class="field">
+                                    <label>Current Phase</label>
+                                    <select name="goal_phase">
+                                        <option value="">Pilih fase</option>
+                                        @foreach(['Phase 1 - Pain Control','Phase 2 - Mobility / Strength','Phase 3 - Functional Return'] as $phase)
+                                            <option value="{{ $phase }}" {{ old('goal_phase', $record->goal_phase ?? '') === $phase ? 'selected' : '' }}>{{ $phase }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <div class="field">
+                                    <label>Phase Summary</label>
+                                    <input type="text" value="{{ old('goal_phase', $record->goal_phase ?? '') ?: 'Belum memilih fase aktif' }}" readonly>
+                                </div>
+                            </div>
+
+                            <div class="goal-phase-grid">
+                                <div class="field">
+                                    <label>Phase 1 Goal</label>
+                                    <textarea name="phase_1_goal" placeholder="Contoh: nyeri turun, tidur lebih nyaman, edukasi posisi aman">{{ old('phase_1_goal', $record->phase_1_goal ?? '') }}</textarea>
+                                </div>
+
+                                <div class="field">
+                                    <label>Phase 2 Goal</label>
+                                    <textarea name="phase_2_goal" placeholder="Contoh: ROM membaik, strength meningkat, toleransi aktivitas naik">{{ old('phase_2_goal', $record->phase_2_goal ?? '') }}</textarea>
+                                </div>
+
+                                <div class="field">
+                                    <label>Phase 3 Goal</label>
+                                    <textarea name="phase_3_goal" placeholder="Contoh: kembali kerja/olahraga, mandiri HEP, mencegah flare-up">{{ old('phase_3_goal', $record->phase_3_goal ?? '') }}</textarea>
+                                </div>
+                            </div>
+                        </div>
+
+
                             <div class="field">
                                 <label>Referral</label>
                                 <textarea name="referral" placeholder="Rujukan bila ada">{{ old('referral', $record->referral ?? '') }}</textarea>
@@ -2857,6 +3123,87 @@
                                 <label>Next Session Plan</label>
                                 <textarea name="next_session_plan" placeholder="Rencana visit berikutnya">{{ old('next_session_plan', $record->next_session_plan ?? '') }}</textarea>
                             </div>
+
+
+                        <div class="rom-progress-card">
+                            <div class="rom-progress-head">
+                                <div>
+                                    <h4 class="rom-progress-title">ROM / Functional Progress Chart</h4>
+                                    <p class="rom-progress-subtitle">Isi progress ROM dan fungsi agar report bisa menampilkan chart perkembangan pasien.</p>
+                                </div>
+                                <div class="goal-phase-pill">ROM Chart</div>
+                            </div>
+
+                            <div class="rom-progress-grid">
+                                <div class="field">
+                                    <label>Cervical Rotation ROM</label>
+                                    <input type="text" name="rom_cervical_rotation" value="{{ old('rom_cervical_rotation', $record->rom_cervical_rotation ?? '') }}" placeholder="Contoh: kanan 60°, kiri 70°">
+                                </div>
+
+                                <div class="field">
+                                    <label>Shoulder Elevation ROM</label>
+                                    <input type="text" name="rom_shoulder_elevation" value="{{ old('rom_shoulder_elevation', $record->rom_shoulder_elevation ?? '') }}" placeholder="Contoh: kanan 150°, kiri 170°">
+                                </div>
+
+                                <div class="field">
+                                    <label>Functional Score (0-100)</label>
+                                    <select name="functional_score">
+                                        <option value="">Pilih score</option>
+                                        @for($i = 0; $i <= 100; $i += 10)
+                                            <option value="{{ $i }}" {{ (string) old('functional_score', $record->functional_score ?? '') === (string) $i ? 'selected' : '' }}>{{ $i }}%</option>
+                                        @endfor
+                                    </select>
+                                </div>
+
+                                <div class="field">
+                                    <label>Activity Tolerance</label>
+                                    <input type="text" name="activity_tolerance" value="{{ old('activity_tolerance', $record->activity_tolerance ?? '') }}" placeholder="Contoh: duduk 60 menit">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="session-advanced-card">
+                            <div class="session-advanced-head">
+                                <div>
+                                    <h4 class="session-advanced-title">Session Progress Lanjutan</h4>
+                                    <p class="session-advanced-subtitle">Catat fokus, respons, pain after, dan homework untuk perbandingan antar sesi.</p>
+                                </div>
+                                <div class="goal-phase-pill">Session Progress</div>
+                            </div>
+
+                            <div class="session-advanced-grid">
+                                <div class="field">
+                                    <label>Session Focus</label>
+                                    <textarea name="session_focus" placeholder="Fokus sesi ini, contoh: pain modulation, cervical mobility, postural control">{{ old('session_focus', $record->session_focus ?? '') }}</textarea>
+                                </div>
+
+                                <div class="field">
+                                    <label>Session Progress Note</label>
+                                    <textarea name="session_progress_note" placeholder="Progress objektif/subjektif sesi ini">{{ old('session_progress_note', $record->session_progress_note ?? '') }}</textarea>
+                                </div>
+
+                                <div class="field">
+                                    <label>Homework Status</label>
+                                    <select name="session_homework_status">
+                                        <option value="">Pilih status</option>
+                                        @foreach(['Belum diberikan','Diberikan','Dikerjakan sebagian','Dikerjakan rutin','Perlu koreksi'] as $status)
+                                            <option value="{{ $status }}" {{ old('session_homework_status', $record->session_homework_status ?? '') === $status ? 'selected' : '' }}>{{ $status }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <div class="field">
+                                    <label>Pain After Session (0-10)</label>
+                                    <select name="session_pain_after">
+                                        <option value="">Pilih pain after</option>
+                                        @for($i = 0; $i <= 10; $i++)
+                                            <option value="{{ $i }}" {{ (string) old('session_pain_after', $record->session_pain_after ?? '') === (string) $i ? 'selected' : '' }}>{{ $i }}/10</option>
+                                        @endfor
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
                         </div>
                     </div>
 

@@ -307,6 +307,246 @@
             }
         }
 
+    
+        .report-progress-card {
+            margin-top: 16px;
+            border: 1px solid #dbecea;
+            border-radius: 18px;
+            padding: 16px;
+            background: #fbfffe;
+            page-break-inside: avoid;
+        }
+
+        .report-progress-title {
+            margin: 0 0 6px;
+            color: #1f4f4d;
+            font-size: 18px;
+            font-weight: 900;
+        }
+
+        .report-progress-subtitle {
+            margin: 0 0 12px;
+            color: #64748b;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .report-trend-row {
+            display: grid;
+            grid-template-columns: 92px 1fr 54px;
+            gap: 10px;
+            align-items: center;
+            margin-top: 9px;
+        }
+
+        .report-trend-date {
+            color: #64748b;
+            font-size: 10px;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+
+        .report-trend-track {
+            height: 12px;
+            border-radius: 999px;
+            overflow: hidden;
+            background: #eef2f7;
+        }
+
+        .report-trend-fill {
+            height: 100%;
+            border-radius: 999px;
+            background: linear-gradient(90deg, #2f8f8a, #f59e0b, #ef4444);
+        }
+
+        .report-trend-score {
+            text-align: right;
+            color: #20343a;
+            font-size: 12px;
+            font-weight: 900;
+        }
+
+        .report-goal-timeline {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .report-goal-phase {
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 12px;
+            background: #ffffff;
+        }
+
+        .report-goal-phase.active {
+            border-color: #8dd7cc;
+            background: #effdf9;
+        }
+
+        .report-goal-phase-label {
+            color: #1f4f4d;
+            font-size: 11px;
+            font-weight: 900;
+            margin-bottom: 7px;
+        }
+
+        .report-goal-phase-value {
+            color: #20343a;
+            font-size: 12px;
+            line-height: 1.65;
+            white-space: pre-line;
+        }
+
+        .report-functional-grid,
+        .report-session-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .report-functional-item,
+        .report-session-item {
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 12px;
+            background: #ffffff;
+            page-break-inside: avoid;
+        }
+
+        .report-functional-label,
+        .report-session-label {
+            color: #64748b;
+            font-size: 10px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: .4px;
+            margin-bottom: 6px;
+        }
+
+        .report-functional-value,
+        .report-session-value {
+            color: #20343a;
+            font-size: 12px;
+            line-height: 1.65;
+            white-space: pre-line;
+        }
+
+        @media print {
+            .report-progress-card,
+            .report-goal-phase,
+            .report-functional-item,
+            .report-session-item {
+                box-shadow: none !important;
+            }
+        }
+
+    
+        .report-rom-score {
+            margin-top: 12px;
+            border: 1px solid #dbecea;
+            border-radius: 16px;
+            padding: 14px;
+            background: #ffffff;
+        }
+
+        .report-rom-score-head {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            color: #20343a;
+            font-size: 12px;
+            font-weight: 900;
+            margin-bottom: 8px;
+        }
+
+        .report-rom-score-track {
+            height: 12px;
+            border-radius: 999px;
+            overflow: hidden;
+            background: #eef2f7;
+        }
+
+        .report-rom-score-fill {
+            height: 100%;
+            border-radius: 999px;
+            background: linear-gradient(90deg, #2f8f8a, #22c55e);
+        }
+
+    
+        .report-rom-visual-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .report-rom-chart-card {
+            border: 1px solid #dbecea;
+            border-radius: 16px;
+            padding: 14px;
+            background: #ffffff;
+            page-break-inside: avoid;
+        }
+
+        .report-rom-chart-title {
+            color: #1f4f4d;
+            font-size: 13px;
+            font-weight: 950;
+            margin-bottom: 10px;
+        }
+
+        .report-rom-chart-row {
+            display: grid;
+            grid-template-columns: 52px 1fr 46px;
+            gap: 10px;
+            align-items: center;
+            margin-top: 8px;
+        }
+
+        .report-rom-chart-label {
+            color: #64748b;
+            font-size: 10px;
+            font-weight: 950;
+            text-transform: uppercase;
+        }
+
+        .report-rom-chart-track {
+            height: 10px;
+            border-radius: 999px;
+            background: #eef2f7;
+            overflow: hidden;
+        }
+
+        .report-rom-chart-fill {
+            height: 100%;
+            border-radius: 999px;
+            background: linear-gradient(90deg, #2f8f8a, #22c55e);
+        }
+
+        .report-rom-chart-value {
+            text-align: right;
+            color: #20343a;
+            font-size: 11px;
+            font-weight: 950;
+        }
+
+        .report-rom-chart-raw {
+            margin-top: 10px;
+            color: #64748b;
+            font-size: 11px;
+            line-height: 1.55;
+            font-weight: 750;
+        }
+
+        @media (max-width: 760px) {
+            .report-rom-visual-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
     </style>
     <!-- Khayra PWA -->
     <link rel="manifest" href="/manifest.webmanifest">
@@ -336,6 +576,52 @@
     }
 
     $reportPainQualityTags = collect(json_decode($record->pain_quality_tags ?? '[]', true) ?: []);
+
+    $reportPainTrendRecords = $visit->patient
+        ? $visit->patient->visits()
+            ->with('medicalRecord')
+            ->whereHas('medicalRecord', fn ($query) => $query->whereNotNull('pain_scale'))
+            ->orderBy('visit_date')
+            ->get()
+            ->map(function ($painVisit) {
+                return (object) [
+                    'visit_date' => $painVisit->visit_date,
+                    'pain_scale' => optional($painVisit->medicalRecord)->pain_scale,
+                    'pain_after' => optional($painVisit->medicalRecord)->session_pain_after,
+                    'progress_note' => optional($painVisit->medicalRecord)->session_progress_note,
+                ];
+            })
+        : collect();
+
+    $reportPainStart = optional($reportPainTrendRecords->first())->pain_scale;
+    $reportPainLatest = optional($reportPainTrendRecords->last())->pain_scale;
+    $reportPainDelta = (!is_null($reportPainStart) && !is_null($reportPainLatest)) ? ((int) $reportPainLatest - (int) $reportPainStart) : null;
+
+    $reportFunctionalProgressItems = collect([
+        ['label' => 'Cervical Rotation ROM', 'value' => $record->rom_cervical_rotation ?? null],
+        ['label' => 'Shoulder Elevation ROM', 'value' => $record->rom_shoulder_elevation ?? null],
+        ['label' => 'Activity Tolerance', 'value' => $record->activity_tolerance ?? null],
+        ['label' => 'Initial Limitation', 'value' => $record->functional_limitation_initial ?? null],
+        ['label' => 'Clinical Limitation', 'value' => $record->functional_limitation_clinical ?? null],
+        ['label' => 'Response to Treatment', 'value' => $record->response_to_treatment ?? null],
+        ['label' => 'Next Plan', 'value' => $record->next_session_plan ?? null],
+    ])->filter(fn ($item) => !blank($item['value']));
+
+    $extractRomPair = function ($value) {
+        $value = (string) ($value ?? '');
+
+        preg_match('/kanan\s*([0-9]+)/i', $value, $rightMatch);
+        preg_match('/kiri\s*([0-9]+)/i', $value, $leftMatch);
+
+        return [
+            'right' => isset($rightMatch[1]) ? (int) $rightMatch[1] : null,
+            'left' => isset($leftMatch[1]) ? (int) $leftMatch[1] : null,
+            'raw' => $value,
+        ];
+    };
+
+    $cervicalRomPair = $extractRomPair($record->rom_cervical_rotation ?? null);
+    $shoulderRomPair = $extractRomPair($record->rom_shoulder_elevation ?? null);
 
 @endphp
 
@@ -481,7 +767,186 @@
         @endif
     </section>
 
-    <section class="section">
+    
+        <section class="{{ str_contains(request()->path(), '/print') ? 'section' : 'section-card' }}">
+            <h2 class="section-title">Progress Chart & Goal Phase</h2>
+            <p class="section-subtitle">Visualisasi pain trend, functional progress, treatment phase, dan progress sesi lanjutan.</p>
+
+            <div class="report-progress-card">
+                <h3 class="report-progress-title">Pain Trend Chart</h3>
+                <p class="report-progress-subtitle">
+                    Perubahan pain scale 0-10 antar sesi.
+                    @if(is_null($reportPainDelta))
+                        Trend belum tersedia.
+                    @elseif($reportPainDelta < 0)
+                        Nyeri turun {{ abs($reportPainDelta) }} poin.
+                    @elseif($reportPainDelta > 0)
+                        Nyeri naik {{ $reportPainDelta }} poin.
+                    @else
+                        Nyeri stabil.
+                    @endif
+                </p>
+
+                @if($reportPainTrendRecords->count())
+                    @foreach($reportPainTrendRecords as $painTrend)
+                        @php
+                            $painScore = is_null($painTrend->pain_scale) ? 0 : min(max((int) $painTrend->pain_scale, 0), 10);
+                        @endphp
+                        <div class="report-trend-row">
+                            <div class="report-trend-date">{{ $painTrend->visit_date ?: '-' }}</div>
+                            <div class="report-trend-track">
+                                <div class="report-trend-fill" style="width: {{ max($painScore * 10, 4) }}%;"></div>
+                            </div>
+                            <div class="report-trend-score">{{ $painScore }}/10</div>
+                        </div>
+                    @endforeach
+                @else
+                    <div class="report-functional-value">Belum ada pain scale antar sesi.</div>
+                @endif
+            </div>
+
+            <div class="report-progress-card">
+                <h3 class="report-progress-title">Functional Progress Summary</h3>
+                <p class="report-progress-subtitle">Ringkasan progress fungsi berdasarkan field klinis yang tersedia.</p>
+
+                @if(!is_null($record->functional_score))
+                    <div class="report-rom-score">
+                        <div class="report-rom-score-head">
+                            <span>Functional Score</span>
+                            <span>{{ $record->functional_score }}%</span>
+                        </div>
+                        <div class="report-rom-score-track">
+                            <div class="report-rom-score-fill" style="width: {{ min(max((int) $record->functional_score, 0), 100) }}%;"></div>
+                        </div>
+                    </div>
+                @endif
+
+
+                @if(!blank($record->rom_cervical_rotation) || !blank($record->rom_shoulder_elevation))
+                    <div class="report-rom-visual-grid">
+                        @if(!blank($record->rom_cervical_rotation))
+                            <div class="report-rom-chart-card">
+                                <div class="report-rom-chart-title">Cervical Rotation ROM</div>
+
+                                @if(!is_null($cervicalRomPair['right']))
+                                    <div class="report-rom-chart-row">
+                                        <div class="report-rom-chart-label">Kanan</div>
+                                        <div class="report-rom-chart-track">
+                                            <div class="report-rom-chart-fill" style="width: {{ min(max($cervicalRomPair['right'], 0), 90) / 90 * 100 }}%;"></div>
+                                        </div>
+                                        <div class="report-rom-chart-value">{{ $cervicalRomPair['right'] }}°</div>
+                                    </div>
+                                @endif
+
+                                @if(!is_null($cervicalRomPair['left']))
+                                    <div class="report-rom-chart-row">
+                                        <div class="report-rom-chart-label">Kiri</div>
+                                        <div class="report-rom-chart-track">
+                                            <div class="report-rom-chart-fill" style="width: {{ min(max($cervicalRomPair['left'], 0), 90) / 90 * 100 }}%;"></div>
+                                        </div>
+                                        <div class="report-rom-chart-value">{{ $cervicalRomPair['left'] }}°</div>
+                                    </div>
+                                @endif
+
+                                <div class="report-rom-chart-raw">{{ $record->rom_cervical_rotation }}</div>
+                            </div>
+                        @endif
+
+                        @if(!blank($record->rom_shoulder_elevation))
+                            <div class="report-rom-chart-card">
+                                <div class="report-rom-chart-title">Shoulder Elevation ROM</div>
+
+                                @if(!is_null($shoulderRomPair['right']))
+                                    <div class="report-rom-chart-row">
+                                        <div class="report-rom-chart-label">Kanan</div>
+                                        <div class="report-rom-chart-track">
+                                            <div class="report-rom-chart-fill" style="width: {{ min(max($shoulderRomPair['right'], 0), 180) / 180 * 100 }}%;"></div>
+                                        </div>
+                                        <div class="report-rom-chart-value">{{ $shoulderRomPair['right'] }}°</div>
+                                    </div>
+                                @endif
+
+                                @if(!is_null($shoulderRomPair['left']))
+                                    <div class="report-rom-chart-row">
+                                        <div class="report-rom-chart-label">Kiri</div>
+                                        <div class="report-rom-chart-track">
+                                            <div class="report-rom-chart-fill" style="width: {{ min(max($shoulderRomPair['left'], 0), 180) / 180 * 100 }}%;"></div>
+                                        </div>
+                                        <div class="report-rom-chart-value">{{ $shoulderRomPair['left'] }}°</div>
+                                    </div>
+                                @endif
+
+                                <div class="report-rom-chart-raw">{{ $record->rom_shoulder_elevation }}</div>
+                            </div>
+                        @endif
+                    </div>
+                @endif
+
+                @if($reportFunctionalProgressItems->count())
+                    <div class="report-functional-grid">
+                        @foreach($reportFunctionalProgressItems as $progressItem)
+                            <div class="report-functional-item">
+                                <div class="report-functional-label">{{ $progressItem['label'] }}</div>
+                                <div class="report-functional-value">{{ $progressItem['value'] }}</div>
+                            </div>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="report-functional-value">Belum ada data functional progress.</div>
+                @endif
+            </div>
+
+            <div class="report-progress-card">
+                <h3 class="report-progress-title">Treatment Goal Phase</h3>
+                <p class="report-progress-subtitle">Phase aktif: {{ $record->goal_phase ?? '-' }}</p>
+
+                <div class="report-goal-timeline">
+                    <div class="report-goal-phase {{ ($record->goal_phase ?? '') === 'Phase 1 - Pain Control' ? 'active' : '' }}">
+                        <div class="report-goal-phase-label">Phase 1 - Pain Control</div>
+                        <div class="report-goal-phase-value">{{ $record->phase_1_goal ?? '-' }}</div>
+                    </div>
+
+                    <div class="report-goal-phase {{ ($record->goal_phase ?? '') === 'Phase 2 - Mobility / Strength' ? 'active' : '' }}">
+                        <div class="report-goal-phase-label">Phase 2 - Mobility / Strength</div>
+                        <div class="report-goal-phase-value">{{ $record->phase_2_goal ?? '-' }}</div>
+                    </div>
+
+                    <div class="report-goal-phase {{ ($record->goal_phase ?? '') === 'Phase 3 - Functional Return' ? 'active' : '' }}">
+                        <div class="report-goal-phase-label">Phase 3 - Functional Return</div>
+                        <div class="report-goal-phase-value">{{ $record->phase_3_goal ?? '-' }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="report-progress-card">
+                <h3 class="report-progress-title">Session Progress Lanjutan</h3>
+                <p class="report-progress-subtitle">Catatan sesi ini untuk membandingkan treatment lanjutan antar visit.</p>
+
+                <div class="report-session-grid">
+                    <div class="report-session-item">
+                        <div class="report-session-label">Session Focus</div>
+                        <div class="report-session-value">{{ $record->session_focus ?? '-' }}</div>
+                    </div>
+
+                    <div class="report-session-item">
+                        <div class="report-session-label">Session Progress Note</div>
+                        <div class="report-session-value">{{ $record->session_progress_note ?? '-' }}</div>
+                    </div>
+
+                    <div class="report-session-item">
+                        <div class="report-session-label">Pain After Session</div>
+                        <div class="report-session-value">{{ is_null($record->session_pain_after) ? '-' : $record->session_pain_after . '/10' }}</div>
+                    </div>
+
+                    <div class="report-session-item">
+                        <div class="report-session-label">Homework Status</div>
+                        <div class="report-session-value">{{ $record->session_homework_status ?? '-' }}</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+<section class="section">
         <h2 class="section-title">Pain Body Mapping</h2>
 
         <div class="report-pain-body">
@@ -580,8 +1045,10 @@
 
         </div>
 
+        </section>
 
-<h2 class="section-title">Diagnosis & Clinical Decision</h2>
+        <section class="section-card">
+            <h2 class="section-title">Diagnosis & Clinical Decision</h2>
         <div class="grid-2">
             <div class="item">
                 <div class="item-label">Physiotherapy Diagnosis</div>

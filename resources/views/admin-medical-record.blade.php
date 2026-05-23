@@ -781,6 +781,202 @@
             grid-column: 1 / -1;
         }
 
+    
+        .goal-phase-view-card,
+        .session-progress-view-card {
+            margin-top: 16px;
+            border: 1px solid #dbecea;
+            border-radius: 24px;
+            background: linear-gradient(135deg, #fbfffe 0%, #ffffff 58%, #f7fffc 100%);
+            padding: 18px;
+            box-shadow: 0 16px 38px rgba(31,79,77,.06);
+        }
+
+        .goal-phase-view-grid,
+        .session-progress-view-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .goal-phase-view-item,
+        .session-progress-view-item {
+            border: 1px solid #dbecea;
+            border-radius: 18px;
+            background: #ffffff;
+            padding: 14px;
+        }
+
+        .goal-phase-active {
+            border-color: #8dd7cc;
+            background: #f0fdfa;
+        }
+
+        .goal-phase-view-title,
+        .session-progress-view-title {
+            margin: 0;
+            color: #1f4f4d;
+            font-size: 18px;
+            font-weight: 950;
+            letter-spacing: -.02em;
+        }
+
+        @media (max-width: 860px) {
+            .goal-phase-view-grid,
+            .session-progress-view-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+    
+        .rom-progress-view-card {
+            margin-top: 16px;
+            border: 1px solid #dbecea;
+            border-radius: 24px;
+            background: linear-gradient(135deg, #fbfffe 0%, #ffffff 58%, #f7fffc 100%);
+            padding: 18px;
+            box-shadow: 0 16px 38px rgba(31,79,77,.06);
+        }
+
+        .rom-progress-view-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .rom-progress-view-item {
+            border: 1px solid #dbecea;
+            border-radius: 18px;
+            background: #ffffff;
+            padding: 14px;
+        }
+
+        .rom-score-bar {
+            height: 10px;
+            border-radius: 999px;
+            background: #eef2f7;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .rom-score-fill {
+            height: 100%;
+            border-radius: 999px;
+            background: linear-gradient(90deg, #2f8f8a, #22c55e);
+        }
+
+        @media (max-width: 900px) {
+            .rom-progress-view-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+    
+        /* Admin Medical Record Layout Polish */
+        .content-grid.admin-clinical-full-layout {
+            display: block;
+        }
+
+        .admin-patient-summary-strip {
+            margin-bottom: 18px;
+            border: 1px solid #dbecea;
+            border-radius: 24px;
+            background: rgba(255,255,255,.94);
+            box-shadow: 0 18px 45px rgba(31,79,77,.08);
+            padding: 18px;
+        }
+
+        .admin-patient-summary-head {
+            display: flex;
+            justify-content: space-between;
+            gap: 14px;
+            align-items: flex-start;
+            margin-bottom: 14px;
+        }
+
+        .admin-patient-summary-title {
+            margin: 0;
+            color: #1f4f4d;
+            font-size: 20px;
+            font-weight: 950;
+            letter-spacing: -.02em;
+        }
+
+        .admin-patient-summary-subtitle {
+            margin: 5px 0 0;
+            color: #64748b;
+            font-size: 12px;
+            line-height: 1.7;
+            font-weight: 750;
+        }
+
+        .admin-patient-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .admin-patient-summary-grid .profile-box {
+            min-height: 96px;
+        }
+
+        .admin-clinical-main-wide > .section-card {
+            width: 100%;
+        }
+
+        .goal-phase-view-card {
+            grid-column: 1 / -1;
+            width: 100%;
+            padding: 22px;
+            border-radius: 26px;
+        }
+
+        .goal-phase-view-card .data-label {
+            line-height: 1.35;
+        }
+
+        .goal-phase-view-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 14px;
+            margin-top: 16px;
+        }
+
+        .goal-phase-view-item {
+            min-height: 160px;
+            padding: 18px;
+            border-radius: 20px;
+        }
+
+        .goal-phase-view-item .data-value {
+            margin-top: 10px;
+            line-height: 1.7;
+            word-break: normal;
+            overflow-wrap: anywhere;
+        }
+
+        @media (max-width: 1100px) {
+            .admin-patient-summary-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .goal-phase-view-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .admin-patient-summary-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .admin-patient-summary-head {
+                display: block;
+            }
+        }
+
     </style>
     <!-- Khayra PWA -->
     <link rel="manifest" href="/manifest.webmanifest">
@@ -908,12 +1104,17 @@
             Viewer ini hanya untuk monitoring admin. Update clinical assessment dan report tetap dilakukan dari akun therapist.
         </div>
 
-        <div class="content-grid">
-            <aside class="section-card">
-                <h2 class="section-title">Patient Summary</h2>
-                <p class="section-subtitle">Informasi dasar patient dan visit aktif.</p>
+        <div class="content-grid admin-clinical-full-layout">
+            <div class="admin-patient-summary-strip">
+                <div class="admin-patient-summary-head">
+                    <div>
+                        <h2 class="admin-patient-summary-title">Patient Summary</h2>
+                        <p class="admin-patient-summary-subtitle">Informasi dasar patient dan visit aktif sebelum admin membaca clinical notes.</p>
+                    </div>
+                    <a href="/admin/visits" class="btn btn-soft">All Visits</a>
+                </div>
 
-                <div class="profile-stack">
+                <div class="admin-patient-summary-grid">
                     <div class="profile-box">
                         <div class="profile-label">Patient</div>
                         <div class="profile-value">{{ $visit->patient->full_name ?? '-' }}</div>
@@ -939,12 +1140,13 @@
                         <div class="profile-value">{{ $visit->notes ?: '-' }}</div>
                     </div>
                 </div>
-            </aside>
+            </div>
 
-            <section class="section-card">
+            <div class="admin-clinical-main-wide">
+                <section class="section-card">
                 <h2 class="section-title">Clinical Notes V2</h2>
                 <p class="section-subtitle">
-                    Tampilan lengkap hasil clinical assessment therapist untuk kebutuhan koordinasi dan monitoring admin.
+                    Tampilan lengkap hasil clinical assessment therapist untuk monitoring, koordinasi, dan follow-up admin.
                 </p>
 
 
@@ -1197,6 +1399,30 @@
                             <div class="data-value">{{ $record->patient_goal ?? '-' }}</div>
                         </div>
 
+                    <div class="goal-phase-view-card">
+                        <h4 class="goal-phase-view-title">Treatment Goal Phase</h4>
+                        <div class="data-label" style="margin-top:8px;">Current Phase</div>
+                        <div class="data-value">{{ $record->goal_phase ?? '-' }}</div>
+
+                        <div class="goal-phase-view-grid">
+                            <div class="goal-phase-view-item {{ ($record->goal_phase ?? '') === 'Phase 1 - Pain Control' ? 'goal-phase-active' : '' }}">
+                                <div class="data-label">Phase 1 - Pain Control</div>
+                                <div class="data-value">{{ $record->phase_1_goal ?? '-' }}</div>
+                            </div>
+
+                            <div class="goal-phase-view-item {{ ($record->goal_phase ?? '') === 'Phase 2 - Mobility / Strength' ? 'goal-phase-active' : '' }}">
+                                <div class="data-label">Phase 2 - Mobility / Strength</div>
+                                <div class="data-value">{{ $record->phase_2_goal ?? '-' }}</div>
+                            </div>
+
+                            <div class="goal-phase-view-item {{ ($record->goal_phase ?? '') === 'Phase 3 - Functional Return' ? 'goal-phase-active' : '' }}">
+                                <div class="data-label">Phase 3 - Functional Return</div>
+                                <div class="data-value">{{ $record->phase_3_goal ?? '-' }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+
                         <div class="clinical-decision-card">
                             <div class="data-label">Referral</div>
                             <div class="data-value">{{ $record->referral ?? '-' }}</div>
@@ -1331,8 +1557,65 @@
                         <div class="data-label">Next Session Plan</div>
                         <div class="data-value">{{ $record->next_session_plan ?? '-' }}</div>
                     </div>
+
+
+                    <div class="rom-progress-view-card">
+                        <h4 class="session-progress-view-title">ROM / Functional Progress Chart</h4>
+                        <div class="rom-progress-view-grid">
+                            <div class="rom-progress-view-item">
+                                <div class="data-label">Cervical Rotation ROM</div>
+                                <div class="data-value">{{ $record->rom_cervical_rotation ?? '-' }}</div>
+                            </div>
+
+                            <div class="rom-progress-view-item">
+                                <div class="data-label">Shoulder Elevation ROM</div>
+                                <div class="data-value">{{ $record->rom_shoulder_elevation ?? '-' }}</div>
+                            </div>
+
+                            <div class="rom-progress-view-item">
+                                <div class="data-label">Functional Score</div>
+                                <div class="data-value">{{ is_null($record->functional_score) ? '-' : $record->functional_score . '%' }}</div>
+                                @if(!is_null($record->functional_score))
+                                    <div class="rom-score-bar">
+                                        <div class="rom-score-fill" style="width: {{ min(max((int) $record->functional_score, 0), 100) }}%;"></div>
+                                    </div>
+                                @endif
+                            </div>
+
+                            <div class="rom-progress-view-item">
+                                <div class="data-label">Activity Tolerance</div>
+                                <div class="data-value">{{ $record->activity_tolerance ?? '-' }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="session-progress-view-card">
+                        <h4 class="session-progress-view-title">Session Progress Lanjutan</h4>
+                        <div class="session-progress-view-grid">
+                            <div class="session-progress-view-item">
+                                <div class="data-label">Session Focus</div>
+                                <div class="data-value">{{ $record->session_focus ?? '-' }}</div>
+                            </div>
+
+                            <div class="session-progress-view-item">
+                                <div class="data-label">Session Progress Note</div>
+                                <div class="data-value">{{ $record->session_progress_note ?? '-' }}</div>
+                            </div>
+
+                            <div class="session-progress-view-item">
+                                <div class="data-label">Pain After Session</div>
+                                <div class="data-value">{{ is_null($record->session_pain_after) ? '-' : $record->session_pain_after . '/10' }}</div>
+                            </div>
+
+                            <div class="session-progress-view-item">
+                                <div class="data-label">Homework Status</div>
+                                <div class="data-value">{{ $record->session_homework_status ?? '-' }}</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </section>
+            </div>
         </div>
     </main>
 </div>
