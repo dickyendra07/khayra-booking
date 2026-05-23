@@ -317,6 +317,15 @@
             .hero-title { font-size: 32px; }
         }
     </style>
+    <!-- Khayra PWA -->
+    <link rel="manifest" href="/manifest.webmanifest">
+    <meta name="theme-color" content="#2f7c7a">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="Khayra ERM">
+    <meta name="apple-mobile-web-app-title" content="Khayra ERM">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="/images/khayra-logo.png">
 </head>
 <body>
     <div class="layout">
@@ -521,5 +530,59 @@
             </div>
         </main>
     </div>
+<script>
+(function () {
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function () {
+            navigator.serviceWorker.register('/sw.js').catch(function () {});
+        });
+    }
+
+    var deferredInstallPrompt = null;
+
+    window.addEventListener('beforeinstallprompt', function (event) {
+        event.preventDefault();
+        deferredInstallPrompt = event;
+
+        if (document.getElementById('khayraInstallAppButton')) {
+            return;
+        }
+
+        var button = document.createElement('button');
+        button.id = 'khayraInstallAppButton';
+        button.type = 'button';
+        button.innerText = 'Install App';
+        button.style.position = 'fixed';
+        button.style.right = '18px';
+        button.style.bottom = '18px';
+        button.style.zIndex = '99999';
+        button.style.border = '0';
+        button.style.borderRadius = '999px';
+        button.style.padding = '12px 16px';
+        button.style.background = '#2f7c7a';
+        button.style.color = '#ffffff';
+        button.style.fontWeight = '900';
+        button.style.fontFamily = 'Arial, sans-serif';
+        button.style.fontSize = '13px';
+        button.style.boxShadow = '0 14px 30px rgba(47,124,122,.24)';
+        button.style.cursor = 'pointer';
+
+        button.addEventListener('click', function () {
+            if (!deferredInstallPrompt) {
+                return;
+            }
+
+            deferredInstallPrompt.prompt();
+            deferredInstallPrompt.userChoice.finally(function () {
+                deferredInstallPrompt = null;
+                button.remove();
+            });
+        });
+
+        document.body.appendChild(button);
+    });
+})();
+</script>
+
 </body>
 </html>

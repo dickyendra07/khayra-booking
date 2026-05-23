@@ -128,6 +128,15 @@
             .page { margin: 0; box-shadow: none; width: 100%; min-height: auto; }
         }
     </style>
+    <!-- Khayra PWA -->
+    <link rel="manifest" href="/manifest.webmanifest">
+    <meta name="theme-color" content="#2f7c7a">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="Khayra ERM">
+    <meta name="apple-mobile-web-app-title" content="Khayra ERM">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="/images/khayra-logo.png">
 </head>
 <body>
 <div class="toolbar">
@@ -239,5 +248,6 @@
         </tbody>
     </table>
 </div>
+
 </body>
 </html>

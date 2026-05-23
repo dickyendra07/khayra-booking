@@ -28,6 +28,15 @@
         .space{height:72px}
         @media print{body{background:#fff;padding:0}.top{display:none}.sheet{box-shadow:none;border:0;border-radius:0}}
     </style>
+    <!-- Khayra PWA -->
+    <link rel="manifest" href="/manifest.webmanifest">
+    <meta name="theme-color" content="#2f7c7a">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="Khayra ERM">
+    <meta name="apple-mobile-web-app-title" content="Khayra ERM">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="/images/khayra-logo.png">
 </head>
 <body>
 <div class="page">
@@ -97,5 +106,6 @@ Total sesi: {{ $payload['total_session'] ?: ($record ? $record->total_session : 
         </div>
     </div>
 </div>
+
 </body>
 </html>
