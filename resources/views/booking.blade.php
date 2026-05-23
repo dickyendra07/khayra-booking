@@ -508,6 +508,45 @@
                 min-width: 0;
             }
         }
+    
+        .booking-submit-row {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 18px;
+            flex-wrap: wrap;
+        }
+        .booking-submit-btn {
+            min-height: 46px;
+            border: 0;
+            cursor: pointer;
+            padding: 0 20px;
+            border-radius: 16px;
+            font-size: 14px;
+            font-weight: 900;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-family: Arial, sans-serif;
+            white-space: nowrap;
+            background: linear-gradient(135deg, #3d8a89 0%, #2f7c7a 100%);
+            color: #ffffff;
+            box-shadow: 0 12px 24px rgba(47,124,122,.16);
+        }
+        .booking-submit-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 16px 28px rgba(47,124,122,.20);
+        }
+        @media (max-width: 640px) {
+            .booking-submit-row {
+                justify-content: stretch;
+            }
+            .booking-submit-btn {
+                width: 100%;
+            }
+        }
+
     </style>
     <!-- Khayra PWA -->
     <link rel="manifest" href="/manifest.webmanifest">
@@ -700,7 +739,9 @@
                     <div class="submit-note">
                         Dengan mengirim form ini, data booking Anda akan masuk ke sistem admin Khayra Physio untuk proses tindak lanjut.
                     </div>
-                    <button type="submit" class="submit-btn">Kirim Booking</button>
+                    <div class="booking-submit-row">
+                    <button type="submit" class="booking-submit-btn">Kirim Booking</button>
+                </div>
                 </div>
             </form>
         </section>
