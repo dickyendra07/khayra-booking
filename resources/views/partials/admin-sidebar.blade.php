@@ -18,7 +18,7 @@
                 ['key' => 'patients', 'label' => 'Biodata Pasien', 'url' => '/admin/patients'],
                 ['key' => 'visits', 'label' => 'Visit & Rekam Medis', 'url' => '/admin/visits'],
                 ['key' => 'therapists', 'label' => 'Tim Fisioterapis', 'url' => '/admin/therapists'],
-                ['key' => 'therapist-availabilities', 'label' => 'Therapist Availability', 'url' => '/admin/therapist-availabilities'],
+                ['key' => 'therapist-availabilities', 'label' => 'Jadwal Kerja Terapis', 'url' => '/admin/therapist-availabilities'],
             ],
         ],
         [

@@ -339,6 +339,7 @@ Route::post('/booking', function (Request $request) {
         'service' => 'required|string|max:255',
         'booking_date' => 'required|date',
         'booking_time' => 'required',
+        'therapist_id' => 'nullable|exists:therapists,id',
         'complaint' => 'nullable|string',
     ]);
 
@@ -557,6 +558,134 @@ Route::get('/admin/bookings', function (Request $request) {
     ));
 });
 
+
+Route::get('/admin/bookings/calendar', function (Request $request) {
+    if (!session('admin_logged_in')) {
+        return redirect('/admin/login');
+    }
+
+    $selectedDate = $request->query('date', now()->toDateString());
+    $date = \Carbon\Carbon::parse($selectedDate);
+
+    $therapists = Therapist::where('status', 'active')
+        ->orderBy('full_name')
+        ->get();
+
+    $bookings = Booking::with(['patient', 'therapist'])
+        ->whereDate('booking_date', $date->toDateString())
+        ->orderBy('booking_time')
+        ->get();
+
+    $startHour = 8;
+    $endHour = 20;
+    $slotMinutes = 30;
+
+    $timeSlots = collect();
+    $cursor = $date->copy()->setTime($startHour, 0);
+    $end = $date->copy()->setTime($endHour, 0);
+
+    while ($cursor <= $end) {
+        $timeSlots->push($cursor->format('H:i'));
+        $cursor->addMinutes($slotMinutes);
+    }
+
+    $statusLabels = [
+        'pending' => 'Pending',
+        'confirmed' => 'Confirmed',
+        'arrived' => 'Arrived',
+        'in_treatment' => 'In Treatment',
+        'completed' => 'Completed',
+        'cancelled' => 'Cancelled',
+        'no_show' => 'No Show',
+    ];
+
+    $calendarStats = [
+        'total' => $bookings->count(),
+        'confirmed' => $bookings->where('status', 'confirmed')->count(),
+        'arrived' => $bookings->where('status', 'arrived')->count(),
+        'in_treatment' => $bookings->where('status', 'in_treatment')->count(),
+        'completed' => $bookings->where('status', 'completed')->count(),
+    ];
+
+    return view('admin-booking-calendar', compact(
+        'selectedDate',
+        'date',
+        'therapists',
+        'bookings',
+        'timeSlots',
+        'statusLabels',
+        'calendarStats'
+    ));
+});
+
+Route::get('/admin/bookings/create', function (Request $request) {
+    if (!session('admin_logged_in')) {
+        return redirect('/admin/login');
+    }
+
+    $patients = Patient::orderBy('full_name')->get();
+    $therapists = Therapist::where('status', 'active')->orderBy('full_name')->get();
+    $services = ClinicService::where('status', 'active')->orderBy('name')->get();
+
+    $prefill = [
+        'booking_date' => $request->query('date', now()->toDateString()),
+        'booking_time' => $request->query('time', now()->format('H:i')),
+        'therapist_id' => $request->query('therapist_id'),
+    ];
+
+    return view('admin-booking-create', compact('patients', 'therapists', 'services', 'prefill'));
+});
+
+Route::post('/admin/bookings/create', function (Request $request) {
+    if (!session('admin_logged_in')) {
+        return redirect('/admin/login');
+    }
+
+    $data = $request->validate([
+        'patient_id' => 'nullable|exists:patients,id',
+        'therapist_id' => 'nullable|exists:therapists,id',
+        'full_name' => 'required|string|max:255',
+        'whatsapp' => 'required|string|max:50',
+        'service' => 'required|string|max:255',
+        'booking_date' => 'required|date',
+        'booking_time' => 'required',
+        'complaint' => 'nullable|string',
+        'status' => 'required|in:pending,confirmed,arrived,in_treatment,completed,cancelled,no_show',
+    ]);
+
+    $allowedBookingSlots = ['08:00','08:30','09:00','09:30','10:00','10:30','11:00','11:30','12:00','12:30','13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30','17:00','17:30','18:00','18:30','19:00','19:30','20:00'];
+    $data['booking_time'] = substr((string) $data['booking_time'], 0, 5);
+
+    if (!in_array($data['booking_time'], $allowedBookingSlots, true)) {
+        return back()
+            ->withInput()
+            ->withErrors(['booking_time' => 'Jam appointment harus mengikuti slot operasional 08:00-20:00 per 30 menit.']);
+    }
+
+    $patient = !empty($data['patient_id']) ? Patient::find($data['patient_id']) : null;
+
+    if ($patient) {
+        $data['full_name'] = $patient->full_name;
+        $data['whatsapp'] = $patient->whatsapp ?: $data['whatsapp'];
+    }
+
+    $booking = Booking::create([
+        'patient_id' => $data['patient_id'] ?? null,
+        'therapist_id' => $data['therapist_id'] ?? null,
+        'full_name' => $data['full_name'],
+        'whatsapp' => $data['whatsapp'],
+        'service' => $data['service'],
+        'booking_date' => $data['booking_date'],
+        'booking_time' => $data['booking_time'],
+        'complaint' => $data['complaint'] ?? null,
+        'status' => $data['status'] ?? 'confirmed',
+    ]);
+
+    return redirect('/admin/bookings/calendar?date=' . $booking->booking_date)
+        ->with('success', 'Appointment berhasil dibuat.');
+});
+
+
 Route::get('/admin/bookings/{id}', function ($id) {
     if (!session('admin_logged_in')) {
         return redirect('/admin/login');
@@ -575,6 +704,10 @@ Route::get('/admin/bookings/{id}/edit', function ($id) {
     return view('admin-booking-edit', compact('booking'));
 });
 
+Route::get('/admin/bookings/{id}/update', function ($id) {
+    return redirect('/admin/bookings/' . $id . '/edit');
+});
+
 Route::post('/admin/bookings/{id}/update', function (Request $request, $id) {
     if (!session('admin_logged_in')) {
         return redirect('/admin/login');
@@ -588,15 +721,26 @@ Route::post('/admin/bookings/{id}/update', function (Request $request, $id) {
         'service' => 'required|string|max:255',
         'booking_date' => 'required|date',
         'booking_time' => 'required',
+        'therapist_id' => 'nullable|exists:therapists,id',
         'complaint' => 'nullable|string',
         'status' => 'required|in:pending,confirmed,arrived,in_treatment,completed,cancelled,no_show',
     ]);
 
+    $allowedBookingSlots = ['08:00','08:30','09:00','09:30','10:00','10:30','11:00','11:30','12:00','12:30','13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30','17:00','17:30','18:00','18:30','19:00','19:30','20:00'];
+    $normalizedBookingTime = substr((string) $request->booking_time, 0, 5);
+
+    if (!in_array($normalizedBookingTime, $allowedBookingSlots, true)) {
+        return back()
+            ->withInput()
+            ->withErrors(['booking_time' => 'Jam appointment harus mengikuti slot operasional 08:00-20:00 per 30 menit.']);
+    }
+
     $booking->full_name = $request->full_name;
     $booking->whatsapp = $request->whatsapp;
     $booking->service = $request->service;
+    $booking->therapist_id = $request->therapist_id;
     $booking->booking_date = $request->booking_date;
-    $booking->booking_time = $request->booking_time;
+    $booking->booking_time = $normalizedBookingTime;
     $booking->complaint = $request->complaint;
     $booking->status = $request->status;
     $booking->save();
@@ -2684,8 +2828,15 @@ Route::post('/therapist/visits/{id}/medical-record', function (Request $request,
         'special_test_notes' => 'nullable|string',
 
         'physiotherapy_diagnosis' => 'nullable|string',
+        'icd_code' => 'nullable|string|max:50',
+        'icd_diagnosis' => 'nullable|string|max:255',
         'impairment' => 'nullable|string',
         'functional_limitation_clinical' => 'nullable|string',
+        'icf_body_function' => 'nullable|string',
+        'icf_body_structure' => 'nullable|string',
+        'icf_activities_participation' => 'nullable|string',
+        'icf_personal_factors' => 'nullable|string',
+        'icf_environmental_factors' => 'nullable|string',
         'patient_goal' => 'nullable|string',
         'referral' => 'nullable|string',
 
@@ -2763,8 +2914,15 @@ Route::post('/therapist/visits/{id}/medical-record', function (Request $request,
             'special_test_notes' => $request->special_test_notes,
 
             'physiotherapy_diagnosis' => $request->physiotherapy_diagnosis,
+            'icd_code' => $request->icd_code,
+            'icd_diagnosis' => $request->icd_diagnosis,
             'impairment' => $request->impairment,
             'functional_limitation_clinical' => $request->functional_limitation_clinical,
+            'icf_body_function' => $request->icf_body_function,
+            'icf_body_structure' => $request->icf_body_structure,
+            'icf_activities_participation' => $request->icf_activities_participation,
+            'icf_personal_factors' => $request->icf_personal_factors,
+            'icf_environmental_factors' => $request->icf_environmental_factors,
             'patient_goal' => $request->patient_goal,
             'referral' => $request->referral,
 

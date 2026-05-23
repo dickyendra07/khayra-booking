@@ -912,6 +912,40 @@
             .hero-title { font-size: 32px; }
             .stats-grid { grid-template-columns: 1fr; }
         }
+    
+        .scheduler-action-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 12px 0 18px;
+        }
+        .scheduler-action-btn {
+            min-height: 42px;
+            border: 0;
+            cursor: pointer;
+            padding: 0 16px;
+            border-radius: 14px;
+            font-size: 13px;
+            font-weight: 900;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-family: Arial, sans-serif;
+            white-space: nowrap;
+        }
+        .scheduler-action-btn.primary {
+            background: linear-gradient(135deg, #3d8a89 0%, #2f7c7a 100%);
+            color: #ffffff;
+            box-shadow: 0 12px 24px rgba(47,124,122,.16);
+        }
+        .scheduler-action-btn.soft {
+            color: #2f7c7a;
+            background: #ffffff;
+            border: 1px solid #d8ebe7;
+        }
+
     </style>
     <!-- Khayra PWA -->
     <link rel="manifest" href="/manifest.webmanifest">
@@ -1009,7 +1043,12 @@
                         <p class="section-subtitle">Pilih tanggal untuk melihat agenda appointment pada hari tersebut.</p>
                     </div>
 
-                    <form method="GET" action="/admin/bookings" class="date-form">
+                    
+                <div class="scheduler-action-row">
+                    <a href="/admin/bookings/calendar?date={{ $selectedDate ?? now()->toDateString() }}" class="scheduler-action-btn primary">Calendar View</a>
+                    <a href="/admin/bookings/create?date={{ $selectedDate ?? now()->toDateString() }}" class="scheduler-action-btn soft">+ Buat Appointment</a>
+                </div>
+<form method="GET" action="/admin/bookings" class="date-form">
                         <div class="field">
                             <label>Pilih Tanggal</label>
                             <input type="date" name="date" value="{{ $selectedDate }}">

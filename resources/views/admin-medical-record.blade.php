@@ -368,6 +368,102 @@
                 border-radius: 22px;
             }
         }
+    
+        .clinical-code-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+            margin-top: 14px;
+        }
+
+        .clinical-code-card,
+        .icf-card {
+            border: 1px solid #edf1f0;
+            background: #ffffff;
+            border-radius: 18px;
+            padding: 16px;
+        }
+
+        .clinical-code-card .data-label,
+        .icf-card .data-label {
+            margin-bottom: 8px;
+        }
+
+        .icf-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+            margin-top: 14px;
+        }
+
+        .icf-card.wide {
+            grid-column: 1 / -1;
+        }
+
+        .icf-section-card {
+            margin-top: 18px;
+            border: 1px solid #edf1f0;
+            background: #fbfcfc;
+            border-radius: 22px;
+            padding: 18px;
+        }
+
+        .icf-section-title {
+            margin: 0;
+            color: #22343a;
+            font-size: 18px;
+            font-weight: 900;
+        }
+
+        .icf-section-subtitle {
+            margin: 6px 0 0;
+            color: #64748b;
+            font-size: 13px;
+            line-height: 1.7;
+        }
+
+        @media (max-width: 900px) {
+            .clinical-code-grid,
+            .icf-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .icf-card.wide {
+                grid-column: auto;
+            }
+        }
+
+    
+        .clinical-decision-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+            margin-top: 14px;
+        }
+
+        .clinical-decision-card {
+            border: 1px solid #edf1f0;
+            background: #ffffff;
+            border-radius: 18px;
+            padding: 16px;
+            min-height: 118px;
+        }
+
+        .clinical-decision-card.wide {
+            grid-column: 1 / -1;
+            min-height: auto;
+        }
+
+        @media (max-width: 900px) {
+            .clinical-decision-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .clinical-decision-card.wide {
+                grid-column: auto;
+            }
+        }
+
     </style>
     <!-- Khayra PWA -->
     <link rel="manifest" href="/manifest.webmanifest">
@@ -733,41 +829,87 @@
                 </div>
 
                 <div class="viewer-section">
-                    <h3 class="viewer-title">7. Diagnosis & Clinical Decision</h3>
-                    <p class="viewer-text">Diagnosis fisioterapi, impairment, goal, referral, dan rencana program.</p>
+                    <h3 class="viewer-title">7. Diagnosa & Clinical Decision</h3>
+                    <p class="viewer-text">Diagnosa, impairment, goal, referral, dan rencana program.</p>
 
                     <div class="data-box">
-                        <div class="data-label">Physiotherapy Diagnosis</div>
+                        <div class="data-label">Diagnosa</div>
                         <div class="data-value">{{ $record->physiotherapy_diagnosis ?? '-' }}</div>
+
+                        <div class="clinical-code-grid">
+                            <div class="clinical-code-card">
+                                <div class="data-label">ICD Code</div>
+                                <div class="data-value">{{ $record->icd_code ?? '-' }}</div>
+                            </div>
+
+                            <div class="clinical-code-card">
+                                <div class="data-label">ICD Diagnosis</div>
+                                <div class="data-value">{{ $record->icd_diagnosis ?? '-' }}</div>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="grid-2 spacer">
-                        <div class="data-box">
+                    <div class="clinical-decision-grid">
+                        <div class="clinical-decision-card">
                             <div class="data-label">Impairment</div>
                             <div class="data-value">{{ $record->impairment ?? '-' }}</div>
                         </div>
 
-                        <div class="data-box">
+                        <div class="clinical-decision-card">
                             <div class="data-label">Functional Limitation (Clinical)</div>
                             <div class="data-value">{{ $record->functional_limitation_clinical ?? '-' }}</div>
                         </div>
                     </div>
 
-                    <div class="grid-2 spacer">
-                        <div class="data-box">
+                    <div class="icf-section-card">
+                        <h4 class="icf-section-title">ICF Structure</h4>
+                        <p class="icf-section-subtitle">Kerangka assessment berdasarkan Body Function, Body Structure, Activities & Participation, Personal Factors, dan Environmental Factors.</p>
+
+                        <div class="icf-grid">
+                            <div class="icf-card">
+                                <div class="data-label">Body Function</div>
+                                <div class="data-value">{{ $record->icf_body_function ?? '-' }}</div>
+                            </div>
+
+                            <div class="icf-card">
+                                <div class="data-label">Body Structure</div>
+                                <div class="data-value">{{ $record->icf_body_structure ?? '-' }}</div>
+                            </div>
+
+                            <div class="icf-card">
+                                <div class="data-label">Activities & Participation</div>
+                                <div class="data-value">{{ $record->icf_activities_participation ?? '-' }}</div>
+                            </div>
+
+                            <div class="icf-card">
+                                <div class="data-label">Personal Factors</div>
+                                <div class="data-value">{{ $record->icf_personal_factors ?? '-' }}</div>
+                            </div>
+
+                            <div class="icf-card wide">
+                                <div class="data-label">Environmental Factors</div>
+                                <div class="data-value">{{ $record->icf_environmental_factors ?? '-' }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="clinical-decision-grid">
+                        <div class="clinical-decision-card">
                             <div class="data-label">Patient Goal</div>
                             <div class="data-value">{{ $record->patient_goal ?? '-' }}</div>
                         </div>
 
-                        <div class="data-box">
+                        <div class="clinical-decision-card">
                             <div class="data-label">Referral</div>
                             <div class="data-value">{{ $record->referral ?? '-' }}</div>
                         </div>
                     </div>
 
-                    <div class="data-box spacer">
-                        <div class="data-label">Program Patient</div>
-                        <div class="data-value">{{ $record->program_patient ?? '-' }}</div>
+                    <div class="clinical-decision-grid">
+                        <div class="clinical-decision-card wide">
+                            <div class="data-label">Program Patient</div>
+                            <div class="data-value">{{ $record->program_patient ?? '-' }}</div>
+                        </div>
                     </div>
 
                     <div class="grid-3 spacer">

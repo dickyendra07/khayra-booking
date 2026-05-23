@@ -235,14 +235,33 @@
                         <label>Service</label>
                         <input type="text" name="service" value="{{ old('service', $booking->service) }}">
                     </div>
+                    <div class="form-group">
+                        <label>Fisioterapis</label>
+                        <select name="therapist_id">
+                            <option value="">Belum ditentukan</option>
+                            @foreach(($therapists ?? collect()) as $therapist)
+                                <option value="{{ $therapist->id }}" {{ old('therapist_id', $booking->therapist_id ?? '') == $therapist->id ? 'selected' : '' }}>
+                                    {{ $therapist->full_name ?? $therapist->name ?? ('Therapist #' . $therapist->id) }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
 
                     <div class="field">
                         <label>Status</label>
                         <select name="status">
-                            <option value="pending" {{ old('status', $booking->status) == 'pending' ? 'selected' : '' }}>pending</option>
-                            <option value="confirmed" {{ old('status', $booking->status) == 'confirmed' ? 'selected' : '' }}>confirmed</option>
-                            <option value="completed" {{ old('status', $booking->status) == 'completed' ? 'selected' : '' }}>completed</option>
-                            <option value="cancelled" {{ old('status', $booking->status) == 'cancelled' ? 'selected' : '' }}>cancelled</option>
+                            @foreach([
+                                'pending' => 'Pending',
+                                'confirmed' => 'Confirmed',
+                                'arrived' => 'Arrived',
+                                'in_treatment' => 'In Treatment',
+                                'completed' => 'Completed',
+                                'cancelled' => 'Cancelled',
+                                'no_show' => 'No Show',
+                            ] as $value => $label)
+                                <option value="{{ $value }}" {{ old('status', $booking->status) == $value ? 'selected' : '' }}>{{ $label }}</option>
+                            @endforeach
                         </select>
                     </div>
 
@@ -253,7 +272,12 @@
 
                     <div class="field">
                         <label>Booking Time</label>
-                        <input type="time" name="booking_time" value="{{ old('booking_time', $booking->booking_time) }}">
+                        <select name="booking_time" required>
+
+                            @foreach(['08:00','08:30','09:00','09:30','10:00','10:30','11:00','11:30','12:00','12:30','13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30','17:00','17:30','18:00','18:30','19:00','19:30','20:00'] as $slot)
+                                <option value="{{ $slot }}" {{ old('booking_time', substr((string) $booking->booking_time, 0, 5)) === $slot ? 'selected' : '' }}>{{ $slot }}</option>
+                            @endforeach
+                        </select>
                     </div>
 
                     <div class="field full">

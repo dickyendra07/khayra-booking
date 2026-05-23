@@ -34,6 +34,13 @@ class MedicalRecord extends Model
         'special_test_notes',
 
         'physiotherapy_diagnosis',
+        'icf_environmental_factors',
+        'icf_personal_factors',
+        'icf_activities_participation',
+        'icf_body_structure',
+        'icf_body_function',
+        'icd_diagnosis',
+        'icd_code',
         'impairment',
         'functional_limitation_clinical',
         'patient_goal',

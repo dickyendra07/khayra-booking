@@ -640,6 +640,21 @@
             }
         }
 
+    
+        .mini-section-title {
+            margin: 18px 0 6px;
+            font-size: 16px;
+            font-weight: 900;
+            color: #22343a;
+        }
+        .form-subsection {
+            margin-top: 18px;
+            padding: 18px;
+            border: 1px solid #edf1f0;
+            border-radius: 22px;
+            background: #fbfcfc;
+        }
+
     </style>
     <!-- Khayra PWA -->
     <link rel="manifest" href="/manifest.webmanifest">
@@ -725,7 +740,7 @@
     }
 
     if (!$record || blank($record->physiotherapy_diagnosis)) {
-        $summaryIssues->push('Diagnosis fisioterapi belum diisi');
+        $summaryIssues->push('Diagnosa belum diisi');
     }
 
     if (!$record || blank($record->program_patient)) {
@@ -1192,12 +1207,26 @@
                     </div>
 
                     <div class="form-section">
-                        <h3 class="form-section-title">7. Diagnosis & Clinical Decision</h3>
-                        <p class="form-section-text">Tulis diagnosis, impairment, goal, referral, dan rencana program therapy.</p>
+                        <h3 class="form-section-title">7. Diagnosa & Clinical Decision</h3>
+                        <p class="form-section-text">Tulis diagnosa, impairment, goal, referral, dan rencana program therapy.</p>
 
                         <div class="field">
-                            <label>Physiotherapy Diagnosis</label>
-                            <textarea name="physiotherapy_diagnosis" placeholder="Diagnosis fisioterapi">{{ old('physiotherapy_diagnosis', $record->physiotherapy_diagnosis ?? '') }}</textarea>
+                            <label>Diagnosa</label>
+                            <textarea name="physiotherapy_diagnosis" placeholder="Diagnosa">{{ old('physiotherapy_diagnosis', $record->physiotherapy_diagnosis ?? '') }}</textarea>
+
+                            <div class="form-grid two">
+                                <div class="field">
+                                    <label>ICD Code</label>
+                                    <input type="text" name="icd_code" value="{{ old('icd_code', $record->icd_code ?? '') }}" placeholder="Contoh: M54.5">
+                                    <div class="hint">Isi kode ICD bila sudah diketahui. Referensi bisa dari ICD-10 WHO.</div>
+                                </div>
+
+                                <div class="field">
+                                    <label>ICD Diagnosis</label>
+                                    <input type="text" name="icd_diagnosis" value="{{ old('icd_diagnosis', $record->icd_diagnosis ?? '') }}" placeholder="Contoh: Low back pain">
+                                    <div class="hint">Nama diagnosis ICD atau diagnosis medis rujukan.</div>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="grid-2">
@@ -1211,6 +1240,40 @@
                                 <textarea name="functional_limitation_clinical" placeholder="Keterbatasan fungsi dari sudut klinis">{{ old('functional_limitation_clinical', $record->functional_limitation_clinical ?? '') }}</textarea>
                             </div>
                         </div>
+
+                        <div class="form-subsection">
+                            <h4 class="mini-section-title">ICF Structure</h4>
+                            <p class="form-section-text">Susun assessment sesuai kerangka ICF: Body Function, Body Structure, Activities & Participation, Personal Factors, dan Environmental Factors.</p>
+
+                            <div class="form-grid two">
+                                <div class="field">
+                                    <label>Body Function</label>
+                                    <textarea name="icf_body_function" placeholder="Contoh: nyeri, ROM terbatas, muscle weakness, balance deficit">{{ old('icf_body_function', $record->icf_body_function ?? '') }}</textarea>
+                                </div>
+
+                                <div class="field">
+                                    <label>Body Structure</label>
+                                    <textarea name="icf_body_structure" placeholder="Contoh: lumbar spine, knee joint, soft tissue, nerve structure">{{ old('icf_body_structure', $record->icf_body_structure ?? '') }}</textarea>
+                                </div>
+
+                                <div class="field">
+                                    <label>Activities & Participation</label>
+                                    <textarea name="icf_activities_participation" placeholder="Contoh: kesulitan berjalan, duduk lama, naik tangga, bekerja, olahraga">{{ old('icf_activities_participation', $record->icf_activities_participation ?? '') }}</textarea>
+                                </div>
+
+                                <div class="field">
+                                    <label>Personal Factors</label>
+                                    <textarea name="icf_personal_factors" placeholder="Contoh: usia, kebiasaan aktivitas, motivasi, pekerjaan, lifestyle">{{ old('icf_personal_factors', $record->icf_personal_factors ?? '') }}</textarea>
+                                </div>
+
+                                <div class="field full">
+                                    <label>Environmental Factors</label>
+                                    <textarea name="icf_environmental_factors" placeholder="Contoh: support keluarga, ergonomi kerja, alat bantu, lingkungan rumah">{{ old('icf_environmental_factors', $record->icf_environmental_factors ?? '') }}</textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        
 
                         <div class="grid-2">
                             <div class="field">
