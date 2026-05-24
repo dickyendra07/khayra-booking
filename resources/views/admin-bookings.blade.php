@@ -946,6 +946,230 @@
             border: 1px solid #d8ebe7;
         }
 
+    
+        /* 5F Booking Scheduler Polish */
+        body,
+        button,
+        input,
+        select,
+        textarea,
+        table,
+        .data-value,
+        .data-label,
+        .section-title,
+        .section-subtitle {
+            font-family: Arial, Helvetica, sans-serif !important;
+        }
+
+        .booking-card,
+        .agenda-card,
+        .appointment-card,
+        .calendar-card,
+        .week-card,
+        .day-card {
+            border-radius: 22px !important;
+        }
+
+        .agenda-card,
+        .appointment-card {
+            padding: 20px 22px !important;
+            margin-bottom: 16px !important;
+        }
+
+        .agenda-card .appointment-actions,
+        .appointment-card .appointment-actions,
+        .booking-actions {
+            display: flex !important;
+            align-items: center !important;
+            gap: 10px !important;
+            flex-wrap: wrap !important;
+            margin-top: 14px !important;
+        }
+
+        .agenda-card form,
+        .appointment-card form,
+        .booking-status-form {
+            display: flex !important;
+            align-items: center !important;
+            gap: 10px !important;
+            flex-wrap: wrap !important;
+            margin-top: 10px !important;
+        }
+
+        .agenda-card select,
+        .appointment-card select,
+        .booking-status-form select {
+            min-width: 170px !important;
+            height: 44px !important;
+            border-radius: 14px !important;
+            padding: 0 14px !important;
+        }
+
+        .agenda-card button,
+        .appointment-card button,
+        .agenda-card a,
+        .appointment-card a,
+        .booking-actions a,
+        .booking-actions button {
+            min-height: 38px !important;
+            border-radius: 13px !important;
+            padding: 0 15px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            line-height: 1 !important;
+            white-space: nowrap !important;
+        }
+
+        .week-card,
+        .day-card {
+            padding: 16px 18px !important;
+            margin-bottom: 12px !important;
+        }
+
+        .calendar-layout,
+        .booking-calendar-layout,
+        .scheduler-grid {
+            gap: 22px !important;
+        }
+
+        @media (max-width: 900px) {
+            .agenda-card,
+            .appointment-card {
+                padding: 16px !important;
+            }
+
+            .agenda-card form,
+            .appointment-card form,
+            .booking-status-form {
+                align-items: stretch !important;
+            }
+
+            .agenda-card select,
+            .appointment-card select,
+            .booking-status-form select,
+            .agenda-card button,
+            .appointment-card button {
+                width: 100% !important;
+            }
+        }
+
+    
+        /* 5F Admin Bookings Real Class Polish */
+        .status-form {
+            display: grid !important;
+            grid-template-columns: minmax(180px, 1fr) auto !important;
+            gap: 10px !important;
+            align-items: center !important;
+            margin-top: 12px !important;
+            max-width: 340px !important;
+        }
+
+        .status-form select {
+            height: 42px !important;
+            min-height: 42px !important;
+            border-radius: 14px !important;
+            padding: 0 14px !important;
+            font-size: 13px !important;
+            font-weight: 800 !important;
+            font-family: Arial, Helvetica, sans-serif !important;
+        }
+
+        .mini-submit {
+            height: 42px !important;
+            min-height: 42px !important;
+            border-radius: 14px !important;
+            padding: 0 18px !important;
+            font-size: 13px !important;
+            font-weight: 900 !important;
+            font-family: Arial, Helvetica, sans-serif !important;
+            white-space: nowrap !important;
+        }
+
+        .action-link {
+            min-height: 36px !important;
+            border-radius: 13px !important;
+            padding: 0 14px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 12px !important;
+            font-weight: 900 !important;
+            font-family: Arial, Helvetica, sans-serif !important;
+            line-height: 1 !important;
+            white-space: nowrap !important;
+        }
+
+        .status-pill {
+            min-height: 28px !important;
+            padding: 0 12px !important;
+            border-radius: 999px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 11px !important;
+            font-weight: 900 !important;
+            font-family: Arial, Helvetica, sans-serif !important;
+            text-transform: capitalize !important;
+            white-space: nowrap !important;
+        }
+
+        .agenda-item,
+        .booking-item,
+        .daily-booking-card {
+            padding: 18px 20px !important;
+            border-radius: 22px !important;
+            margin-bottom: 14px !important;
+        }
+
+        .agenda-meta,
+        .booking-meta,
+        .patient-sub,
+        .section-subtitle,
+        .hero-subtitle,
+        .subtitle {
+            font-family: Arial, Helvetica, sans-serif !important;
+            line-height: 1.65 !important;
+        }
+
+        .section-title,
+        .hero-title,
+        .title,
+        h1,
+        h2,
+        h3 {
+            font-family: Arial, Helvetica, sans-serif !important;
+            letter-spacing: -0.02em !important;
+        }
+
+        td,
+        th,
+        .primary-text,
+        .secondary-text {
+            font-family: Arial, Helvetica, sans-serif !important;
+        }
+
+        .booking-list-actions,
+        .quick-actions,
+        .action-row {
+            display: flex !important;
+            align-items: center !important;
+            gap: 9px !important;
+            flex-wrap: wrap !important;
+        }
+
+        @media (max-width: 760px) {
+            .status-form {
+                grid-template-columns: 1fr !important;
+                max-width: 100% !important;
+            }
+
+            .mini-submit,
+            .status-form select {
+                width: 100% !important;
+            }
+        }
+
     </style>
     <!-- Khayra PWA -->
     <link rel="manifest" href="/manifest.webmanifest">

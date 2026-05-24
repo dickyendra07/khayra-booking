@@ -2016,6 +2016,111 @@
             }
         }
 
+    
+        /* 5F Medical Record Font + Spacing Polish */
+        body,
+        button,
+        input,
+        select,
+        textarea,
+        table,
+        label,
+        .data-value,
+        .data-label,
+        .viewer-text,
+        .section-subtitle,
+        .form-section-subtitle,
+        .patient-sub,
+        .record-link,
+        .report-link,
+        .print-link {
+            font-family: Arial, Helvetica, sans-serif !important;
+        }
+
+        input,
+        select,
+        textarea {
+            font-size: 14px !important;
+            line-height: 1.55 !important;
+            letter-spacing: 0 !important;
+        }
+
+        textarea {
+            min-height: 104px;
+            resize: vertical;
+        }
+
+        label,
+        .data-label {
+            font-size: 12px !important;
+            letter-spacing: .04em !important;
+            font-weight: 900 !important;
+        }
+
+        .data-value,
+        .viewer-text,
+        .section-subtitle,
+        .form-section-subtitle {
+            font-size: 14px !important;
+            line-height: 1.75 !important;
+        }
+
+        .section-card,
+        .viewer-section,
+        .clinical-decision-card,
+        .data-box,
+        .dry-needling-card,
+        .goal-phase-card,
+        .session-advanced-card,
+        .rom-progress-card,
+        .pain-body-chart-card {
+            border-radius: 22px !important;
+        }
+
+        .form-grid,
+        .clinical-decision-grid,
+        .grid-2,
+        .grid-3,
+        .body-chart-grid {
+            gap: 16px !important;
+        }
+
+        .section-card,
+        .viewer-section {
+            margin-bottom: 20px !important;
+        }
+
+        .dry-needling-card {
+            padding: 20px !important;
+            margin: 18px 0 !important;
+        }
+
+        .dry-needling-grid,
+        .goal-phase-grid,
+        .session-advanced-grid,
+        .rom-progress-grid {
+            gap: 16px !important;
+        }
+
+        .dry-needling-card select,
+        .dry-needling-card input {
+            height: 46px !important;
+            border-radius: 14px !important;
+        }
+
+        @media (max-width: 900px) {
+            .form-grid,
+            .clinical-decision-grid,
+            .grid-2,
+            .grid-3,
+            .dry-needling-grid,
+            .goal-phase-grid,
+            .session-advanced-grid,
+            .rom-progress-grid {
+                grid-template-columns: 1fr !important;
+            }
+        }
+
     </style>
     <!-- Khayra PWA -->
     <link rel="manifest" href="/manifest.webmanifest">

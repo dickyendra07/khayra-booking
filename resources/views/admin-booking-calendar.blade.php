@@ -353,6 +353,114 @@
             .toolbar form, .toolbar .btn, .toolbar input[type="date"] { width: 100%; }
             .toolbar .btn { justify-content: center; }
         }
+    
+        /* 5F Booking Scheduler Polish */
+        body,
+        button,
+        input,
+        select,
+        textarea,
+        table,
+        .data-value,
+        .data-label,
+        .section-title,
+        .section-subtitle {
+            font-family: Arial, Helvetica, sans-serif !important;
+        }
+
+        .booking-card,
+        .agenda-card,
+        .appointment-card,
+        .calendar-card,
+        .week-card,
+        .day-card {
+            border-radius: 22px !important;
+        }
+
+        .agenda-card,
+        .appointment-card {
+            padding: 20px 22px !important;
+            margin-bottom: 16px !important;
+        }
+
+        .agenda-card .appointment-actions,
+        .appointment-card .appointment-actions,
+        .booking-actions {
+            display: flex !important;
+            align-items: center !important;
+            gap: 10px !important;
+            flex-wrap: wrap !important;
+            margin-top: 14px !important;
+        }
+
+        .agenda-card form,
+        .appointment-card form,
+        .booking-status-form {
+            display: flex !important;
+            align-items: center !important;
+            gap: 10px !important;
+            flex-wrap: wrap !important;
+            margin-top: 10px !important;
+        }
+
+        .agenda-card select,
+        .appointment-card select,
+        .booking-status-form select {
+            min-width: 170px !important;
+            height: 44px !important;
+            border-radius: 14px !important;
+            padding: 0 14px !important;
+        }
+
+        .agenda-card button,
+        .appointment-card button,
+        .agenda-card a,
+        .appointment-card a,
+        .booking-actions a,
+        .booking-actions button {
+            min-height: 38px !important;
+            border-radius: 13px !important;
+            padding: 0 15px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            line-height: 1 !important;
+            white-space: nowrap !important;
+        }
+
+        .week-card,
+        .day-card {
+            padding: 16px 18px !important;
+            margin-bottom: 12px !important;
+        }
+
+        .calendar-layout,
+        .booking-calendar-layout,
+        .scheduler-grid {
+            gap: 22px !important;
+        }
+
+        @media (max-width: 900px) {
+            .agenda-card,
+            .appointment-card {
+                padding: 16px !important;
+            }
+
+            .agenda-card form,
+            .appointment-card form,
+            .booking-status-form {
+                align-items: stretch !important;
+            }
+
+            .agenda-card select,
+            .appointment-card select,
+            .booking-status-form select,
+            .agenda-card button,
+            .appointment-card button {
+                width: 100% !important;
+            }
+        }
+
     </style>
 </head>
 <body>
