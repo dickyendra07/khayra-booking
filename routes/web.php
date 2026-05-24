@@ -3919,123 +3919,237 @@ Route::get('/admin/reports/inventory', function (Request $request) {
     ));
 });
 
-Route::get('/admin/reports/therapist-performance', function (Request $request) {
-    if (!session('admin_logged_in')) {
-        return redirect('/admin/login');
-    }
+Route::get('/admin/reports/therapist-performance', function () {
+    $therapists = \App\Models\Therapist::orderBy('full_name')->get();
 
-    $month = $request->query('month', now()->format('Y-m'));
-    $export = $request->query('export');
-
-    $startDate = \Carbon\Carbon::parse($month . '-01')->startOfMonth();
-    $endDate = $startDate->copy()->endOfMonth();
-
-    $therapists = Therapist::orderBy('full_name')->get();
-
-    $visits = Visit::with(['patient', 'therapistRelation', 'medicalRecord'])
-        ->whereBetween('visit_date', [$startDate->toDateString(), $endDate->toDateString()])
-        ->get();
-
-    $billings = Billing::with(['visit.therapistRelation'])
-        ->whereBetween('invoice_date', [$startDate->toDateString(), $endDate->toDateString()])
-        ->where('payment_status', '!=', 'void')
-        ->get();
-
-
-    $moneyPaid = function ($billing) {
-        if ($billing->payment_status === 'void') {
-            return 0;
-        }
-
-        $paid = (float) ($billing->paid_amount ?? 0);
-        $amount = (float) ($billing->amount ?? 0);
-
-        if ($billing->payment_status === 'paid' && $paid <= 0) {
-            return $amount;
-        }
-
-        return $paid;
-    };
-
-    $moneyOutstanding = function ($billing) {
-        if (($billing->payment_status ?? null) === 'void') {
-            return 0;
-        }
-
-        $total = (float) ($billing->grand_total ?? $billing->total_amount ?? $billing->amount ?? 0);
-        $paid = (float) ($billing->paid_amount ?? 0);
-        $status = $billing->payment_status ?: 'unpaid';
-
-        if ($status === 'paid') {
-            return 0;
-        }
-
-        return max($total - $paid, 0);
-    };
-
-    $rows = $therapists->map(function ($therapist) use ($visits, $billings, $moneyPaid, $moneyOutstanding) {
-        $therapistVisits = $visits->where('therapist_id', $therapist->id);
-        $visitIds = $therapistVisits->pluck('id')->filter()->values();
-        $therapistBillings = $billings->whereIn('visit_id', $visitIds);
-
-        $visitCount = $therapistVisits->count();
-        $completedCount = $therapistVisits->where('status', 'completed')->count();
-        $medicalRecordCount = $therapistVisits->filter(fn ($visit) => $visit->medicalRecord)->count();
-
-        return [
-            'therapist' => $therapist,
-            'visits' => $visitCount,
-            'completed' => $completedCount,
-            'patients' => $therapistVisits->pluck('patient_id')->unique()->filter()->count(),
-            'medical_records' => $medicalRecordCount,
-            'completion_rate' => $visitCount > 0 ? round(($completedCount / $visitCount) * 100, 1) : 0,
-            'medical_record_rate' => $visitCount > 0 ? round(($medicalRecordCount / $visitCount) * 100, 1) : 0,
-            'revenue' => $therapistBillings->sum('amount'),
-            'paid' => $therapistBillings->sum(fn ($billing) => $moneyPaid($billing)),
-            'outstanding' => $therapistBillings->sum(fn ($billing) => $moneyOutstanding($billing)),
-        ];
-    })->sortByDesc('visits')->values();
-
-    $summary = [
-        'month_label' => $startDate->format('F Y'),
-        'therapists' => $therapists->count(),
-        'visits' => $visits->count(),
-        'completed' => $visits->where('status', 'completed')->count(),
-        'patients' => $visits->pluck('patient_id')->unique()->filter()->count(),
-        'revenue' => $rows->sum('revenue'),
-        'paid' => $rows->sum('paid'),
-        'outstanding' => $rows->sum('outstanding'),
+    $clinicalRequiredFields = [
+        'complaint',
+        'pain_scale',
+        'subjective_examination',
+        'objective_examination',
+        'physiotherapy_diagnosis',
+        'impairment',
+        'patient_goal',
+        'program_patient',
+        'treatment_given',
+        'response_to_treatment',
+        'next_session_plan',
     ];
 
-    if ($export === 'csv') {
-        $filename = 'therapist-performance-' . $month . '.csv';
+    $hasBookingsTherapistId = \Illuminate\Support\Facades\Schema::hasColumn('bookings', 'therapist_id');
+    $hasVisitsTherapistId = \Illuminate\Support\Facades\Schema::hasColumn('visits', 'therapist_id');
+    $hasVisitsTherapistText = \Illuminate\Support\Facades\Schema::hasColumn('visits', 'therapist');
 
-        return response()->streamDownload(function () use ($rows) {
-            $handle = fopen('php://output', 'w');
-            fputcsv($handle, ['therapist', 'visits', 'completed', 'patients', 'medical_records', 'completion_rate', 'medical_record_rate', 'revenue', 'paid', 'outstanding']);
-            foreach ($rows as $row) {
-                fputcsv($handle, [
-                    $row['therapist']->full_name,
-                    $row['visits'],
-                    $row['completed'],
-                    $row['patients'],
-                    $row['medical_records'],
-                    $row['completion_rate'],
-                    $row['medical_record_rate'],
-                    $row['revenue'],
-                    $row['paid'],
-                    $row['outstanding'],
-                ]);
+    $hasBillings = \Illuminate\Support\Facades\Schema::hasTable('billings');
+    $hasInvoices = \Illuminate\Support\Facades\Schema::hasTable('invoices');
+    $hasPayments = \Illuminate\Support\Facades\Schema::hasTable('payments');
+    $hasPackageTreatments = \Illuminate\Support\Facades\Schema::hasTable('package_treatments');
+    $hasBookingsPackageColumn = \Illuminate\Support\Facades\Schema::hasColumn('bookings', 'package_treatment_id')
+        || \Illuminate\Support\Facades\Schema::hasColumn('bookings', 'package_id')
+        || \Illuminate\Support\Facades\Schema::hasColumn('bookings', 'is_package');
+
+    $therapistPerformanceRows = $therapists->map(function ($therapist) use (
+        $clinicalRequiredFields,
+        $hasBookingsTherapistId,
+        $hasVisitsTherapistId,
+        $hasVisitsTherapistText,
+        $hasBillings,
+        $hasInvoices,
+        $hasPayments,
+        $hasPackageTreatments,
+        $hasBookingsPackageColumn
+    ) {
+        $visitQuery = \App\Models\Visit::query();
+
+        if ($hasVisitsTherapistId) {
+            $visitQuery->where('therapist_id', $therapist->id);
+        } elseif ($hasVisitsTherapistText) {
+            $visitQuery->where('therapist', $therapist->full_name);
+        }
+
+        $visits = $visitQuery->with(['patient', 'medicalRecord'])->get();
+
+        $visitIds = $visits->pluck('id')->filter()->values();
+        $patientIds = $visits->pluck('patient_id')->filter()->unique()->values();
+
+        $medicalRecords = $visits->pluck('medicalRecord')->filter();
+
+        $completedRecords = $medicalRecords->filter(function ($record) use ($clinicalRequiredFields) {
+            $completed = collect($clinicalRequiredFields)->filter(function ($field) use ($record) {
+                return !blank($record->{$field});
+            })->count();
+
+            return $completed >= count($clinicalRequiredFields);
+        })->count();
+
+        $averageCompleteness = $medicalRecords->count()
+            ? round($medicalRecords->map(function ($record) use ($clinicalRequiredFields) {
+                $completed = collect($clinicalRequiredFields)->filter(function ($field) use ($record) {
+                    return !blank($record->{$field});
+                })->count();
+
+                return ($completed / count($clinicalRequiredFields)) * 100;
+            })->avg())
+            : 0;
+
+        $completionRate = $medicalRecords->count()
+            ? round(($completedRecords / $medicalRecords->count()) * 100)
+            : 0;
+
+        $bookingCount = 0;
+
+        if (\Illuminate\Support\Facades\Schema::hasTable('bookings') && $hasBookingsTherapistId) {
+            $bookingCount = \Illuminate\Support\Facades\DB::table('bookings')
+                ->where('therapist_id', $therapist->id)
+                ->count();
+        }
+
+        $packagePatientCount = 0;
+
+        if ($hasPackageTreatments && \Illuminate\Support\Facades\Schema::hasColumn('package_treatments', 'therapist_id')) {
+            $packagePatientQuery = \Illuminate\Support\Facades\DB::table('package_treatments')
+                ->where('therapist_id', $therapist->id);
+
+            if (\Illuminate\Support\Facades\Schema::hasColumn('package_treatments', 'patient_id')) {
+                $packagePatientCount = $packagePatientQuery->distinct('patient_id')->count('patient_id');
+            } else {
+                $packagePatientCount = $packagePatientQuery->count();
             }
-            fclose($handle);
-        }, $filename, ['Content-Type' => 'text/csv']);
-    }
+        } elseif (\Illuminate\Support\Facades\Schema::hasTable('bookings') && $hasBookingsTherapistId && $hasBookingsPackageColumn) {
+            $packageQuery = \Illuminate\Support\Facades\DB::table('bookings')
+                ->where('therapist_id', $therapist->id);
+
+            if (\Illuminate\Support\Facades\Schema::hasColumn('bookings', 'package_treatment_id')) {
+                $packageQuery->whereNotNull('package_treatment_id');
+            } elseif (\Illuminate\Support\Facades\Schema::hasColumn('bookings', 'package_id')) {
+                $packageQuery->whereNotNull('package_id');
+            } elseif (\Illuminate\Support\Facades\Schema::hasColumn('bookings', 'is_package')) {
+                $packageQuery->where('is_package', 1);
+            }
+
+            if (\Illuminate\Support\Facades\Schema::hasColumn('bookings', 'patient_id')) {
+                $packagePatientCount = $packageQuery->distinct('patient_id')->count('patient_id');
+            } else {
+                $packagePatientCount = $packageQuery->count();
+            }
+        }
+
+        $revenue = 0;
+        $paidAmount = 0;
+        $outstandingAmount = 0;
+
+        if ($hasBillings && \Illuminate\Support\Facades\Schema::hasColumn('billings', 'therapist_id')) {
+            $billingQuery = \Illuminate\Support\Facades\DB::table('billings')
+                ->where('therapist_id', $therapist->id);
+
+            foreach (['total_amount', 'grand_total', 'amount'] as $column) {
+                if (\Illuminate\Support\Facades\Schema::hasColumn('billings', $column)) {
+                    $revenue = (clone $billingQuery)->sum($column);
+                    break;
+                }
+            }
+
+            foreach (['paid_amount', 'payment_amount'] as $column) {
+                if (\Illuminate\Support\Facades\Schema::hasColumn('billings', $column)) {
+                    $paidAmount = (clone $billingQuery)->sum($column);
+                    break;
+                }
+            }
+
+            foreach (['outstanding_amount', 'remaining_amount', 'balance_due'] as $column) {
+                if (\Illuminate\Support\Facades\Schema::hasColumn('billings', $column)) {
+                    $outstandingAmount = (clone $billingQuery)->sum($column);
+                    break;
+                }
+            }
+        } elseif ($hasInvoices && \Illuminate\Support\Facades\Schema::hasColumn('invoices', 'therapist_id')) {
+            $invoiceQuery = \Illuminate\Support\Facades\DB::table('invoices')
+                ->where('therapist_id', $therapist->id);
+
+            foreach (['total_amount', 'grand_total', 'amount'] as $column) {
+                if (\Illuminate\Support\Facades\Schema::hasColumn('invoices', $column)) {
+                    $revenue = (clone $invoiceQuery)->sum($column);
+                    break;
+                }
+            }
+
+            foreach (['paid_amount', 'payment_amount'] as $column) {
+                if (\Illuminate\Support\Facades\Schema::hasColumn('invoices', $column)) {
+                    $paidAmount = (clone $invoiceQuery)->sum($column);
+                    break;
+                }
+            }
+
+            foreach (['outstanding_amount', 'remaining_amount', 'balance_due'] as $column) {
+                if (\Illuminate\Support\Facades\Schema::hasColumn('invoices', $column)) {
+                    $outstandingAmount = (clone $invoiceQuery)->sum($column);
+                    break;
+                }
+            }
+        } elseif ($hasPayments && \Illuminate\Support\Facades\Schema::hasColumn('payments', 'therapist_id')) {
+            $paymentQuery = \Illuminate\Support\Facades\DB::table('payments')
+                ->where('therapist_id', $therapist->id);
+
+            foreach (['amount', 'paid_amount', 'payment_amount'] as $column) {
+                if (\Illuminate\Support\Facades\Schema::hasColumn('payments', $column)) {
+                    $paidAmount = (clone $paymentQuery)->sum($column);
+                    $revenue = $paidAmount;
+                    break;
+                }
+            }
+        }
+
+        return (object) [
+            'therapist' => $therapist,
+            'visit_count' => $visits->count(),
+            'booking_count' => $bookingCount,
+            'patient_count' => $patientIds->count(),
+            'program_count' => $medicalRecords->filter(fn ($record) => !blank($record->program_patient))->count(),
+            'package_patient_count' => $packagePatientCount,
+            'medical_record_count' => $medicalRecords->count(),
+            'completed_record_count' => $completedRecords,
+            'completion_rate' => $completionRate,
+            'average_completeness' => $averageCompleteness,
+            'revenue' => $revenue,
+            'paid_amount' => $paidAmount,
+            'outstanding_amount' => $outstandingAmount,
+        ];
+    });
+
+    $therapistPerformanceSummary = (object) [
+        'therapist_count' => $therapistPerformanceRows->count(),
+        'patient_count' => $therapistPerformanceRows->sum('patient_count'),
+        'visit_count' => $therapistPerformanceRows->sum('visit_count'),
+        'program_count' => $therapistPerformanceRows->sum('program_count'),
+        'package_patient_count' => $therapistPerformanceRows->sum('package_patient_count'),
+        'medical_record_count' => $therapistPerformanceRows->sum('medical_record_count'),
+        'completed_record_count' => $therapistPerformanceRows->sum('completed_record_count'),
+        'completion_rate' => $therapistPerformanceRows->sum('medical_record_count') > 0
+            ? round(($therapistPerformanceRows->sum('completed_record_count') / $therapistPerformanceRows->sum('medical_record_count')) * 100)
+            : 0,
+        'average_completeness' => $therapistPerformanceRows->count()
+            ? round($therapistPerformanceRows->avg('average_completeness'))
+            : 0,
+        'revenue' => $therapistPerformanceRows->sum('revenue'),
+        'paid_amount' => $therapistPerformanceRows->sum('paid_amount'),
+        'outstanding_amount' => $therapistPerformanceRows->sum('outstanding_amount'),
+    ];
+
+    $topTherapistsByPatients = $therapistPerformanceRows
+        ->sortByDesc('patient_count')
+        ->take(5)
+        ->values();
+
+    $topTherapistsByCompletion = $therapistPerformanceRows
+        ->sortByDesc('completion_rate')
+        ->take(5)
+        ->values();
 
     return view('admin-report-therapist-performance', compact(
-        'summary',
-        'month',
-        'rows',
-        'visits'
+        'therapistPerformanceRows',
+        'therapistPerformanceSummary',
+        'topTherapistsByPatients',
+        'topTherapistsByCompletion'
     ));
 });
 
