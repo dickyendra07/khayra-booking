@@ -267,6 +267,60 @@
             .title { font-size: 32px; }
             .stats-grid { grid-template-columns: 1fr; }
         }
+    
+        /* Inventory Monthly Summary Layout Fix */
+        .content-grid,
+        .report-grid,
+        .summary-content-grid,
+        .inventory-summary-grid {
+            grid-template-columns: 1fr !important;
+        }
+
+        .movement-card,
+        .summary-card,
+        .table-card {
+            width: 100%;
+            max-width: 100%;
+        }
+
+        .movement-card {
+            margin-top: 18px;
+        }
+
+        .movement-card .table-wrap,
+        .table-card .table-wrap {
+            overflow-x: auto;
+        }
+
+        @media (min-width: 1024px) {
+            .movement-card,
+            .summary-card,
+            .table-card {
+                grid-column: 1 / -1;
+            }
+        }
+
+    
+        /* Inventory Monthly Summary Direct Grid Fix */
+        .grid-2 {
+            grid-template-columns: 1fr !important;
+            gap: 18px !important;
+        }
+
+        .grid-2 > .section-card {
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+
+        .grid-2 .table-wrap {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        .grid-2 table {
+            min-width: 720px;
+        }
+
     </style>
     <!-- Khayra PWA -->
     <link rel="manifest" href="/manifest.webmanifest">

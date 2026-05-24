@@ -69,6 +69,9 @@ class MedicalRecord extends Model
         'flare_up_management',
 
         'treatment_given',
+        'dry_needling_quantity',
+        'dry_needling_inventory_item_id',
+        'dry_needling_done',
         'response_to_treatment',
         'next_session_plan',
         'session_homework_status',
@@ -91,11 +94,17 @@ class MedicalRecord extends Model
 
     protected $casts = [
         'date_of_control' => 'date',
+        'dry_needling_done' => 'boolean',
     ];
 
     public function visit()
     {
         return $this->belongsTo(Visit::class);
+    }
+
+    public function dryNeedlingInventoryItem()
+    {
+        return $this->belongsTo(InventoryItem::class, 'dry_needling_inventory_item_id');
     }
 
     public function creatorTherapist()

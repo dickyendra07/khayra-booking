@@ -1972,6 +1972,50 @@
             }
         }
 
+    
+        .dry-needling-card {
+            margin-top: 14px;
+            border: 1px solid #dbecea;
+            border-radius: 22px;
+            padding: 16px;
+            background: linear-gradient(135deg, #ffffff, #f6fffd);
+        }
+
+        .dry-needling-head {
+            display: flex;
+            justify-content: space-between;
+            gap: 14px;
+            align-items: flex-start;
+            margin-bottom: 14px;
+        }
+
+        .dry-needling-title {
+            margin: 0;
+            color: #1f4f4d;
+            font-size: 15px;
+            font-weight: 950;
+        }
+
+        .dry-needling-subtitle {
+            margin: 5px 0 0;
+            color: #64748b;
+            font-size: 12px;
+            line-height: 1.6;
+            font-weight: 750;
+        }
+
+        .dry-needling-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+
+        @media (max-width: 760px) {
+            .dry-needling-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
     </style>
     <!-- Khayra PWA -->
     <link rel="manifest" href="/manifest.webmanifest">
@@ -3099,6 +3143,40 @@
                                 <label>Treatment Given</label>
                                 <textarea name="treatment_given" placeholder="Intervensi yang diberikan di sesi ini">{{ old('treatment_given', $record->treatment_given ?? '') }}</textarea>
                             </div>
+
+                            <div class="dry-needling-card">
+                                <div class="dry-needling-head">
+                                    <div>
+                                        <h4 class="dry-needling-title">Dry Needling Inventory Usage</h4>
+                                        <p class="dry-needling-subtitle">Catat penggunaan jarum dry needling agar stok inventory otomatis berkurang.</p>
+                                    </div>
+                                </div>
+
+                                <div class="checkbox-row" style="margin-bottom:14px;">
+                                    <input type="checkbox" name="dry_needling_done" value="1" {{ old('dry_needling_done', $record->dry_needling_done ?? false) ? 'checked' : '' }}>
+                                    <span>Dry needling dilakukan pada sesi ini</span>
+                                </div>
+
+                                <div class="dry-needling-grid">
+                                    <div class="field">
+                                        <label>Inventory Item</label>
+                                        <select name="dry_needling_inventory_item_id">
+                                            <option value="">Pilih item jarum</option>
+                                            @foreach($inventoryItems ?? collect() as $item)
+                                                <option value="{{ $item->id }}" {{ (string) old('dry_needling_inventory_item_id', $record->dry_needling_inventory_item_id ?? '') === (string) $item->id ? 'selected' : '' }}>
+                                                    {{ $item->name }} · Stock: {{ $item->stock }} {{ $item->unit }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+
+                                    <div class="field">
+                                        <label>Jumlah Jarum Dipakai</label>
+                                        <input type="number" min="0" name="dry_needling_quantity" value="{{ old('dry_needling_quantity', $record->dry_needling_quantity ?? '') }}" placeholder="Contoh: 4">
+                                    </div>
+                                </div>
+                            </div>
+
                         </div>
 
                         <div class="grid-2">

@@ -455,6 +455,68 @@
             .hero-main, .hero-side, .section-card, .stat-card { padding: 20px; border-radius: 22px; }
             .brand { font-size: 24px; }
         }
+    
+        .appointment-card {
+            border: 1px solid #dbecea;
+            border-radius: 20px;
+            background: #ffffff;
+            padding: 16px;
+            box-shadow: 0 12px 30px rgba(31,79,77,.06);
+        }
+
+        .appointment-list {
+            display: grid;
+            gap: 12px;
+        }
+
+        .appointment-row {
+            display: grid;
+            grid-template-columns: 120px 1fr auto;
+            gap: 14px;
+            align-items: center;
+            border: 1px solid #e3efed;
+            border-radius: 18px;
+            padding: 14px;
+            background: #fbfffe;
+        }
+
+        .appointment-time {
+            color: #1f4f4d;
+            font-weight: 950;
+            font-size: 14px;
+        }
+
+        .appointment-patient {
+            color: #20343a;
+            font-weight: 950;
+            font-size: 14px;
+        }
+
+        .appointment-meta {
+            margin-top: 4px;
+            color: #64748b;
+            font-weight: 750;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .appointment-status {
+            display: inline-flex;
+            border-radius: 999px;
+            padding: 7px 10px;
+            background: #eafffb;
+            color: #2f7c7a;
+            font-size: 11px;
+            font-weight: 950;
+            text-transform: capitalize;
+        }
+
+        @media (max-width: 760px) {
+            .appointment-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
     </style>
     <!-- Khayra PWA -->
     <link rel="manifest" href="/manifest.webmanifest">
@@ -558,7 +620,51 @@
         </section>
 
         <div class="grid-2">
-            <section class="section-card">
+            
+                <section class="section-card appointment-card">
+                    <div class="section-head">
+                        <div>
+                            <h2 class="section-title">Appointment Schedule</h2>
+                            <p class="section-subtitle">Booking dari admin maupun patient yang sudah ditugaskan ke therapist ini.</p>
+                        </div>
+                    </div>
+
+                    <div class="appointment-list">
+                        @forelse($upcomingAppointments as $booking)
+                            <div class="appointment-row">
+                                <div>
+                                    <div class="appointment-time">{{ $booking->booking_date ?: '-' }}</div>
+                                    <div class="appointment-meta">{{ $booking->booking_time ? substr($booking->booking_time, 0, 5) : '-' }}</div>
+                                </div>
+
+                                <div>
+                                    <div class="appointment-patient">{{ optional($booking->patient)->full_name ?: $booking->full_name }}</div>
+                                    <div class="appointment-meta">
+                                        Booking #{{ $booking->id }} · {{ $booking->service ?: 'Service belum dipilih' }}
+                                        @if($booking->complaint)
+                                            <br>{{ $booking->complaint }}
+                                        @endif
+                                    </div>
+                                </div>
+
+                                <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
+                                    <span class="appointment-status">{{ str_replace('_', ' ', $booking->status ?: 'pending') }}</span>
+
+                                    @if($booking->linked_visit)
+                                        <a href="/therapist/visits/{{ $booking->linked_visit->id }}/medical-record" class="record-link">Medical Record</a>
+                                    @else
+                                        <span class="appointment-status">Waiting Visit</span>
+                                    @endif
+                                </div>
+                            </div>
+                        @empty
+                            <div class="empty-block">Belum ada appointment aktif yang ditugaskan ke therapist ini.</div>
+                        @endforelse
+                    </div>
+                </section>
+
+
+<section class="section-card">
                 <div class="section-head">
                     <div>
                         <h2 class="section-title">Today Visits</h2>

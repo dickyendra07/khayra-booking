@@ -99,6 +99,8 @@
                         <button type="button" class="quick-btn" onclick="fillExample('tape')">Template Kinesio Tape</button>
                         <button type="button" class="quick-btn" onclick="fillExample('gel')">Template Gel Terapi</button>
                         <button type="button" class="quick-btn" onclick="fillExample('band')">Template Resistance Band</button>
+
+                            <button type="button" class="quick-btn" onclick="fillExample('dry_needling')">Template Dry Needling Needle</button>
                         <button type="button" class="quick-btn" onclick="fillExample('ice')">Template Ice Pack</button>
                     </div>
 
@@ -258,6 +260,18 @@ function fillExample(type) {
             selling_price: 50000,
             supplier: 'Supplier Rehab',
             storage_location: 'Freezer / Rak Alat'
+        },
+        dry_needling: {
+            sku: 'DN-NEEDLE-001',
+            name: 'Dry Needling Needle',
+            category: 'Consumable / Treatment Supply',
+            unit: 'pcs',
+            stock: 100,
+            minimum_stock: 20,
+            purchase_price: 0,
+            selling_price: 0,
+            supplier: '',
+            storage_location: 'Treatment Room'
         }
     };
 

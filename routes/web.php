@@ -2732,6 +2732,27 @@ Route::get('/therapist/dashboard', function () {
     $therapistId = session('therapist_id');
     $today = now()->toDateString();
 
+    $assignedBookings = Booking::with(['patient', 'visits'])
+        ->where('therapist_id', $therapistId)
+        ->whereIn('status', ['pending', 'confirmed', 'arrived', 'in_treatment'])
+        ->orderBy('booking_date')
+        ->orderBy('booking_time')
+        ->get()
+        ->map(function ($booking) {
+            $booking->linked_visit = $booking->visits->first();
+            return $booking;
+        });
+
+    $todayAppointments = $assignedBookings
+        ->filter(fn ($booking) => $booking->booking_date == now()->toDateString())
+        ->values();
+
+    $upcomingAppointments = $assignedBookings
+        ->filter(fn ($booking) => $booking->booking_date >= now()->toDateString())
+        ->take(8)
+        ->values();
+
+
     $visits = Visit::with(['patient', 'medicalRecord.homeExercises'])
         ->where('therapist_id', $therapistId)
         ->latest()
@@ -2789,7 +2810,10 @@ Route::get('/therapist/dashboard', function () {
         'scheduledVisits',
         'inProgressVisits',
         'completedVisits',
-        'completedRecordVisits'
+        'completedRecordVisits',
+        'assignedBookings',
+        'todayAppointments',
+        'upcomingAppointments'
     ));
 });
 
@@ -2813,7 +2837,20 @@ Route::get('/therapist/visits/{id}/medical-record', function ($id) {
         ->orderBy('name')
         ->get();
 
-    return view('therapist-medical-record', compact('visit', 'homeExerciseTemplates'));
+    $inventoryItems = InventoryItem::where('status', 'active')
+        ->where(function ($query) {
+            $query->where('name', 'like', '%dry%')
+                ->orWhere('name', 'like', '%needle%')
+                ->orWhere('name', 'like', '%jarum%')
+                ->orWhere('category', 'like', '%dry%')
+                ->orWhere('category', 'like', '%needle%')
+                ->orWhere('category', 'like', '%jarum%')
+                ->orWhere('sku', 'like', '%DN%');
+        })
+        ->orderBy('name')
+        ->get();
+
+    return view('therapist-medical-record', compact('visit', 'homeExerciseTemplates', 'inventoryItems'));
 });
 
 Route::post('/therapist/visits/{id}/medical-record', function (Request $request, $id) {
@@ -2881,6 +2918,9 @@ Route::post('/therapist/visits/{id}/medical-record', function (Request $request,
         'flare_up_management' => 'nullable|string',
 
         'treatment_given' => 'nullable|string',
+        'dry_needling_done' => 'nullable|boolean',
+        'dry_needling_inventory_item_id' => 'nullable|exists:inventory_items,id',
+        'dry_needling_quantity' => 'nullable|integer|min:0',
         'response_to_treatment' => 'nullable|string',
         'next_session_plan' => 'nullable|string',
         'session_focus' => 'nullable|string',
@@ -2924,7 +2964,11 @@ Route::post('/therapist/visits/{id}/medical-record', function (Request $request,
 
     $visit = Visit::with('medicalRecord')->where('therapist_id', $therapistId)->findOrFail($id);
 
-    $medicalRecord = MedicalRecord::updateOrCreate(
+    
+    $previousDryNeedlingInventoryItemId = optional($visit->medicalRecord)->dry_needling_inventory_item_id;
+    $previousDryNeedlingQuantity = (int) (optional($visit->medicalRecord)->dry_needling_quantity ?? 0);
+
+$medicalRecord = MedicalRecord::updateOrCreate(
         ['visit_id' => $visit->id],
         [
             'created_by_therapist_id' => optional($visit->medicalRecord)->created_by_therapist_id ?? $therapistId,
@@ -2988,6 +3032,9 @@ Route::post('/therapist/visits/{id}/medical-record', function (Request $request,
             'flare_up_management' => $request->flare_up_management,
 
             'treatment_given' => $request->treatment_given,
+            'dry_needling_done' => $request->boolean('dry_needling_done'),
+            'dry_needling_inventory_item_id' => $request->boolean('dry_needling_done') ? $request->dry_needling_inventory_item_id : null,
+            'dry_needling_quantity' => $request->boolean('dry_needling_done') ? (int) $request->dry_needling_quantity : null,
             'response_to_treatment' => $request->response_to_treatment,
             'next_session_plan' => $request->next_session_plan,
             'session_focus' => $request->session_focus,
@@ -3105,6 +3152,65 @@ Route::post('/therapist/visits/{id}/medical-record', function (Request $request,
                 ]);
             }
         }
+    }
+
+
+    $newDryNeedlingInventoryItemId = $medicalRecord->dry_needling_inventory_item_id;
+    $newDryNeedlingQuantity = $medicalRecord->dry_needling_done ? (int) ($medicalRecord->dry_needling_quantity ?? 0) : 0;
+
+    if ($previousDryNeedlingInventoryItemId || $newDryNeedlingInventoryItemId) {
+        DB::transaction(function () use (
+            $previousDryNeedlingInventoryItemId,
+            $previousDryNeedlingQuantity,
+            $newDryNeedlingInventoryItemId,
+            $newDryNeedlingQuantity,
+            $medicalRecord,
+            $visit
+        ) {
+            if ($previousDryNeedlingInventoryItemId && $previousDryNeedlingQuantity > 0) {
+                $previousItem = InventoryItem::lockForUpdate()->find($previousDryNeedlingInventoryItemId);
+
+                if ($previousItem) {
+                    $stockBefore = (int) $previousItem->stock;
+                    $stockAfter = $stockBefore + $previousDryNeedlingQuantity;
+                    $previousItem->stock = $stockAfter;
+                    $previousItem->save();
+
+                    InventoryStockMovement::create([
+                        'inventory_item_id' => $previousItem->id,
+                        'type' => 'in',
+                        'quantity' => $previousDryNeedlingQuantity,
+                        'stock_before' => $stockBefore,
+                        'stock_after' => $stockAfter,
+                        'reference' => 'Dry Needling MR #' . $medicalRecord->id,
+                        'notes' => 'Auto reverse previous dry needling usage for Medical Record #' . $medicalRecord->id . ' / Visit #' . $visit->id,
+                    ]);
+                }
+            }
+
+            if ($newDryNeedlingInventoryItemId && $newDryNeedlingQuantity > 0) {
+                $newItem = InventoryItem::lockForUpdate()->findOrFail($newDryNeedlingInventoryItemId);
+
+                if ((int) $newItem->stock < $newDryNeedlingQuantity) {
+                    throw new \RuntimeException('Stok ' . $newItem->name . ' tidak cukup untuk dry needling. Stok tersedia: ' . $newItem->stock);
+                }
+
+                $stockBefore = (int) $newItem->stock;
+                $stockAfter = $stockBefore - $newDryNeedlingQuantity;
+                $newItem->stock = $stockAfter;
+                $newItem->save();
+
+                InventoryStockMovement::create([
+                    'inventory_item_id' => $newItem->id,
+                    'type' => 'out',
+                    'quantity' => $newDryNeedlingQuantity,
+                    'stock_before' => $stockBefore,
+                    'stock_after' => $stockAfter,
+                    'reference' => 'Dry Needling MR #' . $medicalRecord->id,
+                    'notes' => 'Dry Needling usage for Medical Record #' . $medicalRecord->id . ' / Visit #' . $visit->id,
+                ]);
+            }
+        });
     }
 
     MedicalRecordUpdateLog::create([
