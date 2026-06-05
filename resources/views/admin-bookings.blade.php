@@ -1502,6 +1502,7 @@
                                     <th>Kontak</th>
                                     <th>Layanan</th>
                                     <th>Jadwal</th>
+                                    <th>Room</th>
                                     <th>Keluhan Awal</th>
                                     <th>Status</th>
                                     <th>Relasi Pasien</th>
@@ -1529,6 +1530,11 @@
                                         <td>
                                             <div class="primary-text">{{ $booking->booking_date ?: '-' }}</div>
                                             <div class="secondary-text">{{ $booking->booking_time ?: '-' }}</div>
+                                        </td>
+
+                                        <td>
+                                            <div class="primary-text">{{ $booking->room_name ?: 'Belum ditentukan' }}</div>
+                                            <div class="secondary-text">Ruang treatment pasien</div>
                                         </td>
 
                                         <td>
