@@ -2121,6 +2121,179 @@
             }
         }
 
+
+        /* Batch 5A - Medical Record Advanced Tabs */
+        .mr-tabs-shell {
+            margin-top: 18px;
+        }
+
+        .mr-tab-nav {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            padding: 12px;
+            margin: 0 0 18px;
+            border: 1px solid #e4efec;
+            border-radius: 22px;
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(12px);
+            box-shadow: 0 12px 28px rgba(15, 23, 42, 0.045);
+        }
+
+        .mr-tab-button {
+            border: 1px solid #dceae7;
+            background: #ffffff;
+            color: #486168;
+            cursor: pointer;
+            min-height: 42px;
+            padding: 0 14px;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: 900;
+            font-family: Arial, sans-serif;
+            transition: .18s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .mr-tab-button:hover {
+            transform: translateY(-1px);
+            border-color: #b9dad5;
+            color: #2f7c7a;
+        }
+
+        .mr-tab-button.active {
+            background: linear-gradient(135deg, #2f8f89 0%, #226e70 100%);
+            border-color: #226e70;
+            color: #ffffff;
+            box-shadow: 0 12px 24px rgba(47, 124, 122, 0.18);
+        }
+
+        .mr-tab-count {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 22px;
+            height: 22px;
+            padding: 0 7px;
+            border-radius: 999px;
+            background: rgba(47, 124, 122, 0.10);
+            color: inherit;
+            font-size: 11px;
+            font-weight: 900;
+        }
+
+        .mr-tab-button.active .mr-tab-count {
+            background: rgba(255, 255, 255, 0.18);
+        }
+
+        .mr-tab-panel {
+            display: none;
+            animation: mrTabFade .18s ease;
+        }
+
+        .mr-tab-panel.active {
+            display: block;
+        }
+
+        .mr-tab-panel-head {
+            margin-bottom: 16px;
+            padding: 18px 20px;
+            border-radius: 22px;
+            border: 1px solid #e3efec;
+            background: linear-gradient(135deg, #f8fffd 0%, #ffffff 100%);
+        }
+
+        .mr-tab-panel-kicker {
+            display: inline-flex;
+            padding: 7px 11px;
+            border-radius: 999px;
+            background: #eef7f5;
+            color: #2f7c7a;
+            font-size: 11px;
+            font-weight: 900;
+            letter-spacing: .06em;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        .mr-tab-panel-title {
+            margin: 0;
+            font-size: 24px;
+            line-height: 1.2;
+            color: #22343a;
+            font-weight: 900;
+        }
+
+        .mr-tab-panel-text {
+            margin: 8px 0 0;
+            font-size: 13px;
+            line-height: 1.8;
+            color: #64748b;
+        }
+
+        .mr-tab-actions {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin: 18px 0 0;
+            padding-top: 18px;
+            border-top: 1px solid #eef3f2;
+        }
+
+        .mr-tab-nav-btn {
+            border: 1px solid #d8ebe7;
+            background: #ffffff;
+            color: #2f7c7a;
+            cursor: pointer;
+            min-height: 42px;
+            padding: 0 15px;
+            border-radius: 14px;
+            font-size: 13px;
+            font-weight: 900;
+            font-family: Arial, sans-serif;
+        }
+
+        .mr-tab-nav-btn.primary {
+            background: #2f7c7a;
+            color: #ffffff;
+            border-color: #2f7c7a;
+        }
+
+        @keyframes mrTabFade {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 760px) {
+            .mr-tab-nav {
+                position: relative;
+                top: auto;
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .mr-tab-button {
+                width: 100%;
+                justify-content: center;
+                padding: 0 10px;
+                font-size: 12px;
+            }
+
+            .mr-tab-panel-head {
+                padding: 16px;
+            }
+
+            .mr-tab-panel-title {
+                font-size: 20px;
+            }
+        }
+
     </style>
     <!-- Khayra PWA -->
     <link rel="manifest" href="/manifest.webmanifest">
@@ -2502,13 +2675,30 @@
 
             <div class="clinical-main-wide">
                 <section class="section-card">
-                    <h2 class="section-title">Clinical Notes V2</h2>
+                    <h2 class="section-title">Clinical Notes</h2>
                 <p class="section-subtitle">
                     Lengkapi assessment dan intervensi secara lebih terstruktur untuk kebutuhan klinis dan report therapist.
                 </p>
 
                 <form method="POST" action="/therapist/visits/{{ $visit->id }}/medical-record" enctype="multipart/form-data">
                     @csrf
+
+                    <div class="mr-tabs-shell">
+                        <div class="mr-tab-nav" role="tablist" aria-label="Medical Record Categories">
+                            <button type="button" class="mr-tab-button active" data-mr-tab="anamnesa">Anamnesa <span class="mr-tab-count">3</span></button>
+                            <button type="button" class="mr-tab-button" data-mr-tab="examination">Examination <span class="mr-tab-count">3</span></button>
+                            <button type="button" class="mr-tab-button" data-mr-tab="diagnosis">Diagnosis <span class="mr-tab-count">1</span></button>
+                            <button type="button" class="mr-tab-button" data-mr-tab="program">Program <span class="mr-tab-count">2</span></button>
+                            <button type="button" class="mr-tab-button" data-mr-tab="intervention">Intervention <span class="mr-tab-count">2</span></button>
+                            <button type="button" class="mr-tab-button" data-mr-tab="history">History <span class="mr-tab-count">1</span></button>
+                        </div>
+
+                        <div class="mr-tab-panel active" data-mr-panel="anamnesa">
+                            <div class="mr-tab-panel-head">
+                                <div class="mr-tab-panel-kicker">Anamnesa</div>
+                                <h3 class="mr-tab-panel-title">Chief complaint, pain profile, medical history, dan comorbidities.</h3>
+                                <p class="mr-tab-panel-text">Isi keluhan utama, peta nyeri, riwayat medis, dan komorbid pasien.</p>
+                            </div>
 
                     <div class="form-section">
                         <h3 class="form-section-title">1. Chief Complaint & Pain Profile</h3>
@@ -2850,6 +3040,19 @@
                         <button type="button" class="tiny-btn" onclick="addComorbidityRow()">+ Tambah Comorbidity</button>
                     </div>
 
+                            <div class="mr-tab-actions">
+                                <span></span>
+                                <button type="button" class="mr-tab-nav-btn primary" data-mr-next="examination">Next: Examination →</button>
+                            </div>
+                        </div>
+
+                        <div class="mr-tab-panel" data-mr-panel="examination">
+                            <div class="mr-tab-panel-head">
+                                <div class="mr-tab-panel-kicker">Examination</div>
+                                <h3 class="mr-tab-panel-title">Vital sign, supporting data, dan subjective-objective examination.</h3>
+                                <p class="mr-tab-panel-text">Lengkapi pemeriksaan objektif dan data penunjang seperti X-ray, MRI, lab, atau evaluasi lain.</p>
+                            </div>
+
                     <div class="form-section">
                         <h3 class="form-section-title">4. Vital Signs</h3>
                         <p class="form-section-text">Masukkan vital sign dasar yang dibutuhkan pada assessment.</p>
@@ -3025,6 +3228,19 @@
                         </div>
                     </div>
 
+                            <div class="mr-tab-actions">
+                                <button type="button" class="mr-tab-nav-btn" data-mr-next="anamnesa">← Back: Anamnesa</button>
+                                <button type="button" class="mr-tab-nav-btn primary" data-mr-next="diagnosis">Next: Diagnosis →</button>
+                            </div>
+                        </div>
+
+                        <div class="mr-tab-panel" data-mr-panel="diagnosis">
+                            <div class="mr-tab-panel-head">
+                                <div class="mr-tab-panel-kicker">Diagnosis</div>
+                                <h3 class="mr-tab-panel-title">Diagnosis, impairment, ICF, dan clinical decision making.</h3>
+                                <p class="mr-tab-panel-text">Masukkan diagnosis fisioterapi, ICD/ICF, impairment, functional limitation, dan clinical reasoning.</p>
+                            </div>
+
                     <div class="form-section">
                         <h3 class="form-section-title">7. Diagnosa & Clinical Decision</h3>
                         <p class="form-section-text">Tulis diagnosa, impairment, goal, referral, dan rencana program therapy.</p>
@@ -3179,6 +3395,19 @@
                         </div>
                     </div>
 
+                            <div class="mr-tab-actions">
+                                <button type="button" class="mr-tab-nav-btn" data-mr-next="examination">← Back: Examination</button>
+                                <button type="button" class="mr-tab-nav-btn primary" data-mr-next="program">Next: Program →</button>
+                            </div>
+                        </div>
+
+                        <div class="mr-tab-panel" data-mr-panel="program">
+                            <div class="mr-tab-panel-head">
+                                <div class="mr-tab-panel-kicker">Program</div>
+                                <h3 class="mr-tab-panel-title">Treatment goal phase, program patient, control plan, dan home exercise.</h3>
+                                <p class="mr-tab-panel-text">Susun fase target terapi, program pasien, jadwal kontrol, edukasi, dan latihan rumah.</p>
+                            </div>
+
                     <div class="form-section">
                         <h3 class="form-section-title">8. Health Management</h3>
                         <p class="form-section-text">Edukasi terkait nutrisi, lifestyle, dan management flare-up.</p>
@@ -3247,6 +3476,19 @@
 
                         <button type="button" class="tiny-btn" onclick="addHomeExerciseRow()">+ Tambah Home Exercise</button>
                     </div>
+
+                            <div class="mr-tab-actions">
+                                <button type="button" class="mr-tab-nav-btn" data-mr-next="diagnosis">← Back: Diagnosis</button>
+                                <button type="button" class="mr-tab-nav-btn primary" data-mr-next="intervention">Next: Intervention →</button>
+                            </div>
+                        </div>
+
+                        <div class="mr-tab-panel" data-mr-panel="intervention">
+                            <div class="mr-tab-panel-head">
+                                <div class="mr-tab-panel-kicker">Intervention</div>
+                                <h3 class="mr-tab-panel-title">Treatment given, response, session progress, ROM, dan next session plan.</h3>
+                                <p class="mr-tab-panel-text">Catat tindakan sesi ini, respons pasien, progress fungsional, penggunaan inventory, dan rencana sesi berikutnya.</p>
+                            </div>
 
                     <div class="form-section">
                         <h3 class="form-section-title">10. Session Progress</h3>
@@ -3409,6 +3651,19 @@
                         </div>
                     </div>
 
+                            <div class="mr-tab-actions">
+                                <button type="button" class="mr-tab-nav-btn" data-mr-next="program">← Back: Program</button>
+                                <button type="button" class="mr-tab-nav-btn primary" data-mr-next="history">Next: History →</button>
+                            </div>
+                        </div>
+
+                        <div class="mr-tab-panel" data-mr-panel="history">
+                            <div class="mr-tab-panel-head">
+                                <div class="mr-tab-panel-kicker">History</div>
+                                <h3 class="mr-tab-panel-title">Medical record update history dan audit timeline.</h3>
+                                <p class="mr-tab-panel-text">Lihat snapshot perubahan rekam medis untuk kebutuhan audit internal dan timeline pasien.</p>
+                            </div>
+
                     <div class="form-section">
                         <h3 class="form-section-title">11. Medical Record Update History</h3>
                         <p class="form-section-text">Setiap kali Medical Record disimpan, sistem mencatat snapshot update untuk audit internal dan timeline pasien.</p>
@@ -3452,6 +3707,13 @@
                         @endif
                     </div>
 
+                            <div class="mr-tab-actions">
+                                <button type="button" class="mr-tab-nav-btn" data-mr-next="intervention">← Back: Intervention</button>
+                                <button type="submit" class="mr-tab-nav-btn primary">Simpan Medical Record V2</button>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="submit-row">
                         <button type="submit" class="submit-btn">Simpan Medical Record V2</button>
                     </div>
@@ -3463,6 +3725,36 @@
 </div>
 
 <script>
+
+
+    function activateMedicalRecordTab(target) {
+        if (!target) return;
+
+        document.querySelectorAll('[data-mr-tab]').forEach(function (button) {
+            button.classList.toggle('active', button.getAttribute('data-mr-tab') === target);
+        });
+
+        document.querySelectorAll('[data-mr-panel]').forEach(function (panel) {
+            panel.classList.toggle('active', panel.getAttribute('data-mr-panel') === target);
+        });
+
+        const shell = document.querySelector('.mr-tabs-shell');
+        if (shell) {
+            shell.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
+
+    document.querySelectorAll('[data-mr-tab]').forEach(function (button) {
+        button.addEventListener('click', function () {
+            activateMedicalRecordTab(button.getAttribute('data-mr-tab'));
+        });
+    });
+
+    document.querySelectorAll('[data-mr-next]').forEach(function (button) {
+        button.addEventListener('click', function () {
+            activateMedicalRecordTab(button.getAttribute('data-mr-next'));
+        });
+    });
 
     @php
         $homeExerciseTemplateData = ($homeExerciseTemplates ?? collect())->map(function ($template) {
