@@ -3742,6 +3742,111 @@ Route::post('/admin/services/{id}/delete', function ($id) {
 });
 
 
+
+Route::get('/admin/owner-dashboard', function (Request $request) {
+    if (!session('admin_logged_in')) {
+        return redirect('/admin/login');
+    }
+
+    $month = $request->query('month', now()->format('Y-m'));
+    $startDate = \Carbon\Carbon::parse($month . '-01')->startOfMonth();
+    $endDate = $startDate->copy()->endOfMonth();
+    $monthLabel = $startDate->format('F Y');
+
+    $bookings = Booking::with(['patient', 'therapist'])
+        ->whereBetween('booking_date', [$startDate->toDateString(), $endDate->toDateString()])
+        ->get();
+
+    $visits = Visit::with(['patient', 'booking', 'therapistRelation', 'medicalRecord'])
+        ->whereBetween('visit_date', [$startDate->toDateString(), $endDate->toDateString()])
+        ->get();
+
+    $patients = Patient::whereBetween('created_at', [$startDate, $endDate])->get();
+
+    $billings = Billing::with(['patient', 'visit'])
+        ->whereBetween('invoice_date', [$startDate->toDateString(), $endDate->toDateString()])
+        ->get();
+
+    $validBillings = $billings->where('payment_status', '!=', 'void');
+
+    $moneyPaid = function ($billing) {
+        if (($billing->payment_status ?? null) === 'void') {
+            return 0;
+        }
+
+        $paid = (float) ($billing->paid_amount ?? 0);
+        $amount = (float) ($billing->amount ?? 0);
+
+        if (($billing->payment_status ?? null) === 'paid' && $paid <= 0) {
+            return $amount;
+        }
+
+        return $paid;
+    };
+
+    $moneyOutstanding = function ($billing) {
+        if (($billing->payment_status ?? null) === 'void') {
+            return 0;
+        }
+
+        $total = (float) ($billing->grand_total ?? $billing->total_amount ?? $billing->amount ?? 0);
+        $paid = (float) ($billing->paid_amount ?? 0);
+        $status = $billing->payment_status ?: 'unpaid';
+
+        if ($status === 'paid') {
+            return 0;
+        }
+
+        return max($total - $paid, 0);
+    };
+
+    $leaveRequests = class_exists(\App\Models\TherapistLeaveRequest::class)
+        ? \App\Models\TherapistLeaveRequest::with('therapist')->latest()->take(8)->get()
+        : collect();
+
+    $summary = [
+        'bookings' => $bookings->count(),
+        'booking_pending' => $bookings->where('status', 'pending')->count(),
+        'booking_confirmed' => $bookings->where('status', 'confirmed')->count(),
+        'visits' => $visits->count(),
+        'completed_visits' => $visits->where('status', 'completed')->count(),
+        'new_patients' => $patients->count(),
+        'invoice_count' => $billings->count(),
+        'void_invoice' => $billings->where('payment_status', 'void')->count(),
+        'net_revenue' => $validBillings->sum('amount'),
+        'discount' => $validBillings->sum('discount_amount'),
+        'paid_amount' => $validBillings->sum(fn ($billing) => $moneyPaid($billing)),
+        'outstanding' => $validBillings->sum(fn ($billing) => $moneyOutstanding($billing)),
+        'active_staff' => Therapist::where('status', 'active')->count(),
+        'pending_leave' => $leaveRequests->where('status', 'pending')->count(),
+    ];
+
+    $recentBillings = $billings
+        ->sortByDesc('invoice_date')
+        ->take(8)
+        ->values();
+
+    $recentBookings = $bookings
+        ->sortByDesc(fn ($booking) => ($booking->booking_date ?: '') . ' ' . ($booking->booking_time ?: ''))
+        ->take(8)
+        ->values();
+
+    $recentVisits = $visits
+        ->sortByDesc('visit_date')
+        ->take(8)
+        ->values();
+
+    return view('admin-owner-dashboard', compact(
+        'month',
+        'monthLabel',
+        'summary',
+        'recentBillings',
+        'recentBookings',
+        'recentVisits',
+        'leaveRequests'
+    ));
+});
+
 Route::get('/admin/reports', function (Request $request) {
     if (!session('admin_logged_in')) {
         return redirect('/admin/login');
