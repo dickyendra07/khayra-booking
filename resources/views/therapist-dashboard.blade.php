@@ -624,8 +624,8 @@
                 <section class="section-card appointment-card">
                     <div class="section-head">
                         <div>
-                            <h2 class="section-title">Appointment Schedule</h2>
-                            <p class="section-subtitle">Jadwal pasien dari admin maupun patient portal yang sudah ditugaskan ke physiotherapist ini.</p>
+                            <h2 class="section-title">Clinic Appointment Schedule</h2>
+                            <p class="section-subtitle">Jadwal pasien aktif dari admin maupun patient portal. Physiotherapist bisa melihat seluruh jadwal klinik untuk koordinasi operasional.</p>
                         </div>
                     </div>
 
@@ -650,15 +650,17 @@
                                 <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
                                     <span class="appointment-status">{{ str_replace('_', ' ', $booking->status ?: 'pending') }}</span>
 
-                                    @if($booking->linked_visit)
+                                    @if($booking->linked_visit && (int) $booking->therapist_id === (int) session('therapist_id'))
                                         <a href="/therapist/visits/{{ $booking->linked_visit->id }}/medical-record" class="record-link">Medical Record</a>
+                                    @elseif($booking->linked_visit)
+                                        <span class="appointment-status">Visit Created</span>
                                     @else
                                         <span class="appointment-status">Waiting Visit</span>
                                     @endif
                                 </div>
                             </div>
                         @empty
-                            <div class="empty-block">Belum ada appointment aktif yang ditugaskan ke physiotherapist ini.</div>
+                            <div class="empty-block">Belum ada appointment aktif untuk jadwal klinik saat ini.</div>
                         @endforelse
                     </div>
                 </section>

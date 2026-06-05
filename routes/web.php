@@ -2743,13 +2743,23 @@ Route::get('/therapist/dashboard', function () {
             return $booking;
         });
 
-    $todayAppointments = $assignedBookings
+    $clinicScheduleBookings = Booking::with(['patient', 'visits'])
+        ->whereIn('status', ['pending', 'confirmed', 'arrived', 'in_treatment'])
+        ->orderBy('booking_date')
+        ->orderBy('booking_time')
+        ->get()
+        ->map(function ($booking) {
+            $booking->linked_visit = $booking->visits->first();
+            return $booking;
+        });
+
+    $todayAppointments = $clinicScheduleBookings
         ->filter(fn ($booking) => $booking->booking_date == now()->toDateString())
         ->values();
 
-    $upcomingAppointments = $assignedBookings
+    $upcomingAppointments = $clinicScheduleBookings
         ->filter(fn ($booking) => $booking->booking_date >= now()->toDateString())
-        ->take(8)
+        ->take(12)
         ->values();
 
 
@@ -2831,7 +2841,7 @@ Route::get('/therapist/visits/{id}/medical-record', function ($id) {
         'medicalRecord.comorbidities',
         'medicalRecord.supportingData',
         'medicalRecord.homeExercises',
-    ])->where('therapist_id', $therapistId)->findOrFail($id);
+    ])->findOrFail($id);
 
     $homeExerciseTemplates = HomeExerciseTemplate::where('status', 'active')
         ->orderBy('name')
@@ -2962,7 +2972,7 @@ Route::post('/therapist/visits/{id}/medical-record', function (Request $request,
 
     $therapistId = session('therapist_id');
 
-    $visit = Visit::with('medicalRecord')->where('therapist_id', $therapistId)->findOrFail($id);
+    $visit = Visit::with('medicalRecord')->findOrFail($id);
 
     
     $previousDryNeedlingInventoryItemId = optional($visit->medicalRecord)->dry_needling_inventory_item_id;
@@ -3256,7 +3266,7 @@ Route::get('/therapist/visits/{id}/report', function ($id) {
         'medicalRecord.comorbidities',
         'medicalRecord.supportingData',
         'medicalRecord.homeExercises',
-    ])->where('therapist_id', $therapistId)->findOrFail($id);
+    ])->findOrFail($id);
 
     return view('therapist-report', compact('visit'));
 });
@@ -3275,7 +3285,7 @@ Route::get('/therapist/visits/{id}/report/print', function ($id) {
         'medicalRecord.comorbidities',
         'medicalRecord.supportingData',
         'medicalRecord.homeExercises',
-    ])->where('therapist_id', $therapistId)->findOrFail($id);
+    ])->findOrFail($id);
 
     return view('therapist-report-print', compact('visit'));
 });
