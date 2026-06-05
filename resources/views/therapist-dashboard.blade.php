@@ -641,6 +641,7 @@
                                     <div class="appointment-patient">{{ optional($booking->patient)->full_name ?: $booking->full_name }}</div>
                                     <div class="appointment-meta">
                                         Booking #{{ $booking->id }} · {{ $booking->service ?: 'Service belum dipilih' }}
+                                        <br>Room: {{ $booking->room_name ?: 'Belum ditentukan' }}
                                         @if($booking->complaint)
                                             <br>{{ $booking->complaint }}
                                         @endif
@@ -680,7 +681,7 @@
                             <div class="visit-top">
                                 <div>
                                     <div class="patient-name">{{ optional($visit->patient)->full_name ?: '-' }}</div>
-                                    <div class="patient-sub">Visit #{{ $visit->id }} · {{ $visit->visit_date ?: '-' }}</div>
+                                    <div class="patient-sub">Visit #{{ $visit->id }} · {{ $visit->visit_date ?: '-' }} · Room: {{ $visit->room_name ?: optional($visit->booking)->room_name ?: 'Belum ditentukan' }}</div>
                                 </div>
                                 <span class="status-pill status-{{ $visit->status }}">{{ str_replace('_', ' ', $visit->status ?: '-') }}</span>
                             </div>
@@ -721,7 +722,7 @@
                             <div class="visit-top">
                                 <div>
                                     <div class="patient-name">{{ optional($visit->patient)->full_name ?: '-' }}</div>
-                                    <div class="patient-sub">Visit #{{ $visit->id }} · {{ $visit->visit_date ?: '-' }}</div>
+                                    <div class="patient-sub">Visit #{{ $visit->id }} · {{ $visit->visit_date ?: '-' }} · Room: {{ $visit->room_name ?: optional($visit->booking)->room_name ?: 'Belum ditentukan' }}</div>
                                 </div>
 
                                 @if($visit->record_completion >= 90)

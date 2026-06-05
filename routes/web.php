@@ -357,6 +357,7 @@ Route::post('/booking', function (Request $request) {
         'booking_date' => 'required|date',
         'booking_time' => 'required',
         'therapist_id' => 'nullable|exists:therapists,id',
+        'room_name' => 'nullable|string|max:255',
         'complaint' => 'nullable|string',
     ]);
 
@@ -643,14 +644,28 @@ Route::get('/admin/bookings/create', function (Request $request) {
     $patients = Patient::orderBy('full_name')->get();
     $therapists = Therapist::where('status', 'active')->orderBy('full_name')->get();
     $services = ClinicService::where('status', 'active')->orderBy('name')->get();
+    $roomOptions = [
+        'VIP 1',
+        'VIP 2',
+        'R.1.1',
+        'R.2.1',
+        'R.2.2',
+        'R.2.3',
+        'R.2.4',
+        'R.2.5',
+        'R. GYM',
+        'R. Studio Pilates',
+    ];
+
 
     $prefill = [
         'booking_date' => $request->query('date', now()->toDateString()),
         'booking_time' => $request->query('time', now()->format('H:i')),
         'therapist_id' => $request->query('therapist_id'),
+        'room_name' => $request->query('room_name'),
     ];
 
-    return view('admin-booking-create', compact('patients', 'therapists', 'services', 'prefill'));
+    return view('admin-booking-create', compact('patients', 'therapists', 'services', 'roomOptions', 'prefill'));
 });
 
 Route::post('/admin/bookings/create', function (Request $request) {
@@ -661,6 +676,7 @@ Route::post('/admin/bookings/create', function (Request $request) {
     $data = $request->validate([
         'patient_id' => 'nullable|exists:patients,id',
         'therapist_id' => 'nullable|exists:therapists,id',
+        'room_name' => 'nullable|string|max:255',
         'full_name' => 'required|string|max:255',
         'whatsapp' => 'required|string|max:50',
         'service' => 'required|string|max:255',
@@ -689,6 +705,7 @@ Route::post('/admin/bookings/create', function (Request $request) {
     $booking = Booking::create([
         'patient_id' => $data['patient_id'] ?? null,
         'therapist_id' => $data['therapist_id'] ?? null,
+        'room_name' => $data['room_name'] ?? null,
         'full_name' => $data['full_name'],
         'whatsapp' => $data['whatsapp'],
         'service' => $data['service'],
@@ -718,7 +735,25 @@ Route::get('/admin/bookings/{id}/edit', function ($id) {
     }
 
     $booking = Booking::findOrFail($id);
-    return view('admin-booking-edit', compact('booking'));
+    $therapists = Therapist::where('status', 'active')
+        ->orWhere('id', $booking->therapist_id)
+        ->orderBy('full_name')
+        ->get();
+
+    $roomOptions = [
+        'VIP 1',
+        'VIP 2',
+        'R.1.1',
+        'R.2.1',
+        'R.2.2',
+        'R.2.3',
+        'R.2.4',
+        'R.2.5',
+        'R. GYM',
+        'R. Studio Pilates',
+    ];
+
+    return view('admin-booking-edit', compact('booking', 'therapists', 'roomOptions'));
 });
 
 Route::get('/admin/bookings/{id}/update', function ($id) {
@@ -739,6 +774,7 @@ Route::post('/admin/bookings/{id}/update', function (Request $request, $id) {
         'booking_date' => 'required|date',
         'booking_time' => 'required',
         'therapist_id' => 'nullable|exists:therapists,id',
+        'room_name' => 'nullable|string|max:255',
         'complaint' => 'nullable|string',
         'status' => 'required|in:pending,confirmed,arrived,in_treatment,completed,cancelled,no_show',
     ]);
@@ -756,6 +792,7 @@ Route::post('/admin/bookings/{id}/update', function (Request $request, $id) {
     $booking->whatsapp = $request->whatsapp;
     $booking->service = $request->service;
     $booking->therapist_id = $request->therapist_id;
+    $booking->room_name = $request->room_name;
     $booking->booking_date = $request->booking_date;
     $booking->booking_time = $normalizedBookingTime;
     $booking->complaint = $request->complaint;
@@ -2304,7 +2341,20 @@ Route::get('/admin/visits/create', function (Request $request) {
         $selectedBooking = Booking::with('patient')->find($request->query('booking_id'));
     }
 
-    return view('admin-visit-create', compact('patients', 'bookings', 'therapists', 'selectedBooking'));
+    $roomOptions = [
+        'VIP 1',
+        'VIP 2',
+        'R.1.1',
+        'R.2.1',
+        'R.2.2',
+        'R.2.3',
+        'R.2.4',
+        'R.2.5',
+        'R. GYM',
+        'R. Studio Pilates',
+    ];
+
+    return view('admin-visit-create', compact('patients', 'bookings', 'therapists', 'selectedBooking', 'roomOptions'));
 });
 
 Route::post('/admin/visits', function (Request $request) {
@@ -2315,6 +2365,7 @@ Route::post('/admin/visits', function (Request $request) {
     $request->validate([
         'patient_id' => 'required|exists:patients,id',
         'therapist_id' => 'required|exists:therapists,id',
+        'room_name' => 'nullable|string|max:255',
         'visit_date' => 'required|date',
         'status' => 'required|in:scheduled,in_progress,completed,cancelled',
         'notes' => 'nullable|string',
@@ -2322,10 +2373,12 @@ Route::post('/admin/visits', function (Request $request) {
     ]);
 
     $therapist = Therapist::where('status', 'active')->findOrFail($request->therapist_id);
+    $linkedBooking = $request->booking_id ? Booking::find($request->booking_id) : null;
 
     Visit::create([
         'patient_id' => $request->patient_id,
         'therapist_id' => $therapist->id,
+        'room_name' => $request->room_name ?: optional($linkedBooking)->room_name,
         'booking_id' => $request->booking_id ?: null,
         'visit_date' => $request->visit_date,
         'therapist' => $therapist->full_name,
@@ -2349,7 +2402,20 @@ Route::get('/admin/visits/{id}/edit', function ($id) {
         ->latest()
         ->get();
 
-    return view('admin-visit-edit', compact('visit', 'patients', 'bookings', 'therapists'));
+    $roomOptions = [
+        'VIP 1',
+        'VIP 2',
+        'R.1.1',
+        'R.2.1',
+        'R.2.2',
+        'R.2.3',
+        'R.2.4',
+        'R.2.5',
+        'R. GYM',
+        'R. Studio Pilates',
+    ];
+
+    return view('admin-visit-edit', compact('visit', 'patients', 'bookings', 'therapists', 'roomOptions'));
 });
 
 Route::post('/admin/visits/{id}/update', function (Request $request, $id) {
@@ -2360,6 +2426,7 @@ Route::post('/admin/visits/{id}/update', function (Request $request, $id) {
     $request->validate([
         'patient_id' => 'required|exists:patients,id',
         'therapist_id' => 'required|exists:therapists,id',
+        'room_name' => 'nullable|string|max:255',
         'visit_date' => 'required|date',
         'status' => 'required|in:scheduled,in_progress,completed,cancelled',
         'notes' => 'nullable|string',
@@ -2371,6 +2438,7 @@ Route::post('/admin/visits/{id}/update', function (Request $request, $id) {
 
     $visit->patient_id = $request->patient_id;
     $visit->therapist_id = $therapist->id;
+    $visit->room_name = $request->room_name;
     $visit->booking_id = $request->booking_id ?: null;
     $visit->visit_date = $request->visit_date;
     $visit->therapist = $therapist->full_name;

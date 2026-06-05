@@ -232,6 +232,7 @@
     $prefillPatientId = old('patient_id', optional(optional($selectedBooking)->patient)->id);
     $prefillBookingId = old('booking_id', optional($selectedBooking)->id);
     $prefillVisitDate = old('visit_date', optional($selectedBooking)->booking_date ?? now()->format('Y-m-d'));
+    $prefillRoomName = old('room_name', optional($selectedBooking)->room_name);
     $prefillNotes = old('notes', $selectedBooking ? trim(
         "Keluhan awal dari booking: " . ($selectedBooking->complaint ?: '-') . "\n" .
         "Layanan booking: " . ($selectedBooking->service ?: '-') . "\n" .
@@ -278,6 +279,11 @@
                         <div class="info-box">
                             <div class="info-label">Jadwal</div>
                             <div class="info-value">{{ $selectedBooking->booking_date ?: '-' }} {{ $selectedBooking->booking_time ?: '' }}</div>
+                        </div>
+
+                        <div class="info-box">
+                            <div class="info-label">Room</div>
+                            <div class="info-value">{{ $selectedBooking->room_name ?: 'Belum ditentukan' }}</div>
                         </div>
                     </div>
                 </section>
@@ -350,6 +356,19 @@
                         <div class="field">
                             <label>Visit Date</label>
                             <input type="date" name="visit_date" value="{{ $prefillVisitDate }}" required>
+                        </div>
+
+                        <div class="field">
+                            <label>Room</label>
+                            <select name="room_name">
+                                <option value="">Belum ditentukan</option>
+                                @foreach(($roomOptions ?? []) as $room)
+                                    <option value="{{ $room }}" {{ $prefillRoomName === $room ? 'selected' : '' }}>
+                                        {{ $room }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <div class="hint">Room otomatis mengikuti booking bila visit dibuat dari appointment.</div>
                         </div>
 
                         <div class="field">

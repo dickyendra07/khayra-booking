@@ -86,6 +86,18 @@
                     </div>
 
                     <div>
+                        <label>Room</label>
+                        <select name="room_name">
+                            <option value="">Belum ditentukan</option>
+                            @foreach(($roomOptions ?? []) as $room)
+                                <option value="{{ $room }}" {{ old('room_name', $prefill['room_name'] ?? '') === $room ? 'selected' : '' }}>
+                                    {{ $room }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div>
                         <label>Nama Pasien</label>
                         <input type="text" name="full_name" id="fullNameInput" value="{{ old('full_name') }}" required placeholder="Nama pasien">
                     </div>

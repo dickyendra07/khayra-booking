@@ -224,7 +224,10 @@
                                         <div class="primary-text">{{ optional($visit->patient)->full_name ?: '-' }}</div>
                                         <div class="secondary-text">{{ optional($visit->patient)->medical_record_number ?: 'MR not available' }}</div>
                                     </td>
-                                    <td>{{ $visit->visit_date ?: '-' }}</td>
+                                    <td>
+                                        <div class="primary-text">{{ $visit->visit_date ?: '-' }}</div>
+                                        <div class="secondary-text">Room: {{ $visit->room_name ?: optional($visit->booking)->room_name ?: 'Belum ditentukan' }}</div>
+                                    </td>
                                     <td>
                                         <div class="primary-text">{{ optional($visit->therapistRelation)->full_name ?: $visit->therapist ?: '-' }}</div>
                                         <div class="secondary-text">Physiotherapist</div>

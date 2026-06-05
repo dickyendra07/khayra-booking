@@ -10,6 +10,7 @@ class Visit extends Model
         'patient_id',
         'booking_id',
         'therapist_id',
+        'room_name',
         'visit_date',
         'therapist',
         'notes',

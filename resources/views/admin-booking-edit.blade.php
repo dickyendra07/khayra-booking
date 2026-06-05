@@ -247,6 +247,18 @@
                         </select>
                     </div>
 
+                    <div class="field">
+                        <label>Room</label>
+                        <select name="room_name">
+                            <option value="">Belum ditentukan</option>
+                            @foreach(($roomOptions ?? []) as $room)
+                                <option value="{{ $room }}" {{ old('room_name', $booking->room_name ?? '') === $room ? 'selected' : '' }}>
+                                    {{ $room }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
 
                     <div class="field">
                         <label>Status</label>

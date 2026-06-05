@@ -8,6 +8,7 @@ class Booking extends Model
 {
     protected $fillable = [
         'therapist_id',
+        'room_name',
         'patient_id',
         'full_name',
         'whatsapp',
