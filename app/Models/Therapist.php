@@ -38,4 +38,9 @@ class Therapist extends Model
     {
         return $this->hasMany(TherapistAvailability::class);
     }
+
+    public function leaveRequests()
+    {
+        return $this->hasMany(TherapistLeaveRequest::class);
+    }
 }

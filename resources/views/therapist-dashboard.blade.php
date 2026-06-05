@@ -539,6 +539,7 @@
             <div class="brand">Khayra Physio Dashboard</div>
 
             <div class="topbar-actions">
+                <a href="/therapist/leaves/create" class="ghost-link">Request Leave</a>
                 <a href="/" class="ghost-link">Home</a>
                 <form method="POST" action="/therapist/logout" style="margin:0;">
                     @csrf

@@ -27,6 +27,7 @@ use App\Models\PatientProgressEntry;
 use App\Models\HomeExerciseTemplate;
 use App\Models\ClinicService;
 use App\Models\PackageTreatmentDocument;
+use App\Models\TherapistLeaveRequest;
 
 Route::get('/', function (Request $request) {
     $host = $request->getHost();
@@ -3360,6 +3361,78 @@ Route::get('/therapist/visits/{id}/report/print', function ($id) {
 
 
 
+
+Route::get('/admin/staff-leaves', function () {
+    if (!session('admin_logged_in')) {
+        return redirect('/admin/login');
+    }
+
+    $leaveRequests = TherapistLeaveRequest::with('therapist')
+        ->latest()
+        ->get();
+
+    $pendingCount = $leaveRequests->where('status', 'pending')->count();
+    $approvedCount = $leaveRequests->where('status', 'approved')->count();
+    $rejectedCount = $leaveRequests->where('status', 'rejected')->count();
+
+    return view('admin-staff-leaves', compact(
+        'leaveRequests',
+        'pendingCount',
+        'approvedCount',
+        'rejectedCount'
+    ));
+});
+
+Route::post('/admin/staff-leaves/{id}/review', function (Request $request, $id) {
+    if (!session('admin_logged_in')) {
+        return redirect('/admin/login');
+    }
+
+    $data = $request->validate([
+        'status' => 'required|in:approved,rejected',
+        'admin_note' => 'nullable|string',
+    ]);
+
+    $leave = TherapistLeaveRequest::findOrFail($id);
+    $leave->status = $data['status'];
+    $leave->admin_note = $data['admin_note'] ?? null;
+    $leave->reviewed_at = now();
+    $leave->save();
+
+    return redirect('/admin/staff-leaves')->with('success', 'Request cuti berhasil diperbarui.');
+});
+
+Route::get('/therapist/leaves/create', function () {
+    if (!session('therapist_logged_in')) {
+        return redirect('/therapist/login');
+    }
+
+    return view('therapist-leave-create');
+});
+
+Route::post('/therapist/leaves', function (Request $request) {
+    if (!session('therapist_logged_in')) {
+        return redirect('/therapist/login');
+    }
+
+    $data = $request->validate([
+        'start_date' => 'required|date',
+        'end_date' => 'required|date|after_or_equal:start_date',
+        'leave_type' => 'nullable|string|max:255',
+        'reason' => 'nullable|string',
+    ]);
+
+    TherapistLeaveRequest::create([
+        'therapist_id' => session('therapist_id'),
+        'start_date' => $data['start_date'],
+        'end_date' => $data['end_date'],
+        'leave_type' => $data['leave_type'] ?? null,
+        'reason' => $data['reason'] ?? null,
+        'status' => 'pending',
+    ]);
+
+    return redirect('/therapist/dashboard')->with('success', 'Request cuti berhasil dikirim dan menunggu approval admin.');
+});
 
 Route::get('/admin/cashier', function (Request $request) {
     if (!session('admin_logged_in')) {

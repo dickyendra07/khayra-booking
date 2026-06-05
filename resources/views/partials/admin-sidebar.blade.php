@@ -19,6 +19,7 @@
                 ['key' => 'visits', 'label' => 'Visit & Rekam Medis', 'url' => '/admin/visits'],
                 ['key' => 'therapists', 'label' => 'Tim Fisioterapis', 'url' => '/admin/therapists'],
                 ['key' => 'therapist-availabilities', 'label' => 'Jadwal Kerja Terapis', 'url' => '/admin/therapist-availabilities'],
+                ['key' => 'staff-leaves', 'label' => 'Staff Leave / Cuti', 'url' => '/admin/staff-leaves'],
             ],
         ],
         [
