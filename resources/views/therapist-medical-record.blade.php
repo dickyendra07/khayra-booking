@@ -2897,9 +2897,28 @@
                         <p class="form-section-text">Tambahkan data penunjang seperti X-ray, MRI, lab, atau data evaluasi lain.</p>
 
                         <div id="supporting-data-wrapper">
-                            @foreach($supportingData as $index => $item)
+                            @foreach(($supportingData ?? collect()) as $index => $item)
+                                @php
+                                    $supportingId = data_get($item, 'id', '');
+                                    $supportingDateRaw = data_get($item, 'data_date');
+                                    $supportingDate = '';
+
+                                    if (!empty($supportingDateRaw)) {
+                                        try {
+                                            $supportingDate = \Carbon\Carbon::parse($supportingDateRaw)->format('Y-m-d');
+                                        } catch (\Throwable $e) {
+                                            $supportingDate = is_string($supportingDateRaw) ? substr($supportingDateRaw, 0, 10) : '';
+                                        }
+                                    }
+
+                                    $supportingType = data_get($item, 'data_type', '');
+                                    $supportingInterpretation = data_get($item, 'interpretation', '');
+                                    $supportingFilePath = data_get($item, 'file_path', '');
+                                    $supportingFileName = data_get($item, 'file_name', 'Lihat file');
+                                @endphp
+
                                 <div class="inline-card supporting-row">
-                                    <input type="hidden" name="supporting_data_id[]" value="{{ $item->id }}">
+                                    <input type="hidden" name="supporting_data_id[]" value="{{ old('supporting_data_id.' . $index, $supportingId) }}">
                                     <div class="inline-head">
                                         <div class="inline-title">Supporting Data Item</div>
                                         <button type="button" class="remove-btn" onclick="removeRow(this)">Hapus</button>
@@ -2908,26 +2927,26 @@
                                     <div class="grid-3">
                                         <div class="field">
                                             <label>Date</label>
-                                            <input type="date" name="supporting_data_date[]" value="{{ old('supporting_data_date.' . $index, !empty($item->data_date) ? (string) $item->data_date : '') }}">
+                                            <input type="date" name="supporting_data_date[]" value="{{ old('supporting_data_date.' . $index, $supportingDate) }}">
                                         </div>
 
                                         <div class="field">
                                             <label>Type of Data</label>
-                                            <input type="text" name="supporting_data_type[]" value="{{ old('supporting_data_type.' . $index, $item->data_type ?? '') }}" placeholder="Contoh: X-ray / MRI / Lab">
+                                            <input type="text" name="supporting_data_type[]" value="{{ old('supporting_data_type.' . $index, $supportingType) }}" placeholder="Contoh: X-ray / MRI / Lab">
                                         </div>
 
                                         <div class="field">
                                             <label>Interpretation</label>
-                                            <input type="text" name="supporting_data_interpretation[]" value="{{ old('supporting_data_interpretation.' . $index, $item->interpretation ?? '') }}" placeholder="Interpretasi singkat">
+                                            <input type="text" name="supporting_data_interpretation[]" value="{{ old('supporting_data_interpretation.' . $index, $supportingInterpretation) }}" placeholder="Interpretasi singkat">
                                         </div>
 
                                         <div class="field">
                                             <label>Upload File</label>
                                             <div class="file-upload-box">
                                                 <input type="file" name="supporting_data_file[]" accept=".jpg,.jpeg,.png,.webp,.pdf,.doc,.docx,.xls,.xlsx">
-                                                @if(!empty($item->file_path))
-                                                    <a class="current-file-pill" href="{{ asset('storage/' . $item->file_path) }}" target="_blank">
-                                                        📎 {{ $item->file_name ?: 'Lihat file' }}
+                                                @if(!empty($supportingFilePath))
+                                                    <a class="current-file-pill" href="{{ asset('storage/' . $supportingFilePath) }}" target="_blank">
+                                                        📎 {{ $supportingFileName ?: 'Lihat file' }}
                                                     </a>
                                                     <div class="file-upload-hint">Upload file baru hanya jika ingin mengganti attachment.</div>
                                                 @else
