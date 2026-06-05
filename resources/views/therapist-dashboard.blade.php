@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Therapist Dashboard - Khayra Physio</title>
+    <title>Physio Dashboard - Khayra Physio</title>
     <style>
         * { box-sizing: border-box; }
 
@@ -536,7 +536,7 @@
 <div class="page">
     <div class="container">
         <div class="topbar">
-            <div class="brand">Khayra Therapist Dashboard</div>
+            <div class="brand">Khayra Physio Dashboard</div>
 
             <div class="topbar-actions">
                 <a href="/" class="ghost-link">Home</a>
@@ -549,11 +549,11 @@
 
         <section class="hero">
             <div class="hero-main">
-                <div class="hero-badge">Therapist Workspace</div>
-                <h1 class="hero-title">Halo, {{ session('therapist_name') }}. Fokus hari ini: visit, rekam medis, dan progress pasien.</h1>
+                <div class="hero-badge">Physiotherapist Workspace</div>
+                <h1 class="hero-title">Halo, {{ session('therapist_name') }}. Fokus hari ini: jadwal pasien, medical record, dan report fisioterapi.</h1>
                 <p class="hero-text">
-                    Dashboard ini membantu therapist melihat visit yang perlu ditangani, rekam medis yang belum lengkap,
-                    serta akses cepat ke clinical report dan print PDF.
+                    Dashboard ini membantu physiotherapist melihat jadwal pasien, membuka visit, melengkapi medical record,
+                    serta mengakses clinical report dan print PDF dengan cepat.
                 </p>
 
                 <div class="hero-tags">
@@ -566,11 +566,11 @@
 
             <div class="hero-side">
                 <h2 class="side-title">Ringkasan Terkini</h2>
-                <p class="side-subtitle">Informasi singkat therapist berdasarkan data visit terbaru.</p>
+                <p class="side-subtitle">Informasi singkat physiotherapist berdasarkan data visit terbaru.</p>
 
                 <div class="mini-grid">
                     <div class="mini-box">
-                        <div class="mini-label">Therapist</div>
+                        <div class="mini-label">Physiotherapist</div>
                         <div class="mini-value">{{ session('therapist_name') }}</div>
                     </div>
 
@@ -591,7 +591,7 @@
             <div class="stat-card">
                 <div class="stat-label">Total Visits</div>
                 <div class="stat-value">{{ $totalVisits }}</div>
-                <div class="stat-sub">Semua visit yang menjadi tanggung jawab therapist ini.</div>
+                <div class="stat-sub">Semua visit yang menjadi tanggung jawab physiotherapist ini.</div>
             </div>
 
             <div class="stat-card">
@@ -625,7 +625,7 @@
                     <div class="section-head">
                         <div>
                             <h2 class="section-title">Appointment Schedule</h2>
-                            <p class="section-subtitle">Booking dari admin maupun patient yang sudah ditugaskan ke therapist ini.</p>
+                            <p class="section-subtitle">Jadwal pasien dari admin maupun patient portal yang sudah ditugaskan ke physiotherapist ini.</p>
                         </div>
                     </div>
 
@@ -658,7 +658,7 @@
                                 </div>
                             </div>
                         @empty
-                            <div class="empty-block">Belum ada appointment aktif yang ditugaskan ke therapist ini.</div>
+                            <div class="empty-block">Belum ada appointment aktif yang ditugaskan ke physiotherapist ini.</div>
                         @endforelse
                     </div>
                 </section>
@@ -668,7 +668,7 @@
                 <div class="section-head">
                     <div>
                         <h2 class="section-title">Today Visits</h2>
-                        <p class="section-subtitle">Visit hari ini untuk therapist ini.</p>
+                        <p class="section-subtitle">Visit hari ini untuk physiotherapist ini.</p>
                     </div>
                 </div>
 
@@ -757,7 +757,7 @@
             <div class="section-head">
                 <div>
                     <h2 class="section-title">All Assigned Visits</h2>
-                    <p class="section-subtitle">Daftar lengkap visit yang menjadi tanggung jawab therapist ini.</p>
+                    <p class="section-subtitle">Daftar lengkap visit yang menjadi tanggung jawab physiotherapist ini.</p>
                 </div>
             </div>
 
@@ -817,7 +817,7 @@
                 </div>
             @else
                 <div class="empty-state">
-                    Belum ada visit yang ditugaskan kepada therapist ini.
+                    Belum ada visit yang ditugaskan kepada physiotherapist ini.
                 </div>
             @endif
         </section>
