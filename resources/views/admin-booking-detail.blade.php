@@ -316,6 +316,11 @@
                         @endif
                     </div>
                 </div>
+
+                <div class="summary-box">
+                    <div class="summary-label">Room</div>
+                    <div class="summary-value">{{ $booking->room_name ?: 'Belum ditentukan' }}</div>
+                </div>
             </div>
         </section>
 

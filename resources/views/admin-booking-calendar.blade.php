@@ -264,6 +264,19 @@
             color: #52616b;
             line-height: 1.35;
         }
+        .room-line {
+            margin-top: 5px;
+            display: inline-flex !important;
+            width: fit-content;
+            padding: 4px 7px;
+            border-radius: 999px;
+            background: rgba(255,255,255,.72);
+            color: #2f7c7a !important;
+            font-size: 10px !important;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+        }
         .card-meta {
             display: flex !important;
             justify-content: space-between;
@@ -532,6 +545,7 @@
                                     <a href="/admin/bookings/{{ $booking->id }}" class="booking-card {{ $booking->status }}">
                                         <strong>{{ $booking->full_name }}</strong>
                                         <span>{{ $booking->service ?: '-' }}</span>
+                                        <span class="room-line">Room: {{ $booking->room_name ?: 'Belum ditentukan' }}</span>
                                         <span class="card-meta">
                                             <span class="mini-status">{{ $statusLabels[$booking->status] ?? $booking->status }}</span>
                                             <span class="mini-time">{{ $booking->booking_time ? substr((string) $booking->booking_time, 0, 5) : '-' }}</span>
@@ -553,6 +567,7 @@
                                         <a href="/admin/bookings/{{ $booking->id }}" class="booking-card {{ $booking->status }}">
                                             <strong>{{ $booking->full_name }}</strong>
                                             <span>{{ $booking->service ?: '-' }}</span>
+                                            <span class="room-line">Room: {{ $booking->room_name ?: 'Belum ditentukan' }}</span>
                                             <span>{{ $statusLabels[$booking->status] ?? $booking->status }}</span>
                                         </a>
                                     @endforeach
