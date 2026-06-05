@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Khayra RM Final Revision Checklist</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(47,124,122,.12), transparent 30%),
+        linear-gradient(180deg, #f6fbfa 0%, #eef7f5 100%);
+      color: #17232b;
+    }
+    .page { max-width: 1180px; margin: 0 auto; padding: 28px 18px 60px; }
+    .hero {
+      background: linear-gradient(135deg, #2f7c7a 0%, #214f55 100%);
+      color: white;
+      border-radius: 28px;
+      padding: 28px;
+      box-shadow: 0 18px 42px rgba(31,79,85,.18);
+      margin-bottom: 18px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero:before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at top right, rgba(255,255,255,.16), transparent 30%),
+        linear-gradient(rgba(255,255,255,.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.06) 1px, transparent 1px);
+      background-size: auto, 54px 54px, 54px 54px;
+      pointer-events: none;
+    }
+    .hero > * { position: relative; z-index: 1; }
+    .eyebrow {
+      display: inline-flex;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.14);
+      border: 1px solid rgba(255,255,255,.18);
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+    h1 { margin: 0; font-size: clamp(32px, 5vw, 54px); line-height: 1.02; }
+    .hero p { margin: 14px 0 0; max-width: 780px; line-height: 1.8; color: rgba(255,255,255,.9); }
+    .progress-card {
+      background: white;
+      border: 1px solid #e3eeeb;
+      border-radius: 24px;
+      padding: 22px;
+      box-shadow: 0 14px 34px rgba(15,23,42,.06);
+      margin-bottom: 18px;
+    }
+    .progress-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+    .progress-title { font-weight: 900; font-size: 20px; color: #22343a; }
+    .progress-number { font-weight: 900; color: #2f7c7a; }
+    .bar {
+      height: 14px;
+      border-radius: 999px;
+      background: #edf5f3;
+      overflow: hidden;
+    }
+    .bar-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #2f7c7a, #214f55);
+      transition: width .25s ease;
+    }
+    .controls {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+    button {
+      border: 0;
+      border-radius: 13px;
+      padding: 11px 14px;
+      font-size: 13px;
+      font-weight: 900;
+      cursor: pointer;
+      background: #2f7c7a;
+      color: white;
+    }
+    button.secondary {
+      background: #eef7f5;
+      color: #2f7c7a;
+      border: 1px solid #d8ebe7;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+    .batch {
+      background: white;
+      border: 1px solid #e3eeeb;
+      border-radius: 24px;
+      padding: 20px;
+      box-shadow: 0 12px 28px rgba(15,23,42,.045);
+    }
+    .batch-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+    .batch h2 { margin: 0; font-size: 20px; color: #22343a; }
+    .tag {
+      display: inline-flex;
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: #eef7f5;
+      color: #2f7c7a;
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .items { display: grid; gap: 10px; }
+    label.item {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      padding: 12px;
+      border-radius: 16px;
+      background: #f8fbfa;
+      border: 1px solid #edf3f1;
+      cursor: pointer;
+    }
+    input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: #2f7c7a;
+      flex: 0 0 auto;
+      margin-top: 1px;
+    }
+    .item-text { font-size: 14px; line-height: 1.55; color: #334155; font-weight: 700; }
+    .item small { display: block; margin-top: 4px; color: #94a3b8; font-weight: 700; line-height: 1.5; }
+    .done .item-text { text-decoration: line-through; color: #94a3b8; }
+    .note {
+      margin-top: 18px;
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
+      color: #9a3412;
+      border-radius: 20px;
+      padding: 16px;
+      line-height: 1.7;
+      font-size: 14px;
+      font-weight: 700;
+    }
+    @media (max-width: 860px) {
+      .grid { grid-template-columns: 1fr; }
+      .hero, .progress-card, .batch { border-radius: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="hero">
+      <div class="eyebrow">Khayra Physio · RM Final Revision</div>
+      <h1>Interactive Checklist Progress</h1>
+      <p>
+        Checklist kerja untuk menyelesaikan revisi final sistem Khayra: copywriting, physio dashboard,
+        visit list, medical record, ruangan, cuti staff, dan dashboard owner/manajemen.
+      </p>
+    </section>
+
+    <section class="progress-card">
+      <div class="progress-top">
+        <div class="progress-title">Total Progress</div>
+        <div class="progress-number"><span id="doneCount">0</span>/<span id="totalCount">0</span> selesai · <span id="percent">0%</span></div>
+      </div>
+      <div class="bar"><div class="bar-fill" id="barFill"></div></div>
+      <div class="controls">
+        <button onclick="checkAll()">Mark All Done</button>
+        <button class="secondary" onclick="resetAll()">Reset Checklist</button>
+      </div>
+    </section>
+
+    <section class="grid" id="checklist">
+      <div class="batch">
+        <div class="batch-head">
+          <h2>Batch 1 — Quick Fix UI & Copy</h2>
+          <span class="tag">In Progress</span>
+        </div>
+        <div class="items">
+          <label class="item"><input type="checkbox" data-key="b1-1"><span class="item-text">Therapist Login diganti menjadi Physio Login.<small>Termasuk title, heading, dan copywriting.</small></span></label>
+          <label class="item"><input type="checkbox" data-key="b1-2"><span class="item-text">Admin Login copywriting diganti sesuai brief client.<small>Fokus: pendaftaran pasien, jadwal pasien, pembayaran, dan penjualan.</small></span></label>
+          <label class="item"><input type="checkbox" data-key="b1-3"><span class="item-text">Semua wording Therapist diganti menjadi Physiotherapist pada tampilan penting.<small>Dilakukan bertahap agar tidak merusak nama route/model.</small></span></label>
+          <label class="item"><input type="checkbox" data-key="b1-4"><span class="item-text">Visit List action button dibuat rapi stack ke bawah.<small>Warna dibuat lebih konsisten.</small></span></label>
+          <label class="item"><input type="checkbox" data-key="b1-5"><span class="item-text">Fix error Medical Record Supporting Data.<small>Data object/array/date dibuat lebih aman.</small></span></label>
+        </div>
+      </div>
+
+      <div class="batch">
+        <div class="batch-head">
+          <h2>Batch 2 — Dashboard Physio</h2>
+          <span class="tag">Next</span>
+        </div>
+        <div class="items">
+          <label class="item"><input type="checkbox" data-key="b2-1"><span class="item-text">Dashboard physiotherapist copywriting diperbaiki.<small>Lebih profesional dan sesuai istilah client.</small></span></label>
+          <label class="item"><input type="checkbox" data-key="b2-2"><span class="item-text">Tambah shortcut Medical Record yang lebih jelas.<small>Physio bisa langsung lanjut input RM.</small></span></label>
+          <label class="item"><input type="checkbox" data-key="b2-3"><span class="item-text">Jadwal pasien disamakan dengan admin.<small>Physio bisa melihat semua jadwal pasien.</small></span></label>
+          <label class="item"><input type="checkbox" data-key="b2-4"><span class="item-text">Tambah filter tanggal/status/patient untuk dashboard physio.<small>Agar jadwal lebih mudah dipakai harian.</small></span></label>
+        </div>
+      </div>
+
+      <div class="batch">
+        <div class="batch-head">
+          <h2>Batch 3 — Room Management</h2>
+          <span class="tag">Planned</span>
+        </div>
+        <div class="items">
+          <label class="item"><input type="checkbox" data-key="b3-1"><span class="item-text">Buat master data ruangan.<small>VIP 1, VIP 2, R.1.1, R.2.1, R.2.2, R.2.3, R.2.4, R.2.5, R. GYM, R. Studio Pilates.</small></span></label>
+          <label class="item"><input type="checkbox" data-key="b3-2"><span class="item-text">Tambah migration rooms.<small>Database ruangan untuk booking/visit.</small></span></label>
+          <label class="item"><input type="checkbox" data-key="b3-3"><span class="item-text">Tambah field room di booking dan visit.<small>Admin bisa tentukan ruangan pasien.</small></span></label>
+          <label class="item"><input type="checkbox" data-key="b3-4"><span class="item-text">Tampilkan room di list jadwal dan visit.<small>Memudahkan operasional klinik.</small></span></label>
+        </div>
+      </div>
+
+      <div class="batch">
+        <div class="batch-head">
+          <h2>Batch 4 — Staff Leave System</h2>
+          <span class="tag">Planned</span>
+        </div>
+        <div class="items">
+          <label class="item"><input type="checkbox" data-key="b4-1"><span class="item-text">Buat form cuti untuk semua staff.<small>Staff bisa submit permintaan cuti.</small></span></label>
+          <label class="item"><input type="checkbox" data-key="b4-2"><span class="item-text">Buat halaman approval cuti admin/owner.<small>Approve/reject dengan catatan.</small></span></label>
+          <label class="item"><input type="checkbox" data-key="b4-3"><span class="item-text">Cuti tampil di dashboard owner/manajemen.<small>Bagian keluar masuk staff dan approval.</small></span></label>
+        </div>
+      </div>
+
+      <div class="batch">
+        <div class="batch-head">
+          <h2>Batch 5 — Owner / Management Dashboard</h2>
+          <span class="tag">Planned</span>
+        </div>
+        <div class="items">
+          <label class="item"><input type="checkbox" data-key="b5-1"><span class="item-text">Buat dashboard khusus owner/manajemen.<small>Fokus revenue, outstanding, patient growth, dan operational insight.</small></span></label>
+          <label class="item"><input type="checkbox" data-key="b5-2"><span class="item-text">Tampilkan revenue dan penjualan.<small>Menyesuaikan kebutuhan ekonomi bisnis owner.</small></span></label>
+          <label class="item"><input type="checkbox" data-key="b5-3"><span class="item-text">Tampilkan keluar masuk staff.<small>Termasuk staff aktif/nonaktif dan cuti.</small></span></label>
+          <label class="item"><input type="checkbox" data-key="b5-4"><span class="item-text">Tampilkan approval cuti di dashboard.<small>Owner bisa lihat pending leave request.</small></span></label>
+        </div>
+      </div>
+
+      <div class="batch">
+        <div class="batch-head">
+          <h2>Batch 6 — Final QA & Deploy</h2>
+          <span class="tag">Final</span>
+        </div>
+        <div class="items">
+          <label class="item"><input type="checkbox" data-key="b6-1"><span class="item-text">Test admin login, physio login, patient portal.<small>Pastikan semua role aman.</small></span></label>
+          <label class="item"><input type="checkbox" data-key="b6-2"><span class="item-text">Test medical record save/update.<small>Termasuk supporting data dan upload file.</small></span></label>
+          <label class="item"><input type="checkbox" data-key="b6-3"><span class="item-text">Test booking, visit, billing, invoice, dan referral letter.<small>Core operational flow.</small></span></label>
+          <label class="item"><input type="checkbox" data-key="b6-4"><span class="item-text">Push ke GitHub dan deploy production.<small>Setelah client approval final.</small></span></label>
+        </div>
+      </div>
+    </section>
+
+    <div class="note">
+      Catatan kerja: perubahan istilah “therapist” ke “physiotherapist” dilakukan pada tampilan/copywriting dulu. Nama route, model, table, dan session internal tidak perlu langsung diganti agar sistem tidak rusak.
+    </div>
+  </main>
+
+  <script>
+    const STORAGE_KEY = "khayra_rm_final_checklist_v1";
+    const boxes = Array.from(document.querySelectorAll('input[type="checkbox"][data-key]'));
+
+    function loadState() {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+      boxes.forEach(box => {
+        box.checked = !!saved[box.dataset.key];
+        syncItem(box);
+      });
+      updateProgress();
+    }
+
+    function saveState() {
+      const data = {};
+      boxes.forEach(box => data[box.dataset.key] = box.checked);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+
+    function syncItem(box) {
+      const item = box.closest(".item");
+      if (box.checked) item.classList.add("done");
+      else item.classList.remove("done");
+    }
+
+    function updateProgress() {
+      const total = boxes.length;
+      const done = boxes.filter(box => box.checked).length;
+      const percent = total ? Math.round((done / total) * 100) : 0;
+
+      document.getElementById("doneCount").textContent = done;
+      document.getElementById("totalCount").textContent = total;
+      document.getElementById("percent").textContent = percent + "%";
+      document.getElementById("barFill").style.width = percent + "%";
+    }
+
+    boxes.forEach(box => {
+      box.addEventListener("change", () => {
+        syncItem(box);
+        updateProgress();
+        saveState();
+      });
+    });
+
+    function checkAll() {
+      boxes.forEach(box => {
+        box.checked = true;
+        syncItem(box);
+      });
+      updateProgress();
+      saveState();
+    }
+
+    function resetAll() {
+      if (!confirm("Reset semua checklist?")) return;
+      boxes.forEach(box => {
+        box.checked = false;
+        syncItem(box);
+      });
+      updateProgress();
+      saveState();
+    }
+
+    loadState();
+  </script>
+</body>
+</html>

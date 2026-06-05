@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Therapist Login - Khayra Physio</title>
+    <title>Physio Login - Khayra Physio</title>
     <style>
         * { box-sizing: border-box; }
 
@@ -246,9 +246,9 @@
                 </div>
 
                 <div class="form-wrap">
-                    <h1>Therapist Login</h1>
+                    <h1>Physio Login</h1>
                     <p class="subtitle">
-                        Masuk ke therapist workspace untuk membuka visit, mengisi medical record, dan melihat report terapi patient.
+                        Masuk ke physiotherapist workspace untuk melihat jadwal pasien, membuka visit, mengisi medical record, dan membuat report terapi pasien.
                     </p>
 
                     @if(session('error'))

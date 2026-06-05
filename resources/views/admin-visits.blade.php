@@ -125,25 +125,38 @@
         .completed { background: #dcfce7; color: #166534; }
         .cancelled { background: #fee2e2; color: #b91c1c; }
         .action-stack {
-            display: flex;
-            flex-wrap: wrap;
+            display: grid;
+            grid-template-columns: 1fr;
             gap: 8px;
+            min-width: 156px;
         }
         .action-link {
             display: inline-flex;
             align-items: center;
             justify-content: center;
+            text-align: center;
             text-decoration: none;
-            padding: 9px 12px;
+            padding: 10px 12px;
+            min-height: 38px;
             border-radius: 12px;
             font-size: 12px;
-            font-weight: 800;
+            font-weight: 900;
             border: 1px solid transparent;
+            white-space: nowrap;
         }
-        .btn-edit { background: #eef2ff; color: #3457d5; border-color: #dde5ff; }
-        .btn-record { background: #eef7f5; color: #2f7c7a; border-color: #d8ebe7; }
-        .btn-billing { background: #fff7ed; color: #c2410c; border-color: #fed7aa; }
-        .btn-referral { background: #f5f3ff; color: #6d28d9; border-color: #ddd6fe; }
+        .btn-edit,
+        .btn-record,
+        .btn-billing,
+        .btn-referral {
+            background: #eef7f5;
+            color: #2f7c7a;
+            border-color: #d8ebe7;
+        }
+        .btn-record {
+            background: #2f7c7a;
+            color: #ffffff;
+            border-color: #2f7c7a;
+        }
 
         @media (max-width: 900px) {
             .layout { display: block; }
@@ -184,7 +197,7 @@
 
             <section class="section-card">
                 <h2 class="section-title">Visit List</h2>
-                <p class="section-subtitle">Daftar seluruh physiotherapy visit beserta patient, jadwal, staff, dan statusnya.</p>
+                <p class="section-subtitle">Daftar seluruh physiotherapy visit beserta pasien, jadwal, physiotherapist, status, medical record, dan action operasional.</p>
 
                 <div class="table-wrap">
                     <table>
@@ -214,7 +227,7 @@
                                     <td>{{ $visit->visit_date ?: '-' }}</td>
                                     <td>
                                         <div class="primary-text">{{ optional($visit->therapistRelation)->full_name ?: $visit->therapist ?: '-' }}</div>
-                                        <div class="secondary-text">Physiotherapy Team</div>
+                                        <div class="secondary-text">Physiotherapist</div>
                                     </td>
                                     <td>
                                         @if($visit->booking)

@@ -236,7 +236,7 @@
                 <div class="form-wrap">
                     <h1>Admin Login</h1>
                     <p class="subtitle">
-                        Masuk ke admin workspace untuk mengelola patient, booking, visit, therapist, dan billing klinik.
+                        Masuk ke Admin Workspace untuk mengelola pendaftaran pasien, pengelolaan jadwal pasien, pembayaran pasien, dan penjualan.
                     </p>
 
                     @if(session('error'))
