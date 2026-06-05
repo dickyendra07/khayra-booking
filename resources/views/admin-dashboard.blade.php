@@ -884,9 +884,8 @@
                     </div>
                 </div>
             </section>
-        </div>
             <section class="section-card">
-                <div class="section-header" style="align-items: flex-start;">
+                <div class="section-head" style="align-items: flex-start;">
                     <div>
                         <h2 class="section-title">Appointment Arrival Reminder</h2>
                         <p class="section-subtitle">
@@ -1062,7 +1061,7 @@
             </section>
 
             <section class="section-card">
-                <div class="section-header" style="align-items: flex-start;">
+                <div class="section-head" style="align-items: flex-start;">
                     <div>
                         <h2 class="section-title">Birthday Promo Reminder</h2>
                         <p class="section-subtitle">
@@ -1231,7 +1230,7 @@
             </section>
 
             <section class="section-card">
-                <div class="section-header" style="align-items: flex-start;">
+                <div class="section-head" style="align-items: flex-start;">
                     <div>
                         <h2 class="section-title">Marketing Source Analytics</h2>
                         <p class="section-subtitle">
@@ -1370,7 +1369,7 @@
                     <div class="empty-state">Belum ada data sumber informasi patient.</div>
                 @endif
             </section>
-
+        </div>
 </main>
 </div>
 <script>
