@@ -2740,14 +2740,8 @@
                             <input type="hidden" name="pain_type" value="{{ old('pain_type', $record->pain_type ?? '') }}">
                         </div>
 
-                        <div class="grid-2">
-                            <input type="hidden" name="pain_scale" value="{{ old('pain_scale', $record->pain_scale ?? '') }}">
-
-                            <div class="field">
-                                <label>Functional Limitation (Initial)</label>
-                                <input type="text" name="functional_limitation_initial" value="{{ old('functional_limitation_initial', $record->functional_limitation_initial ?? '') }}" placeholder="Contoh: sulit duduk lama / berjalan">
-                            </div>
-                        </div>
+                        <input type="hidden" name="pain_scale" value="{{ old('pain_scale', $record->pain_scale ?? '') }}">
+                        <input type="hidden" name="functional_limitation_initial" value="{{ old('functional_limitation_initial', $record->functional_limitation_initial ?? '') }}">
 
                         <div class="field">
                             <label>Condition Felt</label>

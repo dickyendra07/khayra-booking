@@ -598,11 +598,9 @@
     $reportPainDelta = (!is_null($reportPainStart) && !is_null($reportPainLatest)) ? ((int) $reportPainLatest - (int) $reportPainStart) : null;
 
     $reportFunctionalProgressItems = collect([
-        ['label' => 'Cervical Rotation ROM', 'value' => $record->rom_cervical_rotation ?? null],
-        ['label' => 'Shoulder Elevation ROM', 'value' => $record->rom_shoulder_elevation ?? null],
+        ['label' => 'ROM Kanan', 'value' => $record->rom_cervical_rotation ?? null],
+        ['label' => 'ROM Kiri', 'value' => $record->rom_shoulder_elevation ?? null],
         ['label' => 'Activity Tolerance', 'value' => $record->activity_tolerance ?? null],
-        ['label' => 'Initial Limitation', 'value' => $record->functional_limitation_initial ?? null],
-        ['label' => 'Clinical Limitation', 'value' => $record->functional_limitation_clinical ?? null],
         ['label' => 'Response to Treatment', 'value' => $record->response_to_treatment ?? null],
         ['label' => 'Next Plan', 'value' => $record->next_session_plan ?? null],
     ])->filter(fn ($item) => !blank($item['value']));
@@ -806,8 +804,8 @@
             </div>
 
             <div class="report-progress-card">
-                <h3 class="report-progress-title">Functional Progress Summary</h3>
-                <p class="report-progress-subtitle">Ringkasan progress fungsi berdasarkan field klinis yang tersedia.</p>
+                <h3 class="report-progress-title">ROM & Functional Progress Summary</h3>
+                <p class="report-progress-subtitle">Ringkasan evaluasi ROM kanan/kiri, functional score, response to treatment, dan next plan.</p>
 
                 @if(!is_null($record->functional_score))
                     <div class="report-rom-score">
@@ -826,7 +824,7 @@
                     <div class="report-rom-visual-grid">
                         @if(!blank($record->rom_cervical_rotation))
                             <div class="report-rom-chart-card">
-                                <div class="report-rom-chart-title">Cervical Rotation ROM</div>
+                                <div class="report-rom-chart-title">ROM Kanan</div>
 
                                 @if(!is_null($cervicalRomPair['right']))
                                     <div class="report-rom-chart-row">
@@ -854,7 +852,7 @@
 
                         @if(!blank($record->rom_shoulder_elevation))
                             <div class="report-rom-chart-card">
-                                <div class="report-rom-chart-title">Shoulder Elevation ROM</div>
+                                <div class="report-rom-chart-title">ROM Kiri</div>
 
                                 @if(!is_null($shoulderRomPair['right']))
                                     <div class="report-rom-chart-row">

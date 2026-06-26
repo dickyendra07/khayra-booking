@@ -1338,10 +1338,6 @@
                             <div class="data-value">{{ $record->pain_type ?? '-' }}</div>
                         </div>
 
-                        <div class="data-box">
-                            <div class="data-label">Functional Limitation (Initial)</div>
-                            <div class="data-value">{{ $record->functional_limitation_initial ?? '-' }}</div>
-                        </div>
                     </div>
 
                     <div class="grid-2 spacer">
@@ -1666,12 +1662,12 @@
                         <h4 class="session-progress-view-title">ROM / Functional Progress Chart</h4>
                         <div class="rom-progress-view-grid">
                             <div class="rom-progress-view-item">
-                                <div class="data-label">Cervical Rotation ROM</div>
+                                <div class="data-label">ROM Kanan</div>
                                 <div class="data-value">{{ $record->rom_cervical_rotation ?? '-' }}</div>
                             </div>
 
                             <div class="rom-progress-view-item">
-                                <div class="data-label">Shoulder Elevation ROM</div>
+                                <div class="data-label">ROM Kiri</div>
                                 <div class="data-value">{{ $record->rom_shoulder_elevation ?? '-' }}</div>
                             </div>
 
