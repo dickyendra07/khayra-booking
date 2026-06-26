@@ -163,9 +163,92 @@
             .main { padding: 16px; }
         }
     
-        .btn-report { background: #eef2ff; color: #3730a3; border-color: #c7d2fe; }
-        .btn-print { background: #f8fafc; color: #334155; border-color: #cbd5e1; }
-        .btn-wa { background: #dcfce7; color: #166534; border-color: #86efac; }
+        .action-stack {
+            display: grid;
+            gap: 8px;
+            min-width: 178px;
+        }
+
+        .action-primary-row {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+        }
+
+        .action-secondary-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 8px;
+        }
+
+        .action-link {
+            min-height: 34px;
+            padding: 0 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 900;
+            line-height: 1.2;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            text-decoration: none;
+            border: 1px solid transparent;
+            white-space: nowrap;
+            transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease;
+        }
+
+        .action-link:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 20px rgba(15, 23, 42, .08);
+        }
+
+        .btn-edit {
+            background: #f8fafc;
+            color: #334155;
+            border-color: #dbe5e3;
+        }
+
+        .btn-record {
+            background: linear-gradient(135deg, #2f8c86 0%, #25746f 100%);
+            color: #ffffff;
+            border-color: #25746f;
+        }
+
+        .btn-report {
+            background: #eef2ff;
+            color: #3730a3;
+            border-color: #c7d2fe;
+        }
+
+        .btn-print {
+            background: #f8fafc;
+            color: #334155;
+            border-color: #cbd5e1;
+        }
+
+        .btn-wa {
+            background: #dcfce7;
+            color: #166534;
+            border-color: #86efac;
+        }
+
+        .btn-billing,
+        .btn-referral {
+            background: #eef7f5;
+            color: #24736f;
+            border-color: #d7ebe7;
+        }
+
+        @media (max-width: 980px) {
+            .action-stack {
+                min-width: 0;
+            }
+
+            .action-secondary-grid {
+                grid-template-columns: 1fr;
+            }
+        }
 
 </style>
     <!-- Khayra PWA -->
@@ -257,22 +340,30 @@
                                     </td>
                                     <td>
                                         <div class="action-stack">
-                                            <a href="/admin/visits/{{ $visit->id }}/edit" class="action-link btn-edit">Edit</a>
-                                            <a href="/admin/visits/{{ $visit->id }}/medical-record" class="action-link btn-record">Medical Record</a>
-                                            <a href="/admin/visits/{{ $visit->id }}/report" class="action-link btn-report" target="_blank">Report</a>
-                                            <a href="/admin/visits/{{ $visit->id }}/report/print" class="action-link btn-print" target="_blank">Print PDF</a>
-                                            @php
-                                                $waNumber = preg_replace('/[^0-9]/', '', optional($visit->patient)->whatsapp ?? '');
-                                                if (str_starts_with($waNumber, '0')) {
-                                                    $waNumber = '62' . substr($waNumber, 1);
-                                                }
-                                                $waMessage = 'Halo Bapak/Ibu ' . (optional($visit->patient)->full_name ?: '') . ', report fisioterapi Khayra Physio sudah siap. Admin akan mengirimkan file PDF report melalui WhatsApp ini. Terima kasih.';
-                                            @endphp
-                                            @if($waNumber)
-                                                <a href="https://wa.me/{{ $waNumber }}?text={{ urlencode($waMessage) }}" class="action-link btn-wa" target="_blank">WA Report</a>
-                                            @endif
-                                            <a href="/admin/billings/create?visit_id={{ $visit->id }}" class="action-link btn-billing">Buat Invoice</a>
-                                            <a href="/admin/referral-letters/create?visit_id={{ $visit->id }}" class="action-link btn-referral">Buat Surat Rujukan</a>
+                                            <div class="action-primary-row">
+                                                <a href="/admin/visits/{{ $visit->id }}/medical-record" class="action-link btn-record">Medical Record</a>
+                                            </div>
+
+                                            <div class="action-secondary-grid">
+                                                <a href="/admin/visits/{{ $visit->id }}/edit" class="action-link btn-edit">Edit</a>
+                                                <a href="/admin/visits/{{ $visit->id }}/report" class="action-link btn-report" target="_blank">Report</a>
+                                                <a href="/admin/visits/{{ $visit->id }}/report/print" class="action-link btn-print" target="_blank">Print PDF</a>
+
+                                                @php
+                                                    $waNumber = preg_replace('/[^0-9]/', '', optional($visit->patient)->whatsapp ?? '');
+                                                    if (str_starts_with($waNumber, '0')) {
+                                                        $waNumber = '62' . substr($waNumber, 1);
+                                                    }
+                                                    $waMessage = 'Halo Bapak/Ibu ' . (optional($visit->patient)->full_name ?: '') . ', report fisioterapi Khayra Physio sudah siap. Admin akan mengirimkan file PDF report melalui WhatsApp ini. Terima kasih.';
+                                                @endphp
+
+                                                @if($waNumber)
+                                                    <a href="https://wa.me/{{ $waNumber }}?text={{ urlencode($waMessage) }}" class="action-link btn-wa" target="_blank">WA Report</a>
+                                                @endif
+
+                                                <a href="/admin/billings/create?visit_id={{ $visit->id }}" class="action-link btn-billing">Invoice</a>
+                                                <a href="/admin/referral-letters/create?visit_id={{ $visit->id }}" class="action-link btn-referral">Rujukan</a>
+                                            </div>
                                         </div>
                                     </td>
                                 </tr>
