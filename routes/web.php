@@ -2466,7 +2466,7 @@ Route::get('/admin/visits/{id}/report', function ($id) {
         'medicalRecord.homeExercises',
     ])->findOrFail($id);
 
-    return view('therapist-report', compact('visit') + ['reportContext' => 'therapist']);
+    return view('therapist-report', compact('visit') + ['reportContext' => 'admin']);
 });
 
 Route::get('/admin/visits/{id}/report/print', function ($id) {
@@ -2483,7 +2483,7 @@ Route::get('/admin/visits/{id}/report/print', function ($id) {
         'medicalRecord.homeExercises',
     ])->findOrFail($id);
 
-    return view('therapist-report-print', compact('visit') + ['reportContext' => 'therapist']);
+    return view('therapist-report-print', compact('visit') + ['reportContext' => 'admin']);
 });
 
 Route::get('/admin/visits/{id}/medical-record', function ($id) {
@@ -3373,7 +3373,7 @@ Route::get('/therapist/visits/{id}/report', function ($id) {
         'medicalRecord.homeExercises',
     ])->findOrFail($id);
 
-    return view('therapist-report', compact('visit') + ['reportContext' => 'admin']);
+    return view('therapist-report', compact('visit') + ['reportContext' => 'therapist']);
 });
 
 Route::get('/therapist/visits/{id}/report/print', function ($id) {
@@ -3392,7 +3392,7 @@ Route::get('/therapist/visits/{id}/report/print', function ($id) {
         'medicalRecord.homeExercises',
     ])->findOrFail($id);
 
-    return view('therapist-report-print', compact('visit') + ['reportContext' => 'admin']);
+    return view('therapist-report-print', compact('visit') + ['reportContext' => 'therapist']);
 });
 
 
