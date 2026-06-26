@@ -30,7 +30,7 @@
             padding: 28px;
             margin-bottom: 18px;
             display: grid;
-            grid-template-columns: 1.15fr .85fr;
+            grid-template-columns: 1.1fr .9fr;
             gap: 18px;
             align-items: stretch;
         }
@@ -70,14 +70,12 @@
             border-radius: 24px;
             padding: 24px;
             color: #ffffff;
-            position: relative;
-            overflow: hidden;
         }
 
         .hero-panel h2 { margin: 0 0 10px; font-size: 25px; line-height: 1.2; }
         .hero-panel p { margin: 0; font-size: 13px; line-height: 1.85; color: rgba(255,255,255,.92); }
 
-        .period-form, .quick-links {
+        .period-form, .quick-links, .action-row {
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
@@ -97,12 +95,14 @@
         }
 
         textarea { min-height: 86px; padding-top: 12px; resize: vertical; }
+
         input[type="month"] {
             border: 1px solid rgba(255,255,255,.26);
             background: rgba(255,255,255,.12);
             color: #ffffff;
             font-weight: 800;
         }
+
         input[type="month"]::-webkit-calendar-picker-indicator { filter: invert(1); }
 
         label {
@@ -133,6 +133,7 @@
         .btn-soft { background: #ffffff; color: #2f7c7a; border: 1px solid #d8ebe7; }
         .btn-dark { background: #111827; color: #ffffff; }
         .btn-red { background: #fee2e2; color: #b91c1c; }
+        .btn-green { background: #0f766e; color: #ffffff; }
 
         .stats-grid {
             display: grid;
@@ -172,26 +173,19 @@
 
         .money-positive { color: #0f766e; }
         .money-negative { color: #b91c1c; }
-        .money-warning { color: #c2410c; }
-
-        .grid-2 {
-            display: grid;
-            grid-template-columns: .9fr 1.1fr;
-            gap: 18px;
-            align-items: start;
-        }
-
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 14px;
-        }
-
-        .field-full { grid-column: 1 / -1; }
 
         .section-card {
             border-radius: 26px;
             padding: 24px;
+            margin-bottom: 18px;
+        }
+
+        .section-head {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            align-items: flex-start;
+            flex-wrap: wrap;
             margin-bottom: 18px;
         }
 
@@ -204,11 +198,20 @@
         }
 
         .section-subtitle {
-            margin: 8px 0 18px;
+            margin: 8px 0 0;
             font-size: 13px;
             color: #6b7280;
             line-height: 1.8;
         }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+        }
+
+        .field-wide { grid-column: span 2; }
+        .field-full { grid-column: 1 / -1; }
 
         .alert {
             margin-bottom: 18px;
@@ -219,6 +222,22 @@
             font-size: 13px;
             font-weight: 800;
         }
+
+        .closing-alert {
+            margin-bottom: 18px;
+            border-radius: 22px;
+            padding: 18px;
+            background: #f8fafc;
+            border: 1px solid #dbe7e5;
+            color: #334155;
+            display: flex;
+            justify-content: space-between;
+            gap: 14px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .closing-alert strong { color: #0f766e; }
 
         .table-wrap {
             overflow-x: auto;
@@ -290,17 +309,25 @@
             line-height: 1.7;
         }
 
+        .close-book-box {
+            background: #f8fbfa;
+            border: 1px solid #dbe7e5;
+            border-radius: 20px;
+            padding: 18px;
+        }
+
         @media (max-width: 1180px) {
             .layout { display: block; }
             .main { padding: 18px; }
-            .hero, .grid-2 { grid-template-columns: 1fr; }
+            .hero { grid-template-columns: 1fr; }
             .stats-grid { grid-template-columns: 1fr 1fr; }
+            .form-grid { grid-template-columns: repeat(2, 1fr); }
             .title { font-size: 34px; }
         }
 
         @media (max-width: 720px) {
             .stats-grid, .form-grid { grid-template-columns: 1fr; }
-            .field-full { grid-column: auto; }
+            .field-wide, .field-full { grid-column: auto; }
         }
     </style>
 </head>
@@ -314,25 +341,39 @@
                 <div class="alert">{{ session('success') }}</div>
             @endif
 
+            @if($closing)
+                <div class="closing-alert">
+                    <div>
+                        <strong>Bulan {{ $monthLabel }} sudah tutup buku.</strong><br>
+                        Closed at {{ optional($closing->closed_at)->format('Y-m-d H:i') ?: '-' }} oleh {{ $closing->closed_by ?: '-' }}.
+                        @if($closing->notes)
+                            <br>Notes: {{ $closing->notes }}
+                        @endif
+                    </div>
+                    <a href="/admin/owner-finance/print?month={{ $month }}" class="btn btn-green" target="_blank">Print Closed Report</a>
+                </div>
+            @endif
+
             <section class="hero">
                 <div>
                     <span class="badge">Owner Finance / Cashflow</span>
                     <h1 class="title">Pencatatan uang masuk dan keluar klinik.</h1>
                     <p class="subtitle">
-                        Halaman ini menggabungkan pemasukan otomatis dari billing yang sudah dibayar dengan pencatatan manual
-                        seperti owner tambah modal, pemasukan lain, dan seluruh pengeluaran operasional.
+                        Pemasukan billing otomatis digabung dengan transaksi manual seperti owner tambah modal,
+                        pemasukan lain, dan seluruh biaya operasional. Layout dibuat atas-bawah agar lebih mudah dibaca.
                     </p>
 
                     <div class="quick-links">
                         <a href="/admin/owner-dashboard?month={{ $month }}" class="btn btn-soft">Back to Owner Dashboard</a>
                         <a href="/admin/billings" class="btn btn-soft">Open Billing Ledger</a>
+                        <a href="/admin/owner-finance/print?month={{ $month }}" class="btn btn-green" target="_blank">Print Monthly Report</a>
                     </div>
                 </div>
 
                 <div class="hero-panel">
                     <h2>Period: {{ $monthLabel }}</h2>
                     <p>
-                        Billing void otomatis dikecualikan. Transaksi manual bisa digunakan untuk modal owner dan biaya operasional.
+                        Billing void otomatis dikecualikan. Setelah tutup buku, transaksi manual bulan tersebut akan dikunci.
                     </p>
 
                     <form method="GET" action="/admin/owner-finance" class="period-form">
@@ -372,17 +413,25 @@
                 <div class="stat-card">
                     <div class="stat-label">Transactions</div>
                     <div class="stat-value">{{ $summary['transaction_count'] }}</div>
-                    <div class="stat-sub">Gabungan auto billing dan manual.</div>
+                    <div class="stat-sub">Auto billing + manual.</div>
                 </div>
             </section>
 
-            <section class="grid-2">
-                <div class="section-card">
-                    <h2 class="section-title">Tambah Transaksi Manual</h2>
-                    <p class="section-subtitle">
-                        Gunakan untuk owner tambah modal, pemasukan lain, atau semua pengeluaran klinik.
-                    </p>
+            <section class="section-card">
+                <div class="section-head">
+                    <div>
+                        <h2 class="section-title">Tambah Transaksi Manual</h2>
+                        <p class="section-subtitle">
+                            Gunakan untuk owner tambah modal, pemasukan lain, atau pengeluaran klinik.
+                        </p>
+                    </div>
 
+                    @if($closing)
+                        <span class="pill pill-slate">Locked: Closed Month</span>
+                    @endif
+                </div>
+
+                @if(!$closing)
                     <form method="POST" action="/admin/owner-finance/transactions">
                         @csrf
 
@@ -423,7 +472,7 @@
                                 <input type="text" name="category" value="{{ old('category') }}" placeholder="Contoh: Gaji, Sewa, Modal, Listrik">
                             </div>
 
-                            <div class="field-full">
+                            <div class="field-wide">
                                 <label>Judul Transaksi</label>
                                 <input type="text" name="title" value="{{ old('title') }}" placeholder="Contoh: Owner tambah modal / Bayar listrik" required>
                             </div>
@@ -456,76 +505,118 @@
 
                         <button type="submit" class="btn btn-dark" style="margin-top:16px;">Save Transaction</button>
                     </form>
+                @else
+                    <div class="empty">Bulan ini sudah tutup buku. Transaksi manual tidak dapat ditambah atau dihapus.</div>
+                @endif
+            </section>
+
+            <section class="section-card">
+                <div class="section-head">
+                    <div>
+                        <h2 class="section-title">Cashflow Ledger</h2>
+                        <p class="section-subtitle">
+                            Pemasukan billing otomatis digabung dengan transaksi manual dalam periode ini.
+                        </p>
+                    </div>
+
+                    <div class="action-row" style="margin-top:0;">
+                        <a href="/admin/owner-finance/print?month={{ $month }}" class="btn btn-soft" target="_blank">Print PDF</a>
+                    </div>
                 </div>
 
-                <div class="section-card">
-                    <h2 class="section-title">Cashflow Ledger</h2>
-                    <p class="section-subtitle">
-                        Pemasukan billing otomatis digabung dengan transaksi manual dalam periode ini.
-                    </p>
-
-                    <div class="table-wrap">
-                        <table>
-                            <thead>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Transaction</th>
+                                <th>Type</th>
+                                <th>Source</th>
+                                <th>Method</th>
+                                <th>Amount</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($transactions as $transaction)
                                 <tr>
-                                    <th>Date</th>
-                                    <th>Transaction</th>
-                                    <th>Type</th>
-                                    <th>Source</th>
-                                    <th>Method</th>
-                                    <th>Amount</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($transactions as $transaction)
-                                    <tr>
-                                        <td>{{ $transaction['date'] ? \Carbon\Carbon::parse($transaction['date'])->format('Y-m-d') : '-' }}</td>
-                                        <td>
-                                            <div class="trx-title">{{ $transaction['title'] }}</div>
-                                            <div class="trx-meta">
-                                                {{ $transaction['category'] }}
-                                                @if(!empty($transaction['description']))
-                                                    · {{ $transaction['description'] }}
-                                                @endif
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <span class="pill {{ $transaction['type'] === 'income' ? 'pill-green' : 'pill-red' }}">
-                                                {{ $transaction['type'] }}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <span class="pill {{ $transaction['kind'] === 'auto_billing' ? 'pill-blue' : 'pill-slate' }}">
-                                                {{ $transaction['source'] }}
-                                            </span>
-                                        </td>
-                                        <td>{{ $transaction['payment_method'] ?: '-' }}</td>
-                                        <td class="{{ $transaction['type'] === 'income' ? 'money-positive' : 'money-negative' }}" style="font-weight:900;">
-                                            {{ $transaction['type'] === 'income' ? '+' : '-' }}
-                                            Rp {{ number_format($transaction['amount'], 0, ',', '.') }}
-                                        </td>
-                                        <td>
-                                            @if($transaction['kind'] === 'auto_billing')
-                                                <a class="btn btn-soft" href="{{ $transaction['url'] }}">Open Billing</a>
-                                            @else
-                                                <form method="POST" action="/admin/owner-finance/transactions/{{ $transaction['id'] }}/delete" onsubmit="return confirm('Hapus transaksi manual ini?')">
-                                                    @csrf
-                                                    <button type="submit" class="btn btn-red">Delete</button>
-                                                </form>
+                                    <td>{{ $transaction['date'] ? \Carbon\Carbon::parse($transaction['date'])->format('Y-m-d') : '-' }}</td>
+                                    <td>
+                                        <div class="trx-title">{{ $transaction['title'] }}</div>
+                                        <div class="trx-meta">
+                                            {{ $transaction['category'] }}
+                                            @if(!empty($transaction['description']))
+                                                · {{ $transaction['description'] }}
                                             @endif
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="7">
-                                            <div class="empty">Belum ada transaksi finance pada periode ini.</div>
-                                        </td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="pill {{ $transaction['type'] === 'income' ? 'pill-green' : 'pill-red' }}">
+                                            {{ $transaction['type'] }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="pill {{ $transaction['kind'] === 'auto_billing' ? 'pill-blue' : 'pill-slate' }}">
+                                            {{ $transaction['source'] }}
+                                        </span>
+                                    </td>
+                                    <td>{{ $transaction['payment_method'] ?: '-' }}</td>
+                                    <td class="{{ $transaction['type'] === 'income' ? 'money-positive' : 'money-negative' }}" style="font-weight:900;">
+                                        {{ $transaction['type'] === 'income' ? '+' : '-' }}
+                                        Rp {{ number_format($transaction['amount'], 0, ',', '.') }}
+                                    </td>
+                                    <td>
+                                        @if($transaction['kind'] === 'auto_billing')
+                                            <a class="btn btn-soft" href="{{ $transaction['url'] }}">Open Billing</a>
+                                        @elseif(!$closing)
+                                            <form method="POST" action="/admin/owner-finance/transactions/{{ $transaction['id'] }}/delete" onsubmit="return confirm('Hapus transaksi manual ini?')">
+                                                @csrf
+                                                <button type="submit" class="btn btn-red">Delete</button>
+                                            </form>
+                                        @else
+                                            <span class="pill pill-slate">Locked</span>
+                                        @endif
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="7">
+                                        <div class="empty">Belum ada transaksi finance pada periode ini.</div>
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="section-card">
+                <div class="section-head">
+                    <div>
+                        <h2 class="section-title">Tutup Buku Bulanan</h2>
+                        <p class="section-subtitle">
+                            Simpan snapshot laporan bulan ini agar bisa dijadikan report final bulanan.
+                        </p>
                     </div>
+                </div>
+
+                <div class="close-book-box">
+                    @if(!$closing)
+                        <form method="POST" action="/admin/owner-finance/close" onsubmit="return confirm('Tutup buku bulan {{ $monthLabel }}? Setelah ditutup, transaksi manual bulan ini akan dikunci.')">
+                            @csrf
+                            <input type="hidden" name="month" value="{{ $month }}">
+
+                            <label>Closing Notes</label>
+                            <textarea name="notes" placeholder="Contoh: Tutup buku final bulan {{ $monthLabel }}"></textarea>
+
+                            <button type="submit" class="btn btn-green" style="margin-top:14px;">Tutup Buku Bulan Ini</button>
+                        </form>
+                    @else
+                        <div class="empty">
+                            Bulan {{ $monthLabel }} sudah ditutup pada {{ optional($closing->closed_at)->format('Y-m-d H:i') ?: '-' }}.
+                            Gunakan tombol Print Monthly Report untuk mencetak laporan final.
+                        </div>
+                    @endif
                 </div>
             </section>
         </div>
