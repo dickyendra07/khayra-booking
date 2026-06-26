@@ -8,6 +8,7 @@
             'items' => [
                 ['key' => 'dashboard', 'label' => 'Dashboard ERM', 'url' => '/admin/dashboard'],
                 ['key' => 'owner-dashboard', 'label' => 'Owner Dashboard', 'url' => '/admin/owner-dashboard'],
+                ['key' => 'owner-finance', 'label' => 'Owner Finance / Cashflow', 'url' => '/admin/owner-finance'],
                 ['key' => 'reports', 'label' => 'Reporting Center', 'url' => '/admin/reports'],
             ],
         ],

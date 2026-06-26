@@ -304,6 +304,7 @@
                     </p>
 
                     <div class="quick-links" style="margin-top:18px;">
+                        <a href="/admin/owner-finance?month={{ $month }}" class="btn btn-soft">Owner Finance / Cashflow</a>
                         <a href="/admin/reports/monthly-clinic?month={{ $month }}" class="btn btn-soft">Monthly Clinic Report</a>
                         <a href="/admin/reports/revenue" class="btn btn-soft">Revenue Report</a>
                         <a href="/admin/staff-leaves" class="btn btn-soft">Staff Leave Approval</a>

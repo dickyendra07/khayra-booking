@@ -3838,6 +3838,145 @@ Route::post('/admin/services/{id}/delete', function ($id) {
 
 
 
+
+Route::get('/admin/owner-finance', function (Request $request) {
+    if (!session('admin_logged_in')) {
+        return redirect('/admin/login');
+    }
+
+    $month = $request->query('month', now()->format('Y-m'));
+    $startDate = \Carbon\Carbon::parse($month . '-01')->startOfMonth();
+    $endDate = $startDate->copy()->endOfMonth();
+    $monthLabel = $startDate->format('F Y');
+
+    $moneyPaid = function ($billing) {
+        if (($billing->payment_status ?? null) === 'void') {
+            return 0;
+        }
+
+        $paid = (float) ($billing->paid_amount ?? 0);
+        $amount = (float) ($billing->amount ?? 0);
+
+        if (($billing->payment_status ?? null) === 'paid' && $paid <= 0) {
+            return $amount;
+        }
+
+        return $paid;
+    };
+
+    $billingIncomes = Billing::with(['patient', 'visit'])
+        ->whereBetween('invoice_date', [$startDate->toDateString(), $endDate->toDateString()])
+        ->where('payment_status', '!=', 'void')
+        ->get()
+        ->map(function ($billing) use ($moneyPaid) {
+            $paidAmount = $moneyPaid($billing);
+
+            return [
+                'kind' => 'auto_billing',
+                'id' => $billing->id,
+                'date' => $billing->invoice_date,
+                'type' => 'income',
+                'source' => 'Auto Billing',
+                'category' => 'Treatment Revenue',
+                'title' => $billing->invoice_number ?: ('Invoice #' . $billing->id),
+                'description' => optional($billing->patient)->full_name ?: 'Patient belum terhubung',
+                'amount' => $paidAmount,
+                'payment_method' => $billing->payment_method_label ?? '-',
+                'editable' => false,
+                'url' => '/admin/billings/' . $billing->id,
+            ];
+        })
+        ->filter(fn ($row) => (float) $row['amount'] > 0)
+        ->values();
+
+    $manualTransactions = \App\Models\FinanceTransaction::whereBetween('transaction_date', [$startDate->toDateString(), $endDate->toDateString()])
+        ->latest('transaction_date')
+        ->latest('id')
+        ->get();
+
+    $manualRows = $manualTransactions->map(function ($transaction) {
+        return [
+            'kind' => 'manual',
+            'id' => $transaction->id,
+            'date' => $transaction->transaction_date,
+            'type' => $transaction->type,
+            'source' => $transaction->source_label,
+            'category' => $transaction->category ?: '-',
+            'title' => $transaction->title ?: $transaction->source_label,
+            'description' => $transaction->notes ?: '',
+            'amount' => (float) $transaction->amount,
+            'payment_method' => $transaction->payment_method_label,
+            'editable' => true,
+            'url' => null,
+        ];
+    });
+
+    $transactions = $billingIncomes
+        ->concat($manualRows)
+        ->sortByDesc(fn ($row) => ((string) $row['date']) . '-' . str_pad((string) $row['id'], 8, '0', STR_PAD_LEFT))
+        ->values();
+
+    $billingIncome = $billingIncomes->sum('amount');
+    $manualIncome = $manualTransactions->where('type', 'income')->sum('amount');
+    $manualExpense = $manualTransactions->where('type', 'expense')->sum('amount');
+    $totalIncome = $billingIncome + $manualIncome;
+    $netCashflow = $totalIncome - $manualExpense;
+
+    $summary = [
+        'billing_income' => $billingIncome,
+        'manual_income' => $manualIncome,
+        'total_income' => $totalIncome,
+        'expense' => $manualExpense,
+        'net_cashflow' => $netCashflow,
+        'transaction_count' => $transactions->count(),
+    ];
+
+    return view('admin-owner-finance', compact(
+        'month',
+        'monthLabel',
+        'summary',
+        'transactions'
+    ));
+});
+
+Route::post('/admin/owner-finance/transactions', function (Request $request) {
+    if (!session('admin_logged_in')) {
+        return redirect('/admin/login');
+    }
+
+    $validated = $request->validate([
+        'transaction_date' => 'required|date',
+        'type' => 'required|in:income,expense',
+        'source' => 'nullable|string|max:120',
+        'category' => 'nullable|string|max:120',
+        'title' => 'required|string|max:255',
+        'amount' => 'required|numeric|min:0',
+        'payment_method' => 'nullable|string|max:100',
+        'notes' => 'nullable|string|max:2000',
+    ]);
+
+    $validated['source'] = $validated['source'] ?: ($validated['type'] === 'income' ? 'other_income' : 'operational');
+
+    \App\Models\FinanceTransaction::create($validated);
+
+    $month = \Carbon\Carbon::parse($validated['transaction_date'])->format('Y-m');
+
+    return redirect('/admin/owner-finance?month=' . $month)->with('success', 'Transaksi finance berhasil dicatat.');
+});
+
+Route::post('/admin/owner-finance/transactions/{id}/delete', function ($id) {
+    if (!session('admin_logged_in')) {
+        return redirect('/admin/login');
+    }
+
+    $transaction = \App\Models\FinanceTransaction::findOrFail($id);
+    $month = $transaction->transaction_date ? $transaction->transaction_date->format('Y-m') : now()->format('Y-m');
+    $transaction->delete();
+
+    return redirect('/admin/owner-finance?month=' . $month)->with('success', 'Transaksi finance manual berhasil dihapus.');
+});
+
+
 Route::get('/admin/owner-dashboard', function (Request $request) {
     if (!session('admin_logged_in')) {
         return redirect('/admin/login');
