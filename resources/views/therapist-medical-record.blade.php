@@ -3289,13 +3289,13 @@
                         <div class="mr-tab-panel" data-mr-panel="diagnosis">
                             <div class="mr-tab-panel-head">
                                 <div class="mr-tab-panel-kicker">Diagnosis</div>
-                                <h3 class="mr-tab-panel-title">Diagnosis, impairment, ICF, dan clinical decision making.</h3>
-                                <p class="mr-tab-panel-text">Masukkan diagnosis fisioterapi, ICD/ICF, impairment, functional limitation, dan clinical reasoning.</p>
+                                <h3 class="mr-tab-panel-title">Diagnosis, ICD, dan clinical decision making.</h3>
+                                <p class="mr-tab-panel-text">Masukkan diagnosa, kode ICD bila tersedia, diagnosis ICD, dan clinical reasoning.</p>
                             </div>
 
                     <div class="form-section">
                         <h3 class="form-section-title">7. Diagnosa & Clinical Decision</h3>
-                        <p class="form-section-text">Tulis diagnosa, impairment, goal, referral, dan rencana program therapy.</p>
+                        <p class="form-section-text">Tulis diagnosa, kode ICD, goal pasien, referral, dan rencana program therapy.</p>
 
                         <div class="field">
                             <label>Diagnosa</label>
@@ -3322,8 +3322,8 @@
                         </div>
 
                         <div class="form-subsection">
-                            <h4 class="mini-section-title">ICF Structure</h4>
-                            <p class="form-section-text">Susun assessment sesuai kerangka ICF: Body Function, Body Structure, Activities & Participation, Personal Factors, dan Environmental Factors.</p>
+                            <h4 class="mini-section-title">Clinical Reasoning</h4>
+                            <p class="form-section-text">Catatan clinical reasoning tambahan bila diperlukan.</p>
 
                             <div class="form-grid two">
                                 <div class="field">

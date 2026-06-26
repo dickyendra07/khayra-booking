@@ -1103,28 +1103,33 @@
 
         <section class="section-card">
             <h2 class="section-title">Diagnosis & Clinical Decision</h2>
-            <p class="section-subtitle">Diagnosis fisioterapi, impairment, goal, dan program.</p>
+            <p class="section-subtitle">Diagnosa, ICD, goal, referral, dan program.</p>
 
             <div class="grid-2">
                 <div class="data-box">
-                    <div class="data-label">Physiotherapy Diagnosis</div>
+                    <div class="data-label">Diagnosa</div>
                     <div class="data-value">{{ $record->physiotherapy_diagnosis ?? '-' }}</div>
                 </div>
                 <div class="data-box">
-                    <div class="data-label">Impairment</div>
-                    <div class="data-value">{{ $record->impairment ?? '-' }}</div>
+                    <div class="data-label">ICD Code</div>
+                    <div class="data-value">{{ $record->icd_code ?? '-' }}</div>
                 </div>
             </div>
 
             <div class="grid-2 spacer">
                 <div class="data-box">
+                    <div class="data-label">ICD Diagnosis</div>
+                    <div class="data-value">{{ $record->icd_diagnosis ?? '-' }}</div>
+                </div>
+                <div class="data-box">
                     <div class="data-label">Patient Goal</div>
                     <div class="data-value">{{ $record->patient_goal ?? '-' }}</div>
                 </div>
-                <div class="data-box">
-                    <div class="data-label">Referral</div>
-                    <div class="data-value">{{ $record->referral ?? '-' }}</div>
-                </div>
+            </div>
+
+            <div class="data-box spacer">
+                <div class="data-label">Referral</div>
+                <div class="data-value">{{ $record->referral ?? '-' }}</div>
             </div>
 
             <div class="data-box spacer">

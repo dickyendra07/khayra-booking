@@ -1435,7 +1435,7 @@
 
                 <div class="viewer-section">
                     <h3 class="viewer-title">7. Diagnosa & Clinical Decision</h3>
-                    <p class="viewer-text">Diagnosa, impairment, goal, referral, dan rencana program.</p>
+                    <p class="viewer-text">Diagnosa, ICD, goal, referral, dan rencana program.</p>
 
                     <div class="data-box">
                         <div class="data-label">Diagnosa</div>
@@ -1456,8 +1456,6 @@
 
                     <div class="clinical-decision-grid">
                         <div class="clinical-decision-card">
-                            <div class="data-label">Impairment</div>
-                            <div class="data-value">{{ $record->impairment ?? '-' }}</div>
                         </div>
 
                         <div class="clinical-decision-card">
@@ -1467,8 +1465,8 @@
                     </div>
 
                     <div class="icf-section-card">
-                        <h4 class="icf-section-title">ICF Structure</h4>
-                        <p class="icf-section-subtitle">Kerangka assessment berdasarkan Body Function, Body Structure, Activities & Participation, Personal Factors, dan Environmental Factors.</p>
+                        <h4 class="icf-section-title">Clinical Reasoning</h4>
+                        <p class="icf-section-subtitle">Kerangka assessment berdasarkan Catatan clinical reasoning tambahan.</p>
 
                         <div class="icf-grid">
                             <div class="icf-card">

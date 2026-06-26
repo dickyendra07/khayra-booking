@@ -1051,24 +1051,29 @@
             <h2 class="section-title">Diagnosis & Clinical Decision</h2>
         <div class="grid-2">
             <div class="item">
-                <div class="item-label">Physiotherapy Diagnosis</div>
+                <div class="item-label">Diagnosa</div>
                 <div class="item-value">{{ $record->physiotherapy_diagnosis ?? '-' }}</div>
             </div>
             <div class="item">
-                <div class="item-label">Impairment</div>
-                <div class="item-value">{{ $record->impairment ?? '-' }}</div>
+                <div class="item-label">ICD Code</div>
+                <div class="item-value">{{ $record->icd_code ?? '-' }}</div>
             </div>
         </div>
 
         <div class="grid-2" style="margin-top:12px;">
             <div class="item">
+                <div class="item-label">ICD Diagnosis</div>
+                <div class="item-value">{{ $record->icd_diagnosis ?? '-' }}</div>
+            </div>
+            <div class="item">
                 <div class="item-label">Patient Goal</div>
                 <div class="item-value">{{ $record->patient_goal ?? '-' }}</div>
             </div>
-            <div class="item">
-                <div class="item-label">Referral</div>
-                <div class="item-value">{{ $record->referral ?? '-' }}</div>
-            </div>
+        </div>
+
+        <div class="item" style="margin-top:12px;">
+            <div class="item-label">Referral</div>
+            <div class="item-value">{{ $record->referral ?? '-' }}</div>
         </div>
 
         <div class="item" style="margin-top:12px;">
