@@ -2616,7 +2616,7 @@
                 </div>
             @else
                 <div class="pain-history-empty">
-                    Belum ada pain scale yang tersimpan. Isi field <strong>Scale of Pain</strong> lalu simpan rekam medis.
+                    Belum ada pain tracking yang tersimpan. Lengkapi catatan nyeri pasien lalu simpan rekam medis.
                 </div>
             @endif
         </section>
@@ -2715,17 +2715,11 @@
                                 <input type="text" name="onset" value="{{ old('onset', $record->onset ?? '') }}" placeholder="Contoh: 2 minggu yang lalu">
                             </div>
 
-                            <div class="field">
-                                <label>Pain Type</label>
-                                <input type="text" name="pain_type" value="{{ old('pain_type', $record->pain_type ?? '') }}" placeholder="Contoh: Sharp, dull, radiating">
-                            </div>
+                            <input type="hidden" name="pain_type" value="{{ old('pain_type', $record->pain_type ?? '') }}">
                         </div>
 
                         <div class="grid-2">
-                            <div class="field">
-                                <label>Scale of Pain (0-10)</label>
-                                <input type="number" min="0" max="10" name="pain_scale" value="{{ old('pain_scale', $record->pain_scale ?? '') }}" placeholder="0 - 10">
-                            </div>
+                            <input type="hidden" name="pain_scale" value="{{ old('pain_scale', $record->pain_scale ?? '') }}">
 
                             <div class="field">
                                 <label>Functional Limitation (Initial)</label>
@@ -3166,12 +3160,11 @@
                     </div>
 
                     <div class="form-section">
-                        <h3 class="form-section-title">6. Subjective & Objective Examination</h3>
-                        <p class="form-section-text">Isi hasil subjective examination, objective findings, dan parameter klinis.</p>
+                        <h3 class="form-section-title">6. Objective Examination</h3>
+                        <p class="form-section-text">Isi objective findings dan parameter klinis yang dibutuhkan pada assessment.</p>
 
-                        <div class="field">
-                            <label>Subjective Examination</label>
-                            <textarea name="subjective_examination" placeholder="Riwayat keluhan, pola nyeri, aktivitas pemicu, tujuan terapi">{{ old('subjective_examination', $record->subjective_examination ?? '') }}</textarea>
+                        <div style="display:none;">
+                            <textarea name="subjective_examination">{{ old('subjective_examination', $record->subjective_examination ?? '') }}</textarea>
                         </div>
 
                         <div class="field">
@@ -3264,16 +3257,9 @@
                             </div>
                         </div>
 
-                        <div class="grid-2">
-                            <div class="field">
-                                <label>Impairment</label>
-                                <textarea name="impairment" placeholder="Impairment utama">{{ old('impairment', $record->impairment ?? '') }}</textarea>
-                            </div>
-
-                            <div class="field">
-                                <label>Functional Limitation (Clinical)</label>
-                                <textarea name="functional_limitation_clinical" placeholder="Keterbatasan fungsi dari sudut klinis">{{ old('functional_limitation_clinical', $record->functional_limitation_clinical ?? '') }}</textarea>
-                            </div>
+                        <div style="display:none;">
+                            <textarea name="impairment">{{ old('impairment', $record->impairment ?? '') }}</textarea>
+                            <textarea name="functional_limitation_clinical">{{ old('functional_limitation_clinical', $record->functional_limitation_clinical ?? '') }}</textarea>
                         </div>
 
                         <div class="form-subsection">
@@ -3606,46 +3592,11 @@
                             </div>
                         </div>
 
-                        <div class="session-advanced-card">
-                            <div class="session-advanced-head">
-                                <div>
-                                    <h4 class="session-advanced-title">Session Progress Lanjutan</h4>
-                                    <p class="session-advanced-subtitle">Catat fokus, respons, pain after, dan homework untuk perbandingan antar sesi.</p>
-                                </div>
-                                <div class="goal-phase-pill">Session Progress</div>
-                            </div>
-
-                            <div class="session-advanced-grid">
-                                <div class="field">
-                                    <label>Session Focus</label>
-                                    <textarea name="session_focus" placeholder="Fokus sesi ini, contoh: pain modulation, cervical mobility, postural control">{{ old('session_focus', $record->session_focus ?? '') }}</textarea>
-                                </div>
-
-                                <div class="field">
-                                    <label>Session Progress Note</label>
-                                    <textarea name="session_progress_note" placeholder="Progress objektif/subjektif sesi ini">{{ old('session_progress_note', $record->session_progress_note ?? '') }}</textarea>
-                                </div>
-
-                                <div class="field">
-                                    <label>Homework Status</label>
-                                    <select name="session_homework_status">
-                                        <option value="">Pilih status</option>
-                                        @foreach(['Belum diberikan','Diberikan','Dikerjakan sebagian','Dikerjakan rutin','Perlu koreksi'] as $status)
-                                            <option value="{{ $status }}" {{ old('session_homework_status', $record->session_homework_status ?? '') === $status ? 'selected' : '' }}>{{ $status }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-
-                                <div class="field">
-                                    <label>Pain After Session (0-10)</label>
-                                    <select name="session_pain_after">
-                                        <option value="">Pilih pain after</option>
-                                        @for($i = 0; $i <= 10; $i++)
-                                            <option value="{{ $i }}" {{ (string) old('session_pain_after', $record->session_pain_after ?? '') === (string) $i ? 'selected' : '' }}>{{ $i }}/10</option>
-                                        @endfor
-                                    </select>
-                                </div>
-                            </div>
+                        <div style="display:none;">
+                            <textarea name="session_focus">{{ old('session_focus', $record->session_focus ?? '') }}</textarea>
+                            <textarea name="session_progress_note">{{ old('session_progress_note', $record->session_progress_note ?? '') }}</textarea>
+                            <input type="hidden" name="session_homework_status" value="{{ old('session_homework_status', $record->session_homework_status ?? '') }}">
+                            <input type="hidden" name="session_pain_after" value="{{ old('session_pain_after', $record->session_pain_after ?? '') }}">
                         </div>
 
                         </div>
