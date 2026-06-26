@@ -663,11 +663,17 @@
 <div class="page">
     <div class="container">
         <div class="topbar">
-            <div class="brand">Khayra Therapist Report</div>
+            <div class="brand">Khayra Physiotherapy Report</div>
             <div class="top-actions">
-                <a href="/therapist/dashboard" class="ghost-link">← Dashboard</a>
-                <a href="/therapist/visits/{{ $visit->id }}/medical-record" class="ghost-link">Medical Record</a>
-                <a href="/therapist/visits/{{ $visit->id }}/report/print" target="_blank" class="print-link">Print View</a>
+                @if(($reportContext ?? 'therapist') === 'admin')
+                    <a href="/admin/visits" class="ghost-link">← Admin Visits</a>
+                    <a href="/admin/visits/{{ $visit->id }}/medical-record" class="ghost-link">Medical Record</a>
+                    <a href="/admin/visits/{{ $visit->id }}/report/print" target="_blank" class="print-link">Print / Save PDF</a>
+                @else
+                    <a href="/therapist/dashboard" class="ghost-link">← Dashboard</a>
+                    <a href="/therapist/visits/{{ $visit->id }}/medical-record" class="ghost-link">Medical Record</a>
+                    <a href="/therapist/visits/{{ $visit->id }}/report/print" target="_blank" class="print-link">Print / Save PDF</a>
+                @endif
             </div>
         </div>
 

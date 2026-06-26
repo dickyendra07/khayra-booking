@@ -162,7 +162,12 @@
             .layout { display: block; }
             .main { padding: 16px; }
         }
-    </style>
+    
+        .btn-report { background: #eef2ff; color: #3730a3; border-color: #c7d2fe; }
+        .btn-print { background: #f8fafc; color: #334155; border-color: #cbd5e1; }
+        .btn-wa { background: #dcfce7; color: #166534; border-color: #86efac; }
+
+</style>
     <!-- Khayra PWA -->
     <link rel="manifest" href="/manifest.webmanifest">
     <meta name="theme-color" content="#2f7c7a">
@@ -254,6 +259,18 @@
                                         <div class="action-stack">
                                             <a href="/admin/visits/{{ $visit->id }}/edit" class="action-link btn-edit">Edit</a>
                                             <a href="/admin/visits/{{ $visit->id }}/medical-record" class="action-link btn-record">Medical Record</a>
+                                            <a href="/admin/visits/{{ $visit->id }}/report" class="action-link btn-report" target="_blank">Report</a>
+                                            <a href="/admin/visits/{{ $visit->id }}/report/print" class="action-link btn-print" target="_blank">Print PDF</a>
+                                            @php
+                                                $waNumber = preg_replace('/[^0-9]/', '', optional($visit->patient)->whatsapp ?? '');
+                                                if (str_starts_with($waNumber, '0')) {
+                                                    $waNumber = '62' . substr($waNumber, 1);
+                                                }
+                                                $waMessage = 'Halo Bapak/Ibu ' . (optional($visit->patient)->full_name ?: '') . ', report fisioterapi Khayra Physio sudah siap. Admin akan mengirimkan file PDF report melalui WhatsApp ini. Terima kasih.';
+                                            @endphp
+                                            @if($waNumber)
+                                                <a href="https://wa.me/{{ $waNumber }}?text={{ urlencode($waMessage) }}" class="action-link btn-wa" target="_blank">WA Report</a>
+                                            @endif
                                             <a href="/admin/billings/create?visit_id={{ $visit->id }}" class="action-link btn-billing">Buat Invoice</a>
                                             <a href="/admin/referral-letters/create?visit_id={{ $visit->id }}" class="action-link btn-referral">Buat Surat Rujukan</a>
                                         </div>

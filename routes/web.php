@@ -2450,6 +2450,42 @@ Route::post('/admin/visits/{id}/update', function (Request $request, $id) {
     return redirect('/admin/visits')->with('success', 'Visit berhasil diperbarui!');
 });
 
+
+
+Route::get('/admin/visits/{id}/report', function ($id) {
+    if (!session('admin_logged_in')) {
+        return redirect('/admin/login');
+    }
+
+    $visit = Visit::with([
+        'patient',
+        'therapistRelation',
+        'medicalRecord.histories',
+        'medicalRecord.comorbidities',
+        'medicalRecord.supportingData',
+        'medicalRecord.homeExercises',
+    ])->findOrFail($id);
+
+    return view('therapist-report', compact('visit') + ['reportContext' => 'therapist']);
+});
+
+Route::get('/admin/visits/{id}/report/print', function ($id) {
+    if (!session('admin_logged_in')) {
+        return redirect('/admin/login');
+    }
+
+    $visit = Visit::with([
+        'patient',
+        'therapistRelation',
+        'medicalRecord.histories',
+        'medicalRecord.comorbidities',
+        'medicalRecord.supportingData',
+        'medicalRecord.homeExercises',
+    ])->findOrFail($id);
+
+    return view('therapist-report-print', compact('visit') + ['reportContext' => 'therapist']);
+});
+
 Route::get('/admin/visits/{id}/medical-record', function ($id) {
     if (!session('admin_logged_in')) {
         return redirect('/admin/login');
@@ -3337,7 +3373,7 @@ Route::get('/therapist/visits/{id}/report', function ($id) {
         'medicalRecord.homeExercises',
     ])->findOrFail($id);
 
-    return view('therapist-report', compact('visit'));
+    return view('therapist-report', compact('visit') + ['reportContext' => 'admin']);
 });
 
 Route::get('/therapist/visits/{id}/report/print', function ($id) {
@@ -3356,7 +3392,7 @@ Route::get('/therapist/visits/{id}/report/print', function ($id) {
         'medicalRecord.homeExercises',
     ])->findOrFail($id);
 
-    return view('therapist-report-print', compact('visit'));
+    return view('therapist-report-print', compact('visit') + ['reportContext' => 'admin']);
 });
 
 
