@@ -1046,6 +1046,64 @@ Route::get('/admin/patients/{id}', function ($id) {
         ->latest()
         ->get();
 
+    $packageUsageCalculator = function ($document) {
+        $totalSessions = max((int) ($document->total_sessions ?? 0), 0);
+        $startDate = $document->buying_date ? \Carbon\Carbon::parse($document->buying_date)->toDateString() : null;
+        $endDate = $document->valid_until ? \Carbon\Carbon::parse($document->valid_until)->toDateString() : null;
+
+        $visitQuery = \App\Models\Visit::where('patient_id', $document->patient_id)
+            ->where(function ($query) {
+                $query->whereNull('status')
+                    ->orWhereNotIn('status', ['cancelled', 'canceled', 'void']);
+            })
+            ->whereDate('visit_date', '<=', now()->toDateString());
+
+        if ($startDate) {
+            $visitQuery->whereDate('visit_date', '>=', $startDate);
+        }
+
+        if ($endDate) {
+            $visitQuery->whereDate('visit_date', '<=', $endDate);
+        }
+
+        $usedSessions = (int) $visitQuery->count();
+        $remainingSessions = max($totalSessions - $usedSessions, 0);
+        $isExpired = $document->valid_until
+            ? \Carbon\Carbon::parse($document->valid_until)->endOfDay()->lt(now())
+            : false;
+
+        $status = 'active';
+        $statusLabel = 'Active';
+
+        if ($isExpired) {
+            $status = 'expired';
+            $statusLabel = 'Expired';
+        } elseif ($remainingSessions <= 0 && $totalSessions > 0) {
+            $status = 'used-up';
+            $statusLabel = 'Used Up';
+        }
+
+        return [
+            'total' => $totalSessions,
+            'used' => $usedSessions,
+            'remaining' => $remainingSessions,
+            'status' => $status,
+            'status_label' => $statusLabel,
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+        ];
+    };
+
+    $packageSummaries = PackageTreatmentDocument::with(['billing', 'therapist'])
+        ->where('patient_id', $patient->id)
+        ->latest()
+        ->get()
+        ->map(function ($document) use ($packageUsageCalculator) {
+            return array_merge([
+                'document' => $document,
+            ], $packageUsageCalculator($document));
+        });
+
     return view('admin-patient-detail', compact(
         'patient',
         'timeline',
@@ -1053,7 +1111,8 @@ Route::get('/admin/patients/{id}', function ($id) {
         'outstandingTotal',
         'revenueTotal',
         'voidTotal',
-        'progressEntries'
+        'progressEntries',
+        'packageSummaries'
     ));
 });
 
@@ -4586,6 +4645,58 @@ Route::get('/admin/package-treatments', function (Request $request) {
         })
         ->latest()
         ->get();
+
+    $packageUsageCalculator = function ($document) {
+        $totalSessions = max((int) ($document->total_sessions ?? 0), 0);
+        $startDate = $document->buying_date ? \Carbon\Carbon::parse($document->buying_date)->toDateString() : null;
+        $endDate = $document->valid_until ? \Carbon\Carbon::parse($document->valid_until)->toDateString() : null;
+
+        $visitQuery = \App\Models\Visit::where('patient_id', $document->patient_id)
+            ->where(function ($query) {
+                $query->whereNull('status')
+                    ->orWhereNotIn('status', ['cancelled', 'canceled', 'void']);
+            })
+            ->whereDate('visit_date', '<=', now()->toDateString());
+
+        if ($startDate) {
+            $visitQuery->whereDate('visit_date', '>=', $startDate);
+        }
+
+        if ($endDate) {
+            $visitQuery->whereDate('visit_date', '<=', $endDate);
+        }
+
+        $usedSessions = (int) $visitQuery->count();
+        $remainingSessions = max($totalSessions - $usedSessions, 0);
+        $isExpired = $document->valid_until
+            ? \Carbon\Carbon::parse($document->valid_until)->endOfDay()->lt(now())
+            : false;
+
+        $status = 'active';
+        $statusLabel = 'Active';
+
+        if ($isExpired) {
+            $status = 'expired';
+            $statusLabel = 'Expired';
+        } elseif ($remainingSessions <= 0 && $totalSessions > 0) {
+            $status = 'used-up';
+            $statusLabel = 'Used Up';
+        }
+
+        return [
+            'total' => $totalSessions,
+            'used' => $usedSessions,
+            'remaining' => $remainingSessions,
+            'status' => $status,
+            'status_label' => $statusLabel,
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+        ];
+    };
+
+    $documents->each(function ($document) use ($packageUsageCalculator) {
+        $document->usage_summary = $packageUsageCalculator($document);
+    });
 
     return view('admin-package-treatments', compact('documents', 'search'));
 });

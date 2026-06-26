@@ -23,7 +23,7 @@
         input { width: 100%; padding: 14px 14px; border: 1px solid #dde5e3; border-radius: 14px; font-size: 14px; background: #ffffff; color: #111827; }
         input:focus { outline: none; border-color: #176f69; box-shadow: 0 0 0 4px rgba(23,111,105,.08); }
         .table-wrap { overflow-x: auto; border: 1px solid #edf1f0; border-radius: 22px; }
-        table { width: 100%; border-collapse: collapse; min-width: 980px; }
+        table { width: 100%; border-collapse: collapse; min-width: 1120px; }
         th { text-align: left; padding: 14px; background: #fbfcfc; color: #718096; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; }
         td { padding: 16px 14px; border-top: 1px solid #edf1f0; vertical-align: top; font-size: 14px; }
         .strong { font-weight: 900; color: #22343a; }
@@ -31,6 +31,17 @@
         .pill { display: inline-flex; align-items: center; padding: 7px 11px; border-radius: 999px; background: #eef7f5; color: #2f7c7a; font-size: 12px; font-weight: 900; }
         .actions { display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
         .empty { text-align: center; color: #7b8794; padding: 34px; }
+
+        .usage-box { display: grid; gap: 8px; min-width: 160px; }
+        .usage-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+        .usage-count { font-size: 13px; font-weight: 900; color: #22343a; }
+        .usage-note { color: #7b8794; font-size: 11px; line-height: 1.5; }
+        .usage-bar { height: 8px; border-radius: 999px; background: #edf3f2; overflow: hidden; }
+        .usage-fill { height: 100%; border-radius: inherit; background: linear-gradient(135deg, #3d8a89 0%, #2f7c7a 100%); }
+        .status-chip { display: inline-flex; align-items: center; justify-content: center; padding: 6px 10px; border-radius: 999px; font-size: 11px; font-weight: 900; white-space: nowrap; }
+        .status-chip.active { background: #dcfce7; color: #166534; }
+        .status-chip.used-up { background: #fff7ed; color: #c2410c; }
+        .status-chip.expired { background: #fff1f2; color: #be123c; }
         @media (max-width: 900px) {
             .layout { display: block; }
             .main { padding: 16px; }
@@ -77,6 +88,7 @@
                                 <th>Pasien</th>
                                 <th>Paket</th>
                                 <th>Periode</th>
+                                <th>Usage</th>
                                 <th>Harga</th>
                                 <th style="text-align:right;">Action</th>
                             </tr>
@@ -100,6 +112,22 @@
                                         <div class="muted">Beli: {{ optional($document->buying_date)->format('d/m/Y') ?: '-' }}</div>
                                         <div class="muted">Valid: {{ optional($document->valid_until)->format('d/m/Y') ?: '-' }}</div>
                                     </td>
+                                    @php
+                                        $usage = $document->usage_summary ?? ['total' => (int) $document->total_sessions, 'used' => 0, 'remaining' => (int) $document->total_sessions, 'status' => 'active', 'status_label' => 'Active'];
+                                        $usagePercent = $usage['total'] > 0 ? min(100, round(($usage['used'] / $usage['total']) * 100)) : 0;
+                                    @endphp
+                                    <td>
+                                        <div class="usage-box">
+                                            <div class="usage-top">
+                                                <div class="usage-count">{{ $usage['used'] }}/{{ $usage['total'] }} used</div>
+                                                <span class="status-chip {{ $usage['status'] }}">{{ $usage['status_label'] }}</span>
+                                            </div>
+                                            <div class="usage-bar">
+                                                <div class="usage-fill" style="width: {{ $usagePercent }}%;"></div>
+                                            </div>
+                                            <div class="usage-note">Sisa {{ $usage['remaining'] }} sesi</div>
+                                        </div>
+                                    </td>
                                     <td><span class="pill">Rp {{ number_format($document->package_price, 0, ',', '.') }}</span></td>
                                     <td>
                                         <div class="actions">
@@ -112,7 +140,7 @@
                                     </td>
                                 </tr>
                             @empty
-                                <tr><td colspan="6" class="empty">Belum ada dokumen pembelian paket.</td></tr>
+                                <tr><td colspan="7" class="empty">Belum ada dokumen pembelian paket.</td></tr>
                             @endforelse
                         </tbody>
                     </table>

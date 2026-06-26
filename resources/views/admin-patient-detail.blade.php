@@ -816,7 +816,105 @@
             border-color: #ffe0e6;
         }
 
-    </style>
+    
+        .package-status-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .package-status-card {
+            border: 1px solid #edf1f0;
+            border-radius: 20px;
+            padding: 16px;
+            background: #ffffff;
+        }
+
+        .package-status-top {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .package-status-name {
+            font-size: 14px;
+            font-weight: 900;
+            color: #22343a;
+            line-height: 1.45;
+        }
+
+        .package-status-meta {
+            color: #7b8794;
+            font-size: 12px;
+            line-height: 1.7;
+            margin-top: 4px;
+        }
+
+        .package-status-chip {
+            display: inline-flex;
+            padding: 6px 10px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 900;
+            white-space: nowrap;
+        }
+
+        .package-status-chip.active { background: #dcfce7; color: #166534; }
+        .package-status-chip.used-up { background: #fff7ed; color: #c2410c; }
+        .package-status-chip.expired { background: #fff1f2; color: #be123c; }
+
+        .package-session-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .package-session-box {
+            border-radius: 14px;
+            background: #f8fbfb;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .package-session-label {
+            color: #7b8794;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            font-weight: 900;
+        }
+
+        .package-session-value {
+            color: #22343a;
+            font-size: 18px;
+            font-weight: 900;
+            margin-top: 4px;
+        }
+
+        .package-progress {
+            height: 8px;
+            background: #edf3f2;
+            border-radius: 999px;
+            overflow: hidden;
+            margin-top: 12px;
+        }
+
+        .package-progress-fill {
+            height: 100%;
+            border-radius: inherit;
+            background: linear-gradient(135deg, #3d8a89 0%, #2f7c7a 100%);
+        }
+
+        @media (max-width: 900px) {
+            .package-status-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+</style>
     <!-- Khayra PWA -->
     <link rel="manifest" href="/manifest.webmanifest">
     <meta name="theme-color" content="#2f7c7a">
@@ -943,6 +1041,67 @@
                     <div class="stat-value">{{ $patient->informedConsents->count() }}</div>
                     <div class="stat-sub">{{ $voidTotal }} void invoice.</div>
                 </div>
+            </section>
+
+            <section class="section-card">
+                <div class="section-head">
+                    <div>
+                        <h2 class="section-title">Package Status</h2>
+                        <p class="section-subtitle">Ringkasan penggunaan paket pasien berdasarkan dokumen pembelian paket dan visit dalam periode aktif.</p>
+                    </div>
+                    <a href="/admin/package-treatments/create?patient_id={{ $patient->id }}" class="btn btn-soft">+ Buat Dokumen Paket</a>
+                </div>
+
+                @if(($packageSummaries ?? collect())->count())
+                    <div class="package-status-grid">
+                        @foreach($packageSummaries as $packageSummary)
+                            @php
+                                $packageDocument = $packageSummary['document'];
+                                $packagePercent = $packageSummary['total'] > 0 ? min(100, round(($packageSummary['used'] / $packageSummary['total']) * 100)) : 0;
+                            @endphp
+
+                            <div class="package-status-card">
+                                <div class="package-status-top">
+                                    <div>
+                                        <div class="package-status-name">{{ $packageDocument->package_name ?: 'Treatment Package' }}</div>
+                                        <div class="package-status-meta">
+                                            {{ $packageDocument->document_number ?: 'PKG-' . $packageDocument->id }}<br>
+                                            Valid: {{ optional($packageDocument->valid_until)->format('d/m/Y') ?: '-' }}
+                                        </div>
+                                    </div>
+                                    <span class="package-status-chip {{ $packageSummary['status'] }}">{{ $packageSummary['status_label'] }}</span>
+                                </div>
+
+                                <div class="package-progress">
+                                    <div class="package-progress-fill" style="width: {{ $packagePercent }}%;"></div>
+                                </div>
+
+                                <div class="package-session-grid">
+                                    <div class="package-session-box">
+                                        <div class="package-session-label">Total</div>
+                                        <div class="package-session-value">{{ $packageSummary['total'] }}</div>
+                                    </div>
+
+                                    <div class="package-session-box">
+                                        <div class="package-session-label">Used</div>
+                                        <div class="package-session-value">{{ $packageSummary['used'] }}</div>
+                                    </div>
+
+                                    <div class="package-session-box">
+                                        <div class="package-session-label">Remaining</div>
+                                        <div class="package-session-value">{{ $packageSummary['remaining'] }}</div>
+                                    </div>
+                                </div>
+
+                                <div style="margin-top: 12px;">
+                                    <a href="/admin/package-treatments/{{ $packageDocument->id }}/print" class="mini-link" target="_blank">Print Dokumen Paket</a>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="empty-state">Belum ada dokumen paket untuk patient ini.</div>
+                @endif
             </section>
 
 
