@@ -1450,45 +1450,13 @@
                         </div>
                     </div>
 
-                    <div class="clinical-decision-grid">
-                        <div class="clinical-decision-card">
-                        </div>
+                            
 
-                        <div class="clinical-decision-card">
-                            <div class="data-label">Functional Limitation (Clinical)</div>
-                            <div class="data-value">{{ $record->functional_limitation_clinical ?? '-' }}</div>
-                        </div>
-                    </div>
+                            
 
-                    <div class="icf-section-card">
-                        <h4 class="icf-section-title">Clinical Reasoning</h4>
-                        <p class="icf-section-subtitle">Kerangka assessment berdasarkan Catatan clinical reasoning tambahan.</p>
+                            
 
-                        <div class="icf-grid">
-                            <div class="icf-card">
-                                <div class="data-label">Body Function</div>
-                                <div class="data-value">{{ $record->icf_body_function ?? '-' }}</div>
-                            </div>
-
-                            <div class="icf-card">
-                                <div class="data-label">Body Structure</div>
-                                <div class="data-value">{{ $record->icf_body_structure ?? '-' }}</div>
-                            </div>
-
-                            <div class="icf-card">
-                                <div class="data-label">Activities & Participation</div>
-                                <div class="data-value">{{ $record->icf_activities_participation ?? '-' }}</div>
-                            </div>
-
-                            <div class="icf-card">
-                                <div class="data-label">Personal Factors</div>
-                                <div class="data-value">{{ $record->icf_personal_factors ?? '-' }}</div>
-                            </div>
-
-                            <div class="icf-card wide">
-                                <div class="data-label">Environmental Factors</div>
-                                <div class="data-value">{{ $record->icf_environmental_factors ?? '-' }}</div>
-                            </div>
+                            
                         </div>
                     </div>
 
@@ -1688,28 +1656,11 @@
                         </div>
                     </div>
 
-                    <div class="session-progress-view-card">
-                        <h4 class="session-progress-view-title">Session Progress Lanjutan</h4>
-                        <div class="session-progress-view-grid">
-                            <div class="session-progress-view-item">
-                                <div class="data-label">Session Focus</div>
-                                <div class="data-value">{{ $record->session_focus ?? '-' }}</div>
-                            </div>
+                            
 
-                            <div class="session-progress-view-item">
-                                <div class="data-label">Session Progress Note</div>
-                                <div class="data-value">{{ $record->session_progress_note ?? '-' }}</div>
-                            </div>
+                            
 
-                            <div class="session-progress-view-item">
-                                <div class="data-label">Pain After Session</div>
-                                <div class="data-value">{{ is_null($record->session_pain_after) ? '-' : $record->session_pain_after . '/10' }}</div>
-                            </div>
-
-                            <div class="session-progress-view-item">
-                                <div class="data-label">Homework Status</div>
-                                <div class="data-value">{{ $record->session_homework_status ?? '-' }}</div>
-                            </div>
+                            
                         </div>
                     </div>
                 </div>

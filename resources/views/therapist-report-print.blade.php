@@ -665,10 +665,6 @@
                 <div class="item-label">Complaint</div>
                 <div class="item-value">{{ $record->complaint ?? '-' }}</div>
             </div>
-            <div class="item">
-                <div class="item-label">Subjective Examination</div>
-                <div class="item-value">{{ $record->subjective_examination ?? '-' }}</div>
-            </div>
         </div>
 
         <div class="grid-2" style="margin-top:12px;">
@@ -768,7 +764,7 @@
     
         <section class="{{ str_contains(request()->path(), '/print') ? 'section' : 'section-card' }}">
             <h2 class="section-title">Progress Chart & Goal Phase</h2>
-            <p class="section-subtitle">Visualisasi pain trend, functional progress, treatment phase, dan progress sesi lanjutan.</p>
+            <p class="section-subtitle">Visualisasi pain trend, ROM/functional progress, dan treatment goal phase.</p>
 
             <div class="report-progress-card">
                 <h3 class="report-progress-title">Pain Trend Chart</h3>
@@ -916,32 +912,7 @@
                 </div>
             </div>
 
-            <div class="report-progress-card">
-                <h3 class="report-progress-title">Session Progress Lanjutan</h3>
-                <p class="report-progress-subtitle">Catatan sesi ini untuk membandingkan treatment lanjutan antar visit.</p>
-
-                <div class="report-session-grid">
-                    <div class="report-session-item">
-                        <div class="report-session-label">Session Focus</div>
-                        <div class="report-session-value">{{ $record->session_focus ?? '-' }}</div>
-                    </div>
-
-                    <div class="report-session-item">
-                        <div class="report-session-label">Session Progress Note</div>
-                        <div class="report-session-value">{{ $record->session_progress_note ?? '-' }}</div>
-                    </div>
-
-                    <div class="report-session-item">
-                        <div class="report-session-label">Pain After Session</div>
-                        <div class="report-session-value">{{ is_null($record->session_pain_after) ? '-' : $record->session_pain_after . '/10' }}</div>
-                    </div>
-
-                    <div class="report-session-item">
-                        <div class="report-session-label">Homework Status</div>
-                        <div class="report-session-value">{{ $record->session_homework_status ?? '-' }}</div>
-                    </div>
-                </div>
-            </div>
+            
         </section>
 
 <section class="section">
