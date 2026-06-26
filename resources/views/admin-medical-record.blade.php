@@ -1450,21 +1450,17 @@
                         </div>
                     </div>
 
-                            
-
-                            
-
-                            
-
-                            
-                        </div>
-                    </div>
-
                     <div class="clinical-decision-grid">
                         <div class="clinical-decision-card">
                             <div class="data-label">Patient Goal</div>
                             <div class="data-value">{{ $record->patient_goal ?? '-' }}</div>
                         </div>
+
+                        <div class="clinical-decision-card">
+                            <div class="data-label">Referral</div>
+                            <div class="data-value">{{ $record->referral ?? '-' }}</div>
+                        </div>
+                    </div>
 
                     <div class="goal-phase-view-card">
                         <h4 class="goal-phase-view-title">Treatment Goal Phase</h4>
@@ -1486,13 +1482,6 @@
                                 <div class="data-label">Phase 3 - Functional Return</div>
                                 <div class="data-value">{{ $record->phase_3_goal ?? '-' }}</div>
                             </div>
-                        </div>
-                    </div>
-
-
-                        <div class="clinical-decision-card">
-                            <div class="data-label">Referral</div>
-                            <div class="data-value">{{ $record->referral ?? '-' }}</div>
                         </div>
                     </div>
 
@@ -1525,7 +1514,6 @@
                         <div class="data-value">{{ $record->control_plan ?? '-' }}</div>
                     </div>
                 </div>
-
                 <div class="viewer-section">
                     <h3 class="viewer-title">8. Health Management</h3>
                     <p class="viewer-text">Catatan edukasi dan manajemen pendukung terapi.</p>
@@ -1625,7 +1613,6 @@
                         <div class="data-value">{{ $record->next_session_plan ?? '-' }}</div>
                     </div>
 
-
                     <div class="rom-progress-view-card">
                         <h4 class="session-progress-view-title">ROM / Functional Progress Chart</h4>
                         <div class="rom-progress-view-grid">
@@ -1653,14 +1640,6 @@
                                 <div class="data-label">Activity Tolerance</div>
                                 <div class="data-value">{{ $record->activity_tolerance ?? '-' }}</div>
                             </div>
-                        </div>
-                    </div>
-
-                            
-
-                            
-
-                            
                         </div>
                     </div>
                 </div>
