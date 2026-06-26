@@ -4707,7 +4707,7 @@ Route::get('/admin/package-treatments/create', function (Request $request) {
     }
 
     $patients = Patient::orderBy('full_name')->get();
-    $therapists = Therapist::orderBy('name')->get();
+    $therapists = Therapist::orderBy('full_name')->get();
     $billings = Billing::with(['patient', 'items'])
         ->where('payment_status', '!=', 'void')
         ->latest()
@@ -4924,7 +4924,7 @@ Route::get('/admin/rest-letter/create', function (Request $request) {
     }
 
     $patients = Patient::orderBy('full_name')->get();
-    $therapists = Therapist::orderBy('name')->get();
+    $therapists = Therapist::orderBy('full_name')->get();
     $visits = Visit::with('patient')
         ->latest()
         ->limit(150)
