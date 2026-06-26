@@ -2229,6 +2229,28 @@
             font-weight: 900;
         }
 
+
+        .goal-phase-helper {
+            display: none;
+            margin: 12px 0 14px;
+            padding: 12px 14px;
+            border-radius: 16px;
+            background: #f8fafc;
+            border: 1px dashed #d8e5e3;
+            color: #64748b;
+            font-size: 12px;
+            font-weight: 800;
+            line-height: 1.6;
+        }
+
+        .goal-phase-field.is-hidden {
+            display: none;
+        }
+
+        .goal-phase-helper.is-visible {
+            display: block;
+        }
+
         .mr-tab-panel-text {
             margin: 8px 0 0;
             font-size: 13px;
@@ -3219,6 +3241,43 @@
                             <label>Special Test Notes</label>
                             <textarea name="special_test_notes" placeholder="Catatan special test / additional examination">{{ old('special_test_notes', $record->special_test_notes ?? '') }}</textarea>
                         </div>
+
+                        <div class="rom-progress-card">
+                            <div class="rom-progress-head">
+                                <div>
+                                    <h4 class="rom-progress-title">ROM / Functional Evaluation</h4>
+                                    <p class="rom-progress-subtitle">Isi evaluasi ROM kanan/kiri dan fungsi agar progress pasien mudah dipantau.</p>
+                                </div>
+                                <div class="goal-phase-pill">ROM Chart</div>
+                            </div>
+
+                            <div class="rom-progress-grid">
+                                <div class="field">
+                                    <label>ROM Kanan</label>
+                                    <input type="text" name="rom_cervical_rotation" value="{{ old('rom_cervical_rotation', $record->rom_cervical_rotation ?? '') }}" placeholder="Contoh: kanan 60° / ROM sisi kanan">
+                                </div>
+
+                                <div class="field">
+                                    <label>ROM Kiri</label>
+                                    <input type="text" name="rom_shoulder_elevation" value="{{ old('rom_shoulder_elevation', $record->rom_shoulder_elevation ?? '') }}" placeholder="Contoh: kiri 70° / ROM sisi kiri">
+                                </div>
+
+                                <div class="field">
+                                    <label>Functional Score (0-100)</label>
+                                    <select name="functional_score">
+                                        <option value="">Pilih score</option>
+                                        @for($i = 0; $i <= 100; $i += 10)
+                                            <option value="{{ $i }}" {{ (string) old('functional_score', $record->functional_score ?? '') === (string) $i ? 'selected' : '' }}>{{ $i }}%</option>
+                                        @endfor
+                                    </select>
+                                </div>
+
+                                <div class="field">
+                                    <label>Activity Tolerance</label>
+                                    <input type="text" name="activity_tolerance" value="{{ old('activity_tolerance', $record->activity_tolerance ?? '') }}" placeholder="Contoh: duduk 60 menit">
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                             <div class="mr-tab-actions">
@@ -3302,49 +3361,7 @@
                                 <textarea name="patient_goal" placeholder="Target patient / goal terapi">{{ old('patient_goal', $record->patient_goal ?? '') }}</textarea>
                             </div>
 
-                        <div class="goal-phase-card">
-                            <div class="goal-phase-head">
-                                <div>
-                                    <h4 class="goal-phase-title">Treatment Goal Phase</h4>
-                                    <p class="goal-phase-subtitle">Susun target terapi per fase agar progress pasien mudah dipantau di report.</p>
-                                </div>
-                                <div class="goal-phase-pill">Phase Plan</div>
-                            </div>
 
-                            <div class="goal-phase-select-row">
-                                <div class="field">
-                                    <label>Current Phase</label>
-                                    <select name="goal_phase">
-                                        <option value="">Pilih fase</option>
-                                        @foreach(['Phase 1 - Pain Control','Phase 2 - Mobility / Strength','Phase 3 - Functional Return'] as $phase)
-                                            <option value="{{ $phase }}" {{ old('goal_phase', $record->goal_phase ?? '') === $phase ? 'selected' : '' }}>{{ $phase }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-
-                                <div class="field">
-                                    <label>Phase Summary</label>
-                                    <input type="text" value="{{ old('goal_phase', $record->goal_phase ?? '') ?: 'Belum memilih fase aktif' }}" readonly>
-                                </div>
-                            </div>
-
-                            <div class="goal-phase-grid">
-                                <div class="field">
-                                    <label>Phase 1 Goal</label>
-                                    <textarea name="phase_1_goal" placeholder="Contoh: nyeri turun, tidur lebih nyaman, edukasi posisi aman">{{ old('phase_1_goal', $record->phase_1_goal ?? '') }}</textarea>
-                                </div>
-
-                                <div class="field">
-                                    <label>Phase 2 Goal</label>
-                                    <textarea name="phase_2_goal" placeholder="Contoh: ROM membaik, strength meningkat, toleransi aktivitas naik">{{ old('phase_2_goal', $record->phase_2_goal ?? '') }}</textarea>
-                                </div>
-
-                                <div class="field">
-                                    <label>Phase 3 Goal</label>
-                                    <textarea name="phase_3_goal" placeholder="Contoh: kembali kerja/olahraga, mandiri HEP, mencegah flare-up">{{ old('phase_3_goal', $record->phase_3_goal ?? '') }}</textarea>
-                                </div>
-                            </div>
-                        </div>
 
 
                             <div class="field">
@@ -3393,6 +3410,52 @@
                                 <h3 class="mr-tab-panel-title">Treatment goal phase, program patient, control plan, dan home exercise.</h3>
                                 <p class="mr-tab-panel-text">Susun fase target terapi, program pasien, jadwal kontrol, edukasi, dan latihan rumah.</p>
                             </div>
+
+                        <div class="goal-phase-card">
+                            <div class="goal-phase-head">
+                                <div>
+                                    <h4 class="goal-phase-title">Treatment Goal Phase</h4>
+                                    <p class="goal-phase-subtitle">Susun target terapi per fase agar progress pasien mudah dipantau di report.</p>
+                                </div>
+                                <div class="goal-phase-pill">Phase Plan</div>
+                            </div>
+
+                            <div class="goal-phase-select-row">
+                                <div class="field">
+                                    <label>Current Phase</label>
+                                    <select name="goal_phase" id="goalPhaseSelect">
+                                        <option value="">Pilih fase</option>
+                                        @foreach(['Phase 1 - Pain Control','Phase 2 - Mobility / Strength','Phase 3 - Functional Return'] as $phase)
+                                            <option value="{{ $phase }}" {{ old('goal_phase', $record->goal_phase ?? '') === $phase ? 'selected' : '' }}>{{ $phase }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <div class="field">
+                                    <label>Phase Summary</label>
+                                    <input type="text" value="{{ old('goal_phase', $record->goal_phase ?? '') ?: 'Belum memilih fase aktif' }}" readonly>
+                                </div>
+                            </div>
+
+                            <div class="goal-phase-helper" id="goalPhaseHelper">Pilih current phase terlebih dahulu. Kolom goal akan mengikuti fase yang dipilih.</div>
+
+                            <div class="goal-phase-grid">
+                                <div class="field goal-phase-field" data-goal-phase-field="Phase 1 - Pain Control">
+                                    <label>Phase 1 Goal</label>
+                                    <textarea name="phase_1_goal" placeholder="Contoh: nyeri turun, tidur lebih nyaman, edukasi posisi aman">{{ old('phase_1_goal', $record->phase_1_goal ?? '') }}</textarea>
+                                </div>
+
+                                <div class="field goal-phase-field" data-goal-phase-field="Phase 2 - Mobility / Strength">
+                                    <label>Phase 2 Goal</label>
+                                    <textarea name="phase_2_goal" placeholder="Contoh: ROM membaik, strength meningkat, toleransi aktivitas naik">{{ old('phase_2_goal', $record->phase_2_goal ?? '') }}</textarea>
+                                </div>
+
+                                <div class="field goal-phase-field" data-goal-phase-field="Phase 3 - Functional Return">
+                                    <label>Phase 3 Goal</label>
+                                    <textarea name="phase_3_goal" placeholder="Contoh: kembali kerja/olahraga, mandiri HEP, mencegah flare-up">{{ old('phase_3_goal', $record->phase_3_goal ?? '') }}</textarea>
+                                </div>
+                            </div>
+                        </div>
 
                     <div class="form-section">
                         <h3 class="form-section-title">8. Health Management</h3>
@@ -3472,8 +3535,8 @@
                         <div class="mr-tab-panel" data-mr-panel="intervention">
                             <div class="mr-tab-panel-head">
                                 <div class="mr-tab-panel-kicker">Intervention</div>
-                                <h3 class="mr-tab-panel-title">Treatment given, response, session progress, ROM, dan next session plan.</h3>
-                                <p class="mr-tab-panel-text">Catat tindakan sesi ini, respons pasien, progress fungsional, penggunaan inventory, dan rencana sesi berikutnya.</p>
+                                <h3 class="mr-tab-panel-title">Treatment given, response, recommendation, dan next session plan.</h3>
+                                <p class="mr-tab-panel-text">Catat tindakan sesi ini, respons pasien, penggunaan inventory, rekomendasi, dan rencana sesi berikutnya.</p>
                             </div>
 
                     <div class="form-section">
@@ -3555,42 +3618,7 @@
                             </div>
 
 
-                        <div class="rom-progress-card">
-                            <div class="rom-progress-head">
-                                <div>
-                                    <h4 class="rom-progress-title">ROM / Functional Progress Chart</h4>
-                                    <p class="rom-progress-subtitle">Isi progress ROM dan fungsi agar report bisa menampilkan chart perkembangan pasien.</p>
-                                </div>
-                                <div class="goal-phase-pill">ROM Chart</div>
-                            </div>
 
-                            <div class="rom-progress-grid">
-                                <div class="field">
-                                    <label>Cervical Rotation ROM</label>
-                                    <input type="text" name="rom_cervical_rotation" value="{{ old('rom_cervical_rotation', $record->rom_cervical_rotation ?? '') }}" placeholder="Contoh: kanan 60°, kiri 70°">
-                                </div>
-
-                                <div class="field">
-                                    <label>Shoulder Elevation ROM</label>
-                                    <input type="text" name="rom_shoulder_elevation" value="{{ old('rom_shoulder_elevation', $record->rom_shoulder_elevation ?? '') }}" placeholder="Contoh: kanan 150°, kiri 170°">
-                                </div>
-
-                                <div class="field">
-                                    <label>Functional Score (0-100)</label>
-                                    <select name="functional_score">
-                                        <option value="">Pilih score</option>
-                                        @for($i = 0; $i <= 100; $i += 10)
-                                            <option value="{{ $i }}" {{ (string) old('functional_score', $record->functional_score ?? '') === (string) $i ? 'selected' : '' }}>{{ $i }}%</option>
-                                        @endfor
-                                    </select>
-                                </div>
-
-                                <div class="field">
-                                    <label>Activity Tolerance</label>
-                                    <input type="text" name="activity_tolerance" value="{{ old('activity_tolerance', $record->activity_tolerance ?? '') }}" placeholder="Contoh: duduk 60 menit">
-                                </div>
-                            </div>
-                        </div>
 
                         <div style="display:none;">
                             <textarea name="session_focus">{{ old('session_focus', $record->session_focus ?? '') }}</textarea>
@@ -3677,6 +3705,35 @@
 
 <script>
 
+
+
+    function updateGoalPhaseFields() {
+        const select = document.getElementById('goalPhaseSelect');
+        const helper = document.getElementById('goalPhaseHelper');
+        const fields = document.querySelectorAll('[data-goal-phase-field]');
+
+        if (!select || !fields.length) return;
+
+        const selected = select.value || '';
+
+        fields.forEach(function (field) {
+            const isActive = selected && field.getAttribute('data-goal-phase-field') === selected;
+            field.classList.toggle('is-hidden', !isActive);
+        });
+
+        if (helper) {
+            helper.classList.toggle('is-visible', !selected);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        updateGoalPhaseFields();
+
+        const goalPhaseSelect = document.getElementById('goalPhaseSelect');
+        if (goalPhaseSelect) {
+            goalPhaseSelect.addEventListener('change', updateGoalPhaseFields);
+        }
+    });
 
     function activateMedicalRecordTab(target) {
         if (!target) return;
