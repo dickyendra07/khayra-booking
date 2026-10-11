@@ -11,7 +11,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        // Pengaman terpusat area admin / therapist / patient (lihat RequireAreaLogin).
+        $middleware->appendToGroup('web', \App\Http\Middleware\RequireAreaLogin::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

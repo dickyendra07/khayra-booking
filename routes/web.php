@@ -28,6 +28,8 @@ use App\Models\HomeExerciseTemplate;
 use App\Models\ClinicService;
 use App\Services\BillingCalculator;
 use App\Services\InvoiceWhatsappMessage;
+use App\Support\AdminCredentials;
+use App\Support\LoginThrottle;
 use App\Support\WhatsappLink;
 use App\Models\PackageTreatmentDocument;
 use App\Models\TherapistLeaveRequest;
@@ -79,14 +81,24 @@ Route::post('/admin/login', function (Request $request) {
         'password' => 'required|string',
     ]);
 
-    $adminEmail = env('ADMIN_EMAIL', 'admin@khayraphysio.com');
-    $adminPassword = env('ADMIN_PASSWORD', 'password');
+    $throttle = LoginThrottle::for('admin', mb_strtolower(trim($request->email)), $request->ip());
 
-    if ($request->email !== $adminEmail || $request->password !== $adminPassword) {
+    if ($seconds = $throttle->lockedOutFor()) {
         return back()
-            ->withInput()
+            ->withInput($request->only('email'))
+            ->withErrors(['email' => LoginThrottle::message($seconds)]);
+    }
+
+    if (!AdminCredentials::attempt($request->email, $request->password)) {
+        $throttle->hit();
+
+        return back()
+            ->withInput($request->only('email'))
             ->withErrors(['email' => 'Email atau password admin salah.']);
     }
+
+    $throttle->clear();
+    $request->session()->regenerate();
 
     session([
         'admin_logged_in' => true,
@@ -96,11 +108,9 @@ Route::post('/admin/login', function (Request $request) {
     return redirect('/admin/dashboard');
 });
 
-Route::post('/admin/logout', function () {
-    session()->forget([
-        'admin_logged_in',
-        'admin_email',
-    ]);
+Route::post('/admin/logout', function (Request $request) {
+    $request->session()->invalidate();
+    $request->session()->regenerateToken();
 
     return redirect('/admin/login')->with('success', 'Anda berhasil logout.');
 });
@@ -2866,11 +2876,27 @@ Route::post('/therapist/login', function (Request $request) {
         'password' => 'required|string',
     ]);
 
+    $throttle = LoginThrottle::for('therapist', mb_strtolower(trim($request->email)), $request->ip());
+
+    if ($seconds = $throttle->lockedOutFor()) {
+        return redirect('/therapist/login')
+            ->withInput($request->only('email'))
+            ->with('error', LoginThrottle::message($seconds));
+    }
+
     $therapist = Therapist::where('email', $request->email)
         ->where('status', 'active')
         ->first();
 
-    if ($therapist && Hash::check($request->password, $therapist->password)) {
+    // Hash::check selalu dijalankan (hash dummy bila akun tidak ada) agar waktu
+    // respons tidak membocorkan apakah email terdaftar.
+    $dummyHash = '$2y$10$ra.4UF1A097AZ8JwAxWTtexMNKyeaJqBe10RjepprRBcYtR3LvIue';
+    $passwordValid = Hash::check($request->password, $therapist ? $therapist->password : $dummyHash);
+
+    if ($therapist && $passwordValid) {
+        $throttle->clear();
+        $request->session()->regenerate();
+
         session([
             'therapist_logged_in' => true,
             'therapist_id' => $therapist->id,
@@ -2880,13 +2906,16 @@ Route::post('/therapist/login', function (Request $request) {
         return redirect('/therapist/dashboard');
     }
 
-    return redirect('/therapist/login')->with('error', 'Email atau password therapist salah.');
+    $throttle->hit();
+
+    return redirect('/therapist/login')
+        ->withInput($request->only('email'))
+        ->with('error', 'Email atau password therapist salah.');
 });
 
-Route::post('/therapist/logout', function () {
-    session()->forget('therapist_logged_in');
-    session()->forget('therapist_id');
-    session()->forget('therapist_name');
+Route::post('/therapist/logout', function (Request $request) {
+    $request->session()->invalidate();
+    $request->session()->regenerateToken();
 
     return redirect('/therapist/login');
 });
@@ -4770,6 +4799,10 @@ Route::get('/admin/reports/inventory', function (Request $request) {
 });
 
 Route::get('/admin/reports/therapist-performance', function () {
+    if (!session('admin_logged_in')) {
+        return redirect('/admin/login');
+    }
+
     $therapists = \App\Models\Therapist::orderBy('full_name')->get();
 
     $clinicalRequiredFields = [
@@ -5635,6 +5668,14 @@ Route::post('/patient/login', function (Request $request) {
         'birth_date' => 'required|date',
     ]);
 
+    $throttle = LoginThrottle::for('patient', LoginThrottle::normalizePhone((string) $request->whatsapp), $request->ip());
+
+    if ($seconds = $throttle->lockedOutFor()) {
+        return back()
+            ->withInput($request->only('whatsapp'))
+            ->withErrors(['whatsapp' => LoginThrottle::message($seconds)]);
+    }
+
     $rawWhatsapp = trim((string) $request->whatsapp);
     $digits = preg_replace('/\D+/', '', $rawWhatsapp);
 
@@ -5663,12 +5704,17 @@ Route::post('/patient/login', function (Request $request) {
         ->first();
 
     if (!$patient) {
+        $throttle->hit();
+
         return back()
-            ->withInput()
+            ->withInput($request->only('whatsapp'))
             ->withErrors([
                 'whatsapp' => 'Nomor WhatsApp atau tanggal lahir tidak cocok dengan data pasien. Hubungi admin Khayra Physio untuk pengecekan.',
             ]);
     }
+
+    $throttle->clear();
+    $request->session()->regenerate();
 
     session([
         'patient_logged_in' => true,
@@ -5679,12 +5725,9 @@ Route::post('/patient/login', function (Request $request) {
     return redirect('/patient/dashboard');
 });
 
-Route::post('/patient/logout', function () {
-    session()->forget([
-        'patient_logged_in',
-        'patient_id',
-        'patient_name',
-    ]);
+Route::post('/patient/logout', function (Request $request) {
+    $request->session()->invalidate();
+    $request->session()->regenerateToken();
 
     return redirect('/patient')->with('success', 'Anda berhasil logout.');
 });

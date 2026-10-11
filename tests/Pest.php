@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\ViewErrorBag;
 use Tests\TestCase;
 
 /*
@@ -46,4 +47,18 @@ expect()->extend('toBeOne', function () {
 function something()
 {
     // ..
+}
+
+/**
+ * Pesan error validasi pertama untuk sebuah key dari sesi (format array maupun ViewErrorBag).
+ */
+function sessionError(string $key): ?string
+{
+    $errors = session('errors');
+
+    if ($errors instanceof ViewErrorBag) {
+        return $errors->first($key) ?: null;
+    }
+
+    return $errors['default']['messages'][$key][0] ?? null;
 }
