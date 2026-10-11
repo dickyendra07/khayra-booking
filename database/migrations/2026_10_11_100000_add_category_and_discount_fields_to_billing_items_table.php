@@ -34,6 +34,11 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('billing_items', function (Blueprint $table) {
+            if (Schema::hasColumn('billing_items', 'item_category')) {
+                // Lepas index lebih dulu agar aman di SQLite maupun MySQL/MariaDB.
+                $table->dropIndex(['item_category']);
+            }
+
             foreach (['item_category', 'is_discount_eligible', 'discount_amount', 'clinic_service_id'] as $column) {
                 if (Schema::hasColumn('billing_items', $column)) {
                     $table->dropColumn($column);

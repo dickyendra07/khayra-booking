@@ -497,6 +497,31 @@
                 </div>
             </section>
 
+            @if($billing->replaces)
+                <div class="alert" style="background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe;">
+                    Invoice pengganti (koreksi) untuk
+                    <a href="/admin/billings/{{ $billing->replaces->id }}" style="color:inherit;text-decoration:underline;">{{ $billing->replaces->invoice_number ?: '#' . $billing->replaces->id }}</a>.
+                </div>
+            @endif
+
+            @foreach($replacedBy as $replacement)
+                <div class="alert" style="background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe;">
+                    Invoice ini digantikan oleh
+                    <a href="/admin/billings/{{ $replacement->id }}" style="color:inherit;text-decoration:underline;">{{ $replacement->invoice_number ?: '#' . $replacement->id }}</a>
+                    ({{ $replacement->payment_status }}).
+                </div>
+            @endforeach
+
+            @if(!$lock['void'] && !empty($lock['reasons']))
+                <div class="alert" style="background:#fffbeb;color:#92400e;border:1px solid #fde68a;font-size:13px;">
+                    <strong>Data finansial invoice ini dikunci:</strong>
+                    @foreach($lock['reasons'] as $reason)
+                        <div>• {{ $reason }}</div>
+                    @endforeach
+                    <div style="margin-top:6px;">Koreksi dilakukan dengan Void (alasan wajib) lalu Terbitkan Ulang; semuanya tercatat di riwayat audit di bawah.</div>
+                </div>
+            @endif
+
             @if($billing->payment_status === 'void' || $billing->voided_at)
                 <div class="void-box">
                     <h3>Billing ini sudah di-void</h3>
@@ -504,6 +529,16 @@
                         Transaksi dibatalkan pada {{ $billing->voided_at ? $billing->voided_at->format('Y-m-d H:i') : '-' }}.
                         Reason: {{ $billing->void_reason ?: '-' }}
                     </p>
+                    @if($replacedBy->where('payment_status', '!=', 'void')->isEmpty() && !$lock['closed'])
+                        <a href="/admin/cashier?replaces={{ $billing->id }}" class="btn btn-primary">Terbitkan Ulang (Koreksi)</a>
+                    @elseif($lock['closed'])
+                        <p style="margin:0;">Periode invoice ini sudah tutup buku; invoice pengganti tidak dapat diterbitkan pada periode tertutup.</p>
+                    @endif
+                </div>
+            @elseif($lock['closed'])
+                <div class="void-box">
+                    <h3>Periode tutup buku</h3>
+                    <p>Void tidak tersedia karena periode {{ $billing->invoice_date ? $billing->invoice_date->format('Y-m') : '-' }} sudah tutup buku. Gunakan prosedur Buka Kembali Buku di Owner Finance bila koreksi memang diperlukan.</p>
                 </div>
             @else
                 <div class="void-box">
@@ -640,6 +675,41 @@
                         <div class="info-label">General Notes</div>
                         <div class="info-value">{{ $billing->notes ?: '-' }}</div>
                     </div>
+                </div>
+            </section>
+
+            <section class="section-card">
+                <h2 class="section-title">Riwayat Audit</h2>
+                <p class="section-subtitle">Catatan perubahan invoice (tidak dapat diubah atau dihapus).</p>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr><th>Waktu</th><th>Aksi</th><th>Oleh</th><th>Perubahan</th><th>Alasan</th></tr>
+                        </thead>
+                        <tbody>
+                            @forelse($auditLogs as $log)
+                                <tr>
+                                    <td>{{ optional($log->created_at)->format('Y-m-d H:i') }}</td>
+                                    <td>{{ $log->action }}</td>
+                                    <td>{{ $log->actor ?: '-' }}</td>
+                                    <td>
+                                        @if($log->action === 'created')
+                                            Invoice dibuat (total Rp {{ number_format($log->after['amount'] ?? 0, 0, ',', '.') }})
+                                        @else
+                                            @foreach(($log->after ?? []) as $field => $newValue)
+                                                @if(!is_array($newValue))
+                                                    <div>{{ $field }}: {{ is_array($log->before ?? null) && array_key_exists($field, $log->before) ? (is_array($log->before[$field]) ? '...' : ($log->before[$field] ?? '-')) : '-' }} → {{ $newValue ?? '-' }}</div>
+                                                @endif
+                                            @endforeach
+                                        @endif
+                                    </td>
+                                    <td>{{ $log->reason ?: '-' }}</td>
+                                </tr>
+                            @empty
+                                <tr><td colspan="5">Belum ada catatan audit (invoice dibuat sebelum fitur audit aktif).</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
                 </div>
             </section>
         </div>

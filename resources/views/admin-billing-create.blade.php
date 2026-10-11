@@ -270,6 +270,11 @@
                         </div>
 
                         <div class="field">
+                            <label>Paid Amount (wajib untuk status Partial)</label>
+                            <input type="number" step="0.01" min="0" name="paid_amount" value="{{ old('paid_amount') }}" placeholder="Isi bila status Partial">
+                        </div>
+
+                        <div class="field">
                             <label>Payment Status</label>
                             <select name="payment_status" required>
                                 <option value="paid" {{ old('payment_status') == 'paid' ? 'selected' : '' }}>Paid</option>
@@ -282,6 +287,7 @@
                             <label>Payment Method</label>
                             <select name="payment_method">
                                 <option value="">Pilih Metode Pembayaran</option>
+                                <option value="cash" {{ old('payment_method') == 'cash' ? 'selected' : '' }}>Cash</option>
                                 <option value="qr" {{ old('payment_method') == 'qr' ? 'selected' : '' }}>QR</option>
                                 <option value="debit" {{ old('payment_method') == 'debit' ? 'selected' : '' }}>Debit</option>
                                 <option value="credit" {{ old('payment_method') == 'credit' ? 'selected' : '' }}>Credit Card</option>

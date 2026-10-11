@@ -143,10 +143,34 @@ it('returns the undiscounted total when no promo is used', function () {
 
 it('maps clinic service master categories to billing categories', function () {
     expect(BillingCalculator::categoryForService('Program'))->toBe('program')
-        ->and(BillingCalculator::categoryForService('Specialist'))->toBe('program')
+        ->and(BillingCalculator::categoryForService('Specialist'))->toBe('specialist')
         ->and(BillingCalculator::categoryForService('Add-on'))->toBe('add_on')
         ->and(BillingCalculator::categoryForService('Consultation'))->toBe('consultation')
         ->and(BillingCalculator::categoryForService(null))->toBe('other')
         ->and(BillingCalculator::isDiscountable('add_on'))->toBeFalse()
         ->and(BillingCalculator::isDiscountable('program'))->toBeTrue();
+});
+
+it('menormalkan kategori master tanpa peduli huruf besar-kecil, spasi, atau alias', function (?string $input, string $expected) {
+    expect(BillingCalculator::categoryForService($input))->toBe($expected);
+})->with([
+    ['program', 'program'], [' PROGRAM ', 'program'], ['Program', 'program'],
+    ['add-on', 'add_on'], ['Add On', 'add_on'], ['ADDON', 'add_on'], ['  add-on', 'add_on'],
+    ['konsultasi', 'consultation'], ['Consultation', 'consultation'],
+    ['specialist', 'specialist'], ['SPECIALIST', 'specialist'],
+    ['kategori-aneh', 'other'], ['', 'other'], [null, 'other'],
+]);
+
+it('hanya kategori program yang boleh didiskon (specialist menunggu keputusan bisnis)', function () {
+    expect(config('clinic.billing.discountable_categories'))->toBe(['program'])
+        ->and(BillingCalculator::isDiscountable('specialist'))->toBeFalse()
+        ->and(config('clinic.billing.manual_service_default_category'))->toBe('other');
+});
+
+it('tidak mendiskon layanan specialist walaupun ada promo', function () {
+    $result = (new BillingCalculator)->calculate([
+        ['category' => 'specialist', 'quantity' => 1, 'unit_price' => 425000],
+    ], promo());
+
+    expect($result['promo_applied'])->toBeFalse()->and($result['grand_total'])->toBe(425000.0);
 });

@@ -513,6 +513,10 @@
                 <div class="alert alert-success">{{ session('success') }}</div>
             @endif
 
+            @if(session('error'))
+                <div class="alert" style="background:#fff1f2;color:#be123c;border:1px solid #ffe0e6;">{{ session('error') }}</div>
+            @endif
+
             <section class="hero">
                 <div class="hero-grid">
                     <div>

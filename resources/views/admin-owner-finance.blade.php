@@ -341,6 +341,19 @@
                 <div class="alert">{{ session('success') }}</div>
             @endif
 
+            @if(session('error'))
+                <div class="alert" style="background:#fff1f2;color:#be123c;border:1px solid #ffe0e6;">{{ session('error') }}</div>
+            @endif
+
+            @if(!empty($closingDrift))
+                <div class="alert" style="background:#fffbeb;color:#92400e;border:1px solid #fde68a;">
+                    <strong>Peringatan: data berbeda dari snapshot closing.</strong>
+                    Total pemasukan snapshot saat tutup buku Rp {{ number_format($closingDrift['snapshot'], 0, ',', '.') }},
+                    sedangkan data billing saat ini Rp {{ number_format($closingDrift['live'], 0, ',', '.') }}.
+                    Ini bisa terjadi pada invoice yang diubah sebelum proteksi periode aktif. Snapshot tidak diubah; periksa invoice bulan ini.
+                </div>
+            @endif
+
             @if($closing)
                 <div class="closing-alert">
                     <div>
@@ -615,6 +628,38 @@
                         <div class="empty">
                             Bulan {{ $monthLabel }} sudah ditutup pada {{ optional($closing->closed_at)->format('Y-m-d H:i') ?: '-' }}.
                             Gunakan tombol Print Monthly Report untuk mencetak laporan final.
+                            Closing tidak dapat ditimpa; invoice dan transaksi bulan ini dikunci.
+                        </div>
+
+                        <details style="margin-top:16px;">
+                            <summary style="cursor:pointer;font-weight:800;color:#be123c;">Buka Kembali Buku (prosedur terkontrol)</summary>
+                            <form method="POST" action="/admin/owner-finance/reopen" style="margin-top:12px;" onsubmit="return confirm('Buka kembali buku {{ $monthLabel }}? Tindakan ini tercatat di audit.')">
+                                @csrf
+                                <input type="hidden" name="month" value="{{ $month }}">
+
+                                <label>Alasan (wajib, minimal 10 karakter)</label>
+                                <textarea name="reason" required minlength="10" placeholder="Contoh: koreksi invoice INV-... yang salah input nominal"></textarea>
+
+                                <label style="margin-top:10px;display:block;">Ketik bulan untuk konfirmasi ({{ $month }})</label>
+                                <input type="text" name="confirm_month" required autocomplete="off" placeholder="{{ $month }}">
+
+                                <label style="margin-top:10px;display:block;">Password admin</label>
+                                <input type="password" name="password" required autocomplete="current-password">
+
+                                <button type="submit" class="btn" style="margin-top:14px;background:#be123c;color:#fff;">Buka Kembali Buku</button>
+                            </form>
+                        </details>
+                    @endif
+
+                    @if(!empty($reopenLogs) && $reopenLogs->isNotEmpty())
+                        <div style="margin-top:18px;font-size:13px;">
+                            <strong>Riwayat tutup / buka buku {{ $monthLabel }}</strong>
+                            @foreach($reopenLogs as $log)
+                                <div>
+                                    {{ optional($log->created_at)->format('Y-m-d H:i') }} · {{ $log->action === 'period_reopened' ? 'Dibuka kembali' : 'Ditutup' }}
+                                    oleh {{ $log->actor ?: '-' }}@if($log->reason) · {{ $log->reason }}@endif
+                                </div>
+                            @endforeach
                         </div>
                     @endif
                 </div>

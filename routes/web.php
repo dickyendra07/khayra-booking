@@ -26,7 +26,12 @@ use App\Models\InventoryStockMovement;
 use App\Models\PatientProgressEntry;
 use App\Models\HomeExerciseTemplate;
 use App\Models\ClinicService;
+use App\Services\BillingAudit;
 use App\Services\BillingCalculator;
+use App\Services\BillingIntegrity;
+use App\Services\InvoiceNumberGenerator;
+use App\Models\BillingAuditLog;
+use App\Models\FinanceMonthlyClosing;
 use App\Services\InvoiceWhatsappMessage;
 use App\Support\AdminCredentials;
 use App\Support\LoginThrottle;
@@ -3574,6 +3579,35 @@ Route::get('/admin/cashier', function (Request $request) {
     $selectedPatientId = $request->query('patient_id');
     $selectedVisitId = $request->query('visit_id');
 
+    // Koreksi invoice: isi form kasir dari invoice void yang akan digantikan.
+    $replaces = null;
+    $prefillItems = [];
+
+    if ($request->query('replaces')) {
+        $original = Billing::with('items')->find($request->query('replaces'));
+
+        if (!$original || $original->payment_status !== 'void') {
+            return redirect('/admin/billings')->with('error', 'Terbitkan Ulang hanya untuk invoice yang sudah di-void.');
+        }
+
+        if (Billing::where('replaces_billing_id', $original->id)->where('payment_status', '!=', 'void')->exists()) {
+            return redirect('/admin/billings/' . $original->id)->with('error', 'Invoice ini sudah digantikan oleh invoice lain.');
+        }
+
+        $replaces = $original;
+        $selectedPatientId = $original->patient_id;
+        $selectedVisitId = $original->visit_id;
+        $prefillItems = $original->items->map(fn ($item) => [
+            'type' => $item->item_type === 'inventory' ? 'inventory' : 'service',
+            'description' => $item->description,
+            'quantity' => $item->quantity,
+            'unit_price' => (float) $item->unit_price,
+            'category' => $item->item_category,
+            'clinic_service_id' => $item->clinic_service_id,
+            'inventory_item_id' => $item->inventory_item_id,
+        ])->values()->all();
+    }
+
         $clinicServices = ClinicService::where('status', 'active')
         ->orderByRaw("CASE WHEN category = 'Program' THEN 1 WHEN category = 'Specialist' THEN 2 WHEN category = 'Consultation' THEN 3 WHEN category = 'Add-on' THEN 4 ELSE 5 END")
         ->orderBy('name')
@@ -3585,7 +3619,7 @@ return view('admin-cashier-create', compact(
         'inventoryItems',
         'promos',
         'selectedPatientId',
-        'selectedVisitId', 'clinicServices'));
+        'selectedVisitId', 'clinicServices', 'replaces', 'prefillItems'));
 });
 
 Route::post('/admin/cashier/checkout', function (Request $request) {
@@ -3609,11 +3643,39 @@ Route::post('/admin/cashier/checkout', function (Request $request) {
         'inventory_item_id' => 'nullable|array',
         'clinic_service_id' => 'nullable|array',
         'item_category' => 'nullable|array',
+        'price_reason' => 'nullable|array',
+        'replaces_billing_id' => 'nullable|exists:billings,id',
     ]);
 
+    // Periode yang sudah tutup buku tidak boleh menerima invoice baru.
+    if (BillingIntegrity::isPeriodClosed($request->invoice_date)) {
+        return back()->withInput()->withErrors(['invoice_date' => BillingIntegrity::closedPeriodMessage($request->invoice_date)]);
+    }
+
+    // Invoice pengganti (koreksi): hanya untuk invoice void milik pasien yang sama dan belum digantikan.
+    $replacedBilling = null;
+
+    if ($request->replaces_billing_id) {
+        $replacedBilling = Billing::findOrFail($request->replaces_billing_id);
+
+        if ($replacedBilling->payment_status !== 'void') {
+            return back()->withInput()->withErrors(['replaces_billing_id' => 'Hanya invoice yang sudah di-void yang dapat diganti.']);
+        }
+
+        if ((int) $replacedBilling->patient_id !== (int) $request->patient_id) {
+            return back()->withInput()->withErrors(['replaces_billing_id' => 'Invoice pengganti harus untuk pasien yang sama dengan invoice yang digantikan.']);
+        }
+
+        if (Billing::where('replaces_billing_id', $replacedBilling->id)->where('payment_status', '!=', 'void')->exists()) {
+            return back()->withInput()->withErrors(['replaces_billing_id' => 'Invoice ini sudah pernah digantikan oleh invoice lain.']);
+        }
+    }
+
     $clinicServices = ClinicService::whereIn('id', array_filter((array) $request->clinic_service_id))->get()->keyBy('id');
+    $inventoryReference = InventoryItem::whereIn('id', array_filter((array) $request->inventory_item_id))->get()->keyBy('id');
 
     $rows = [];
+    $priceOverrides = [];
 
     foreach ($request->item_type as $index => $type) {
         $type = $type === 'inventory' ? 'inventory' : 'service';
@@ -3646,6 +3708,31 @@ Route::post('/admin/cashier/checkout', function (Request $request) {
                 : config('clinic.billing.manual_service_default_category');
         }
 
+        // Harga di luar daftar harga master wajib disertai alasan dan dicatat di audit.
+        $referencePrices = [];
+
+        if ($type === 'inventory' && $inventoryReference->has($inventoryItemId)) {
+            $referencePrices = [(float) $inventoryReference[$inventoryItemId]->selling_price];
+        } elseif ($clinicServiceId) {
+            $master = $clinicServices[$clinicServiceId];
+            $referencePrices = array_map('floatval', array_filter([
+                $master->price_per_visit, $master->package_3x_price, $master->package_6x_price, $master->package_12x_price,
+            ], fn ($price) => $price !== null));
+        }
+
+        $lineNotes = null;
+
+        if ($referencePrices !== [] && !in_array((float) $unitPrice, $referencePrices, true)) {
+            $reason = trim((string) ($request->price_reason[$index] ?? ''));
+
+            if (mb_strlen($reason) < 5) {
+                return back()->withInput()->withErrors(['price_reason' => 'Harga "' . $description . '" berbeda dari harga master. Isi alasan perubahan harga (minimal 5 karakter).']);
+            }
+
+            $lineNotes = 'Harga diubah dari Rp' . number_format($referencePrices[0], 0, ',', '.') . ' (master) menjadi Rp' . number_format($unitPrice, 0, ',', '.') . '. Alasan: ' . $reason;
+            $priceOverrides[] = ['description' => $description, 'master_prices' => $referencePrices, 'unit_price' => $unitPrice, 'reason' => $reason];
+        }
+
         $rows[] = [
             'item_type' => $type,
             'category' => $category,
@@ -3654,6 +3741,7 @@ Route::post('/admin/cashier/checkout', function (Request $request) {
             'unit_price' => $unitPrice,
             'inventory_item_id' => $type === 'inventory' ? $inventoryItemId : null,
             'clinic_service_id' => $clinicServiceId,
+            'notes' => $lineNotes,
         ];
     }
 
@@ -3682,6 +3770,7 @@ Route::post('/admin/cashier/checkout', function (Request $request) {
             'discount_amount' => $line['discount_amount'],
             'inventory_item_id' => $line['inventory_item_id'],
             'clinic_service_id' => $line['clinic_service_id'],
+            'notes' => $line['notes'],
         ];
     }, $calculation['lines']);
 
@@ -3718,9 +3807,12 @@ Route::post('/admin/cashier/checkout', function (Request $request) {
             $paidAmount,
             $changeAmount,
             $remainingAmount,
-            $paymentStatus
+            $paymentStatus,
+            $replacedBilling,
+            $priceOverrides
         ) {
-            $invoiceNumber = 'INV-' . now()->format('Ymd-His');
+            // Nomor unik & aman untuk checkout bersamaan (counter dikunci di dalam transaction ini).
+            $invoiceNumber = (new InvoiceNumberGenerator)->next();
 
             $billing = Billing::create([
                 'patient_id' => $request->patient_id,
@@ -3740,6 +3832,7 @@ Route::post('/admin/cashier/checkout', function (Request $request) {
                 'payment_method' => $request->payment_method,
                 'payment_detail_notes' => $request->payment_detail_notes,
                 'notes' => $request->notes,
+                'replaces_billing_id' => $replacedBilling ? $replacedBilling->id : null,
             ]);
 
             foreach ($rows as $row) {
@@ -3769,6 +3862,22 @@ Route::post('/admin/cashier/checkout', function (Request $request) {
                         'notes' => 'Keluar dari Kasir Checkout untuk invoice ' . $billing->invoice_number,
                     ]);
                 }
+            }
+
+            BillingAudit::record('created', $billing, null, array_merge(BillingAudit::snapshot($billing), [
+                'items' => array_map(fn ($row) => [
+                    'description' => $row['description'],
+                    'category' => $row['item_category'],
+                    'quantity' => $row['quantity'],
+                    'unit_price' => $row['unit_price'],
+                    'discount_eligible' => $row['is_discount_eligible'],
+                    'discount_amount' => $row['discount_amount'],
+                ], $rows),
+                'price_overrides' => $priceOverrides,
+            ]), $replacedBilling ? 'Invoice pengganti untuk ' . ($replacedBilling->invoice_number ?: '#' . $replacedBilling->id) : null);
+
+            if ($replacedBilling) {
+                BillingAudit::record('replaced_by', $replacedBilling, null, ['replaced_by_billing_id' => $billing->id, 'replaced_by_invoice' => $billing->invoice_number]);
             }
 
             return $billing;
@@ -3858,6 +3967,8 @@ Route::post('/admin/services', function (Request $request) {
         'status' => 'required|in:active,inactive',
     ]);
 
+    $data['category'] = ClinicService::normalizeCategory($data['category'] ?? null);
+
     ClinicService::create($data);
 
     return redirect('/admin/services')->with('success', 'Layanan berhasil ditambahkan.');
@@ -3880,6 +3991,8 @@ Route::post('/admin/services/{id}/update', function (Request $request, $id) {
         'notes' => 'nullable|string',
         'status' => 'required|in:active,inactive',
     ]);
+
+    $data['category'] = ClinicService::normalizeCategory($data['category'] ?? null);
 
     $service->update($data);
 
@@ -3991,14 +4104,30 @@ Route::get('/admin/owner-finance', function (Request $request) {
         'transaction_count' => $transactions->count(),
     ];
 
-    $closing = \App\Models\FinanceMonthlyClosing::where('month', $month)->first();
+    $closing = \App\Models\FinanceMonthlyClosing::active()->where('month', $month)->first();
+
+    // Riwayat buka-kembali dan deteksi selisih snapshot vs data billing saat ini (hanya baca).
+    $reopenLogs = BillingAuditLog::where('finance_month', $month)
+        ->whereIn('action', ['period_closed', 'period_reopened'])
+        ->latest('id')->limit(10)->get();
+
+    $closingDrift = null;
+
+    if ($closing && abs((float) $closing->total_income - (float) $summary['total_income']) >= 1) {
+        $closingDrift = [
+            'snapshot' => (float) $closing->total_income,
+            'live' => (float) $summary['total_income'],
+        ];
+    }
 
     return view('admin-owner-finance', compact(
         'month',
         'monthLabel',
         'summary',
         'transactions',
-        'closing'
+        'closing',
+        'reopenLogs',
+        'closingDrift'
     ));
 });
 
@@ -4090,7 +4219,7 @@ Route::get('/admin/owner-finance/print', function (Request $request) {
         'transaction_count' => $transactions->count(),
     ];
 
-    $closing = \App\Models\FinanceMonthlyClosing::where('month', $month)->first();
+    $closing = \App\Models\FinanceMonthlyClosing::active()->where('month', $month)->first();
 
     return view('admin-owner-finance-print', compact(
         'month',
@@ -4112,6 +4241,14 @@ Route::post('/admin/owner-finance/close', function (Request $request) {
     ]);
 
     $month = $validated['month'];
+
+    // Closing tidak boleh ditimpa. Untuk menutup ulang, bulan harus dibuka kembali lebih dulu
+    // lewat prosedur Buka Kembali Buku (alasan wajib, konfirmasi password, tercatat di audit).
+    if (FinanceMonthlyClosing::isClosed($month)) {
+        return redirect('/admin/owner-finance?month=' . $month)
+            ->with('error', 'Bulan ' . $month . ' sudah tutup buku dan tidak bisa ditimpa. Gunakan Buka Kembali Buku bila koreksi diperlukan.');
+    }
+
     $startDate = \Carbon\Carbon::parse($month . '-01')->startOfMonth();
     $endDate = $startDate->copy()->endOfMonth();
 
@@ -4182,35 +4319,122 @@ Route::post('/admin/owner-finance/close', function (Request $request) {
     $totalIncome = $billingIncome + $manualIncome;
     $netCashflow = $totalIncome - $manualExpense;
 
-    \App\Models\FinanceMonthlyClosing::updateOrCreate(
-        ['month' => $month],
-        [
-            'period_start' => $startDate->toDateString(),
-            'period_end' => $endDate->toDateString(),
-            'billing_income' => $billingIncome,
-            'manual_income' => $manualIncome,
-            'total_income' => $totalIncome,
-            'total_expense' => $manualExpense,
-            'net_cashflow' => $netCashflow,
-            'transaction_count' => $transactions->count(),
-            'closed_by' => 'Owner/Admin',
-            'closed_at' => now(),
-            'notes' => $validated['notes'] ?? null,
-            'snapshot' => [
-                'summary' => [
-                    'billing_income' => $billingIncome,
-                    'manual_income' => $manualIncome,
-                    'total_income' => $totalIncome,
-                    'total_expense' => $manualExpense,
-                    'net_cashflow' => $netCashflow,
-                    'transaction_count' => $transactions->count(),
+    // Closing sebelumnya (yang sudah dibuka kembali) dicatat di audit sebelum diganti.
+    $previousClosing = FinanceMonthlyClosing::where('month', $month)->first();
+
+    $closingSummary = [
+        'billing_income' => $billingIncome,
+        'manual_income' => $manualIncome,
+        'total_income' => $totalIncome,
+        'total_expense' => $manualExpense,
+        'net_cashflow' => $netCashflow,
+        'transaction_count' => $transactions->count(),
+    ];
+
+    DB::transaction(function () use ($month, $previousClosing, $closingSummary, $validated, $startDate, $endDate, $billingIncome, $manualIncome, $totalIncome, $manualExpense, $netCashflow, $transactions) {
+        BillingAudit::record(
+            'period_closed',
+            null,
+            $previousClosing ? ['previous_closing' => $previousClosing->only(['billing_income', 'manual_income', 'total_income', 'total_expense', 'net_cashflow', 'transaction_count', 'closed_at', 'reopened_at', 'reopened_by', 'reopen_reason', 'snapshot'])] : null,
+            $closingSummary,
+            $validated['notes'] ?? null,
+            $month
+        );
+
+        \App\Models\FinanceMonthlyClosing::updateOrCreate(
+            ['month' => $month],
+            [
+                'reopened_at' => null,
+                'reopened_by' => null,
+                'reopen_reason' => null,
+                'period_start' => $startDate->toDateString(),
+                'period_end' => $endDate->toDateString(),
+                'billing_income' => $billingIncome,
+                'manual_income' => $manualIncome,
+                'total_income' => $totalIncome,
+                'total_expense' => $manualExpense,
+                'net_cashflow' => $netCashflow,
+                'transaction_count' => $transactions->count(),
+                'closed_by' => session('admin_email') ?: 'Owner/Admin',
+                'closed_at' => now(),
+                'notes' => $validated['notes'] ?? null,
+                'snapshot' => [
+                    'summary' => [
+                        'billing_income' => $billingIncome,
+                        'manual_income' => $manualIncome,
+                        'total_income' => $totalIncome,
+                        'total_expense' => $manualExpense,
+                        'net_cashflow' => $netCashflow,
+                        'transaction_count' => $transactions->count(),
+                    ],
+                    'transactions' => $transactions->values()->all(),
                 ],
-                'transactions' => $transactions->values()->all(),
-            ],
-        ]
-    );
+            ]
+        );
+    });
 
     return redirect('/admin/owner-finance?month=' . $month)->with('success', 'Tutup buku bulan ' . $month . ' berhasil disimpan.');
+});
+
+// Buka kembali buku bulanan: prosedur terkontrol (alasan wajib, ketik ulang bulan, konfirmasi
+// password admin, throttle) dan selalu tercatat di audit. Data closing lama tidak dihapus/diubah.
+Route::post('/admin/owner-finance/reopen', function (Request $request) {
+    if (!session('admin_logged_in')) {
+        return redirect('/admin/login');
+    }
+
+    $validated = $request->validate([
+        'month' => 'required|date_format:Y-m',
+        'reason' => 'required|string|min:10|max:2000',
+        'confirm_month' => 'required|string',
+        'password' => 'required|string',
+    ]);
+
+    $month = $validated['month'];
+    $back = redirect('/admin/owner-finance?month=' . $month);
+
+    $throttle = LoginThrottle::for('admin', 'reopen|' . mb_strtolower((string) session('admin_email')), $request->ip());
+
+    if ($seconds = $throttle->lockedOutFor()) {
+        return $back->with('error', LoginThrottle::message($seconds));
+    }
+
+    if (trim($validated['confirm_month']) !== $month) {
+        return $back->with('error', 'Konfirmasi bulan tidak sesuai. Ketik persis ' . $month . ' untuk membuka kembali buku.');
+    }
+
+    if (!AdminCredentials::attempt((string) session('admin_email'), $validated['password'])) {
+        $throttle->hit();
+
+        return $back->with('error', 'Konfirmasi password salah. Buku bulan ini tidak dibuka.');
+    }
+
+    $closing = FinanceMonthlyClosing::active()->where('month', $month)->first();
+
+    if (!$closing) {
+        return $back->with('error', 'Bulan ' . $month . ' tidak dalam status tutup buku.');
+    }
+
+    $throttle->clear();
+
+    DB::transaction(function () use ($closing, $month, $validated) {
+        $closing->update([
+            'reopened_at' => now(),
+            'reopened_by' => session('admin_email') ?: 'admin',
+            'reopen_reason' => $validated['reason'],
+        ]);
+
+        BillingAudit::record(
+            'period_reopened',
+            null,
+            $closing->only(['billing_income', 'manual_income', 'total_income', 'total_expense', 'net_cashflow', 'transaction_count', 'closed_at']),
+            ['reopened' => true],
+            $validated['reason'],
+            $month
+        );
+    });
+
+    return $back->with('success', 'Buku bulan ' . $month . ' dibuka kembali. Setelah koreksi selesai, tutup buku ulang agar snapshot baru tercatat.');
 });
 
 Route::post('/admin/owner-finance/transactions', function (Request $request) {
@@ -4231,8 +4455,8 @@ Route::post('/admin/owner-finance/transactions', function (Request $request) {
 
     $month = \Carbon\Carbon::parse($validated['transaction_date'])->format('Y-m');
 
-    if (\App\Models\FinanceMonthlyClosing::where('month', $month)->exists()) {
-        return redirect('/admin/owner-finance?month=' . $month)->with('success', 'Bulan ini sudah tutup buku. Transaksi manual tidak bisa ditambahkan.');
+    if (FinanceMonthlyClosing::isClosed($month)) {
+        return redirect('/admin/owner-finance?month=' . $month)->with('error', 'Bulan ini sudah tutup buku. Transaksi manual tidak bisa ditambahkan.');
     }
 
     $validated['source'] = $validated['source'] ?: ($validated['type'] === 'income' ? 'other_income' : 'operational');
@@ -4250,8 +4474,8 @@ Route::post('/admin/owner-finance/transactions/{id}/delete', function ($id) {
     $transaction = \App\Models\FinanceTransaction::findOrFail($id);
     $month = $transaction->transaction_date ? $transaction->transaction_date->format('Y-m') : now()->format('Y-m');
 
-    if (\App\Models\FinanceMonthlyClosing::where('month', $month)->exists()) {
-        return redirect('/admin/owner-finance?month=' . $month)->with('success', 'Bulan ini sudah tutup buku. Transaksi manual tidak bisa dihapus.');
+    if (FinanceMonthlyClosing::isClosed($month)) {
+        return redirect('/admin/owner-finance?month=' . $month)->with('error', 'Bulan ini sudah tutup buku. Transaksi manual tidak bisa dihapus.');
     }
 
     $transaction->delete();
@@ -6385,26 +6609,44 @@ Route::post('/admin/billings', function (Request $request) {
         'visit_id' => 'nullable|exists:visits,id',
         'invoice_date' => 'required|date',
         'amount' => 'required|numeric|min:0',
+        'paid_amount' => 'nullable|numeric|min:0',
         'payment_status' => 'required|in:paid,unpaid,partial',
-        'payment_method' => 'nullable|in:qr,debit,credit,bank_bca,bank_bni,bank_mandiri,insurance',
+        'payment_method' => 'nullable|in:cash,qr,debit,credit,bank_bca,bank_bni,bank_mandiri,insurance',
         'payment_detail_notes' => 'nullable|string',
         'notes' => 'nullable|string',
     ]);
 
-    $latestBilling = Billing::latest('id')->first();
-    $nextNumber = $latestBilling ? $latestBilling->id + 1 : 1;
+    if (BillingIntegrity::isPeriodClosed($request->invoice_date)) {
+        return back()->withInput()->withErrors(['invoice_date' => BillingIntegrity::closedPeriodMessage($request->invoice_date)]);
+    }
 
-    Billing::create([
-        'patient_id' => $request->patient_id,
-        'visit_id' => $request->visit_id ?: null,
-        'invoice_number' => 'INV-' . str_pad($nextNumber, 4, '0', STR_PAD_LEFT),
-        'invoice_date' => $request->invoice_date,
-        'amount' => $request->amount,
-        'payment_status' => $request->payment_status ?: 'unpaid',
-        'payment_method' => $request->payment_method,
-        'payment_detail_notes' => $request->payment_detail_notes,
-        'notes' => $request->notes,
-    ]);
+    $amount = (float) $request->amount;
+    $partialPaid = (float) ($request->paid_amount ?: 0);
+
+    // Pembayaran sebagian wajib menyebut nominal yang sudah dibayar agar paid/remaining konsisten.
+    if ($request->payment_status === 'partial' && ($partialPaid <= 0 || $partialPaid >= $amount)) {
+        return back()->withInput()->withErrors(['paid_amount' => 'Untuk status Partial, isi Paid Amount lebih dari 0 dan kurang dari total invoice.']);
+    }
+
+    $billing = DB::transaction(function () use ($request, $amount, $partialPaid) {
+        $billing = new Billing([
+            'patient_id' => $request->patient_id,
+            'visit_id' => $request->visit_id ?: null,
+            'invoice_number' => (new InvoiceNumberGenerator)->next(),
+            'invoice_date' => $request->invoice_date,
+            'amount' => $amount,
+            'payment_method' => $request->payment_method,
+            'payment_detail_notes' => $request->payment_detail_notes,
+            'notes' => $request->notes,
+        ]);
+
+        BillingIntegrity::applyStatus($billing, $request->payment_status ?: 'unpaid', $partialPaid);
+        $billing->save();
+
+        BillingAudit::record('created', $billing, null, array_merge(BillingAudit::snapshot($billing), ['source' => 'manual']));
+
+        return $billing;
+    });
 
     return redirect('/admin/billings')->with('success', 'Billing berhasil ditambahkan!');
 });
@@ -6414,8 +6656,12 @@ Route::get('/admin/billings/{id}', function ($id) {
         return redirect('/admin/login');
     }
 
-    $billing = Billing::with(['patient', 'visit', 'items.inventoryItem'])->findOrFail($id);
-    return view('admin-billing-detail', compact('billing'));
+    $billing = Billing::with(['patient', 'visit', 'items.inventoryItem', 'replaces'])->findOrFail($id);
+    $lock = BillingIntegrity::lock($billing);
+    $replacedBy = Billing::where('replaces_billing_id', $billing->id)->get();
+    $auditLogs = BillingAuditLog::where('billing_id', $billing->id)->latest('id')->limit(30)->get();
+
+    return view('admin-billing-detail', compact('billing', 'lock', 'replacedBy', 'auditLogs'));
 });
 
 Route::get('/admin/billings/{id}/edit', function ($id) {
@@ -6427,7 +6673,9 @@ Route::get('/admin/billings/{id}/edit', function ($id) {
     $patients = Patient::latest()->get();
     $visits = Visit::with('patient')->latest()->get();
 
-    return view('admin-billing-edit', compact('billing', 'patients', 'visits'));
+    $lock = BillingIntegrity::lock($billing);
+
+    return view('admin-billing-edit', compact('billing', 'patients', 'visits', 'lock'));
 });
 
 Route::post('/admin/billings/{id}/update', function (Request $request, $id) {
@@ -6436,27 +6684,92 @@ Route::post('/admin/billings/{id}/update', function (Request $request, $id) {
     }
 
     $billing = Billing::with(['patient', 'visit', 'items.inventoryItem'])->findOrFail($id);
+    $lock = BillingIntegrity::lock($billing);
 
-    $request->validate([
-        'patient_id' => 'required|exists:patients,id',
-        'visit_id' => 'nullable|exists:visits,id',
-        'invoice_date' => 'required|date',
-        'amount' => 'required|numeric|min:0',
-        'payment_status' => 'required|in:paid,unpaid,partial',
-        'payment_method' => 'nullable|in:qr,debit,credit,bank_bca,bank_bni,bank_mandiri,insurance',
+    if ($lock['void']) {
+        return redirect('/admin/billings/' . $billing->id)->with('error', 'Invoice yang sudah di-void tidak dapat diubah.');
+    }
+
+    // Aturan hanya untuk field yang boleh diubah; field terkunci diabaikan di server walaupun dikirim.
+    $rules = [
         'payment_detail_notes' => 'nullable|string',
         'notes' => 'nullable|string',
-    ]);
+        'change_reason' => 'nullable|string|max:1000',
+    ];
 
-    $billing->patient_id = $request->patient_id;
-    $billing->visit_id = $request->visit_id ?: null;
-    $billing->invoice_date = $request->invoice_date;
-    $billing->amount = $request->amount;
-    $billing->payment_status = $request->payment_status;
-    $billing->payment_method = $request->payment_method;
+    if (!$lock['identity_locked']) {
+        $rules['patient_id'] = 'required|exists:patients,id';
+        $rules['visit_id'] = 'nullable|exists:visits,id';
+        $rules['invoice_date'] = 'required|date';
+    }
+
+    if (!$lock['amount_locked']) {
+        $rules['amount'] = 'required|numeric|min:0';
+    }
+
+    if (!$lock['method_locked']) {
+        $rules['payment_method'] = 'nullable|in:cash,qr,debit,credit,bank_bca,bank_bni,bank_mandiri,insurance';
+    }
+
+    if (!$lock['status_locked']) {
+        $rules['payment_status'] = 'nullable|in:paid,unpaid,partial';
+    }
+
+    $request->validate($rules);
+
+    $before = BillingAudit::snapshot($billing);
+
+    if (!$lock['identity_locked']) {
+        if (BillingIntegrity::isPeriodClosed($request->invoice_date)) {
+            return back()->withInput()->withErrors(['invoice_date' => BillingIntegrity::closedPeriodMessage($request->invoice_date)]);
+        }
+
+        $billing->patient_id = $request->patient_id;
+        $billing->visit_id = $request->visit_id ?: null;
+        $billing->invoice_date = $request->invoice_date;
+    }
+
+    if (!$lock['amount_locked']) {
+        $billing->amount = $request->amount;
+    }
+
+    if (!$lock['method_locked']) {
+        $billing->payment_method = $request->payment_method;
+    }
+
     $billing->payment_detail_notes = $request->payment_detail_notes;
     $billing->notes = $request->notes;
-    $billing->save();
+
+    // Status: hanya transisi yang aman (unpaid -> paid). Selain itu wajib lewat Void + Terbitkan Ulang.
+    $requestedStatus = !$lock['status_locked'] ? $request->payment_status : null;
+    $currentStatus = $billing->payment_status ?: 'unpaid';
+
+    if ($requestedStatus && $requestedStatus !== $currentStatus) {
+        if (!BillingIntegrity::transitionAllowed($currentStatus, $requestedStatus)) {
+            return back()->withInput()->withErrors(['payment_status' => 'Perubahan status ' . $currentStatus . ' -> ' . $requestedStatus . ' tidak diizinkan dari form ini. Gunakan Void lalu Terbitkan Ulang untuk koreksi.']);
+        }
+
+        BillingIntegrity::applyStatus($billing, $requestedStatus);
+    } elseif (!$lock['amount_locked'] && $currentStatus === 'unpaid') {
+        // Nominal berubah pada invoice belum dibayar: sisa tagihan ikut konsisten.
+        BillingIntegrity::applyStatus($billing, 'unpaid');
+    }
+
+    [$changedBefore, $changedAfter] = BillingAudit::diff($before, BillingAudit::snapshot($billing));
+
+    $financialFields = array_diff(array_keys($changedAfter), ['notes', 'payment_detail_notes']);
+
+    if ($financialFields !== [] && mb_strlen(trim((string) $request->change_reason)) < 5) {
+        return back()->withInput()->withErrors(['change_reason' => 'Perubahan data finansial (' . implode(', ', $financialFields) . ') wajib disertai alasan (minimal 5 karakter).']);
+    }
+
+    DB::transaction(function () use ($billing, $changedBefore, $changedAfter, $request) {
+        $billing->save();
+
+        if ($changedAfter !== []) {
+            BillingAudit::record('updated', $billing, $changedBefore, $changedAfter, $request->change_reason);
+        }
+    });
 
     return redirect('/admin/billings/' . $billing->id)->with('success', 'Billing berhasil diperbarui.');
 });
@@ -6504,20 +6817,36 @@ Route::post('/admin/billings/{id}/status', function (Request $request, $id) {
     ]);
 
     $billing = Billing::with(['patient', 'visit', 'items.inventoryItem'])->findOrFail($id);
-    $billing->payment_status = $request->payment_status;
+    $lock = BillingIntegrity::lock($billing);
 
-    // AUTO_SYNC_PAID_AMOUNT_FROM_STATUS
-    $billingTotal = $billing->grand_total ?? $billing->total_amount ?? $billing->amount ?? 0;
-
-    if ($request->payment_status === 'paid') {
-        $billing->paid_amount = $billingTotal;
-    } elseif ($request->payment_status === 'unpaid') {
-        $billing->paid_amount = 0;
-    } elseif ($request->payment_status === 'partial') {
-        $billing->paid_amount = min((float) ($billing->paid_amount ?? 0), (float) $billingTotal);
+    if ($lock['void']) {
+        return redirect('/admin/billings')->with('error', 'Invoice yang sudah di-void tidak dapat diubah statusnya.');
     }
 
-    $billing->save();
+    if ($lock['closed']) {
+        return redirect('/admin/billings')->with('error', BillingIntegrity::closedPeriodMessage($billing->invoice_date));
+    }
+
+    $from = $billing->payment_status ?: 'unpaid';
+    $to = $request->payment_status;
+
+    if ($from === $to) {
+        return redirect('/admin/billings')->with('success', 'Status billing tidak berubah.');
+    }
+
+    if (!BillingIntegrity::transitionAllowed($from, $to)) {
+        return redirect('/admin/billings')->with('error', 'Perubahan status ' . $from . ' -> ' . $to . ' tidak diizinkan karena akan menghapus atau mengubah histori pembayaran. Gunakan Void lalu Terbitkan Ulang untuk koreksi.');
+    }
+
+    $before = BillingAudit::snapshot($billing);
+
+    DB::transaction(function () use ($billing, $to, $before) {
+        BillingIntegrity::applyStatus($billing, $to);
+        $billing->save();
+
+        [$changedBefore, $changedAfter] = BillingAudit::diff($before, BillingAudit::snapshot($billing));
+        BillingAudit::record('status_changed', $billing, $changedBefore, $changedAfter);
+    });
 
     return redirect('/admin/billings')->with('success', 'Status billing berhasil diperbarui!');
 });
@@ -6546,7 +6875,13 @@ Route::post('/admin/billings/{id}/void', function (Request $request, $id) {
         return redirect('/admin/billings/' . $billing->id)->with('success', 'Billing ini sudah di-void sebelumnya.');
     }
 
-    DB::transaction(function () use ($billing, $request) {
+    if (BillingIntegrity::isPeriodClosed($billing->invoice_date)) {
+        return redirect('/admin/billings/' . $billing->id)->with('error', BillingIntegrity::closedPeriodMessage($billing->invoice_date));
+    }
+
+    $voidBefore = BillingAudit::snapshot($billing);
+
+    DB::transaction(function () use ($billing, $request, $voidBefore) {
         foreach ($billing->items as $billingItem) {
             if ($billingItem->item_type !== 'inventory' || !$billingItem->inventory_item_id) {
                 continue;
@@ -6585,19 +6920,25 @@ Route::post('/admin/billings/{id}/void', function (Request $request, $id) {
             'change_amount' => 0,
             'remaining_amount' => 0,
         ]);
+
+        // Jumlah yang pernah dibayar tetap tercatat di audit (before) walaupun kolom dinolkan.
+        [$changedBefore, $changedAfter] = BillingAudit::diff($voidBefore, BillingAudit::snapshot($billing->fresh()));
+        BillingAudit::record('voided', $billing, $changedBefore, $changedAfter, $request->void_reason);
     });
 
     return redirect('/admin/billings/' . $billing->id)->with('success', 'Billing berhasil di-void dan stok inventory sudah dikembalikan.');
 });
 
 
+// Hard delete invoice tidak diizinkan: histori keuangan harus tetap ada. Gunakan Void (dengan alasan,
+// tercatat di audit) lalu Terbitkan Ulang bila perlu koreksi.
 Route::post('/admin/billings/{id}/delete', function ($id) {
     if (!session('admin_logged_in')) {
         return redirect('/admin/login');
     }
 
-    $billing = Billing::with(['patient', 'visit', 'items.inventoryItem'])->findOrFail($id);
-    $billing->delete();
+    $billing = Billing::findOrFail($id);
 
-    return redirect('/admin/billings')->with('success', 'Billing berhasil dihapus.');
+    return redirect('/admin/billings/' . $billing->id)
+        ->with('error', 'Invoice tidak dapat dihapus karena merupakan catatan keuangan. Gunakan Void (dengan alasan) bila invoice salah, lalu Terbitkan Ulang bila perlu.');
 });

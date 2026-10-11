@@ -156,6 +156,15 @@
             <form method="POST" action="/admin/cashier/checkout" id="checkoutForm">
                 @csrf
 
+                @if(isset($replaces) && $replaces)
+                    <input type="hidden" name="replaces_billing_id" value="{{ $replaces->id }}">
+                    <div class="error-box" style="background:#eff6ff;border-color:#bfdbfe;color:#1e40af;">
+                        <strong>Invoice pengganti (koreksi).</strong>
+                        Menggantikan invoice void {{ $replaces->invoice_number ?: '#' . $replaces->id }}. Periksa item dan harga, lalu simpan.
+                        Invoice lama tetap tersimpan sebagai riwayat dan tertaut ke invoice baru ini.
+                    </div>
+                @endif
+
                 <section class="section-card">
                     <h2 class="section-title">Data Transaksi</h2>
                     <p class="section-subtitle">Pilih pasien, visit terkait, tanggal invoice, dan metode bayar.</p>
@@ -418,6 +427,11 @@
             </div>
         </div>
 
+        <div class="price-reason-row" style="display:none; margin-top:10px;">
+            <label style="font-size:12px;font-weight:700;">Alasan harga berbeda dari master (wajib, tercatat di audit)</label>
+            <input type="text" name="price_reason[]" class="price-reason-input" maxlength="300" placeholder="Contoh: promo khusus disetujui owner / koreksi harga input">
+        </div>
+
         <div class="category-row">
             <label>Kategori Item</label>
             <select name="item_category[]" class="category-select" onchange="calculateTotals()">
@@ -663,6 +677,62 @@
         calculateTotals();
     }
 
+    function referencePrices(row) {
+        if (row.dataset.type === 'inventory') {
+            const inv = row.querySelector('.inventory-select');
+            const opt = inv.options[inv.selectedIndex];
+            return opt && opt.value ? [Number(opt.dataset.price || 0)] : [];
+        }
+
+        const svc = row.querySelector('.service-master-select');
+        const opt = svc.options[svc.selectedIndex];
+
+        if (!opt || !opt.value) {
+            return [];
+        }
+
+        return [opt.dataset.price, opt.getAttribute('data-package-3x'), opt.getAttribute('data-package-6x'), opt.getAttribute('data-package-12x')]
+            .filter(value => value !== null && value !== undefined && value !== '')
+            .map(Number);
+    }
+
+    const PREFILL_ITEMS = @json($prefillItems ?? []);
+
+    function fillRowFromPrefill(row, item) {
+        const typeSelect = row.querySelector('.line-type');
+        typeSelect.value = item.type;
+        handleTypeChange(typeSelect);
+
+        if (item.type === 'inventory') {
+            const inventorySelect = row.querySelector('.inventory-select');
+
+            if (item.inventory_item_id) {
+                inventorySelect.value = String(item.inventory_item_id);
+
+                if (inventorySelect.value) {
+                    handleInventoryChange(inventorySelect);
+                }
+            }
+        } else if (item.clinic_service_id) {
+            const serviceSelect = row.querySelector('.service-master-select');
+            serviceSelect.value = String(item.clinic_service_id);
+
+            if (serviceSelect.value) {
+                handleClinicServiceChange(serviceSelect);
+            }
+        }
+
+        row.querySelector('.description-input').value = item.description;
+        row.querySelector('.qty-input').value = item.quantity;
+        row.querySelector('.price-input').value = item.unit_price;
+
+        const hasMaster = row.querySelector('.service-master-select').value !== '';
+
+        if (item.type === 'service' && !hasMaster && item.category) {
+            setRowCategory(row, item.category, false, 'Kategori dari invoice sebelumnya; periksa kembali.');
+        }
+    }
+
     function calculateTotals() {
         let subtotal = 0;
         let discountBase = 0;
@@ -679,6 +749,12 @@
             if (eligible) {
                 discountBase += lineTotal;
             }
+
+            // Harga di luar daftar harga master: alasan wajib (dicatat di audit oleh server).
+            const refs = referencePrices(row);
+            const override = refs.length > 0 && !refs.includes(price);
+            row.querySelector('.price-reason-row').style.display = override ? 'block' : 'none';
+            row.querySelector('.price-reason-input').required = override;
 
             const badge = row.querySelector('.category-badge');
             badge.innerText = eligible ? 'Kena diskon promo' : 'Tidak kena diskon';
@@ -751,7 +827,16 @@
     }
 
     document.addEventListener('DOMContentLoaded', function () {
-        addLineItem();
+        if (PREFILL_ITEMS.length) {
+            PREFILL_ITEMS.forEach(function (item) {
+                addLineItem();
+                const rows = document.querySelectorAll('.line-item');
+                fillRowFromPrefill(rows[rows.length - 1], item);
+            });
+        } else {
+            addLineItem();
+        }
+
         calculateTotals();
     });
 </script>

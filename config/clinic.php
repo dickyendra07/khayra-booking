@@ -18,6 +18,7 @@ return [
 
         'categories' => [
             'program' => 'Program / Treatment',
+            'specialist' => 'Specialist (diskon menunggu keputusan bisnis)',
             'add_on' => 'Add-on',
             'consultation' => 'Konsultasi',
             'product' => 'Produk',
@@ -28,19 +29,21 @@ return [
         ],
 
         // Explicit discount eligibility. Change here only after owner approval.
+        // 'specialist' is intentionally NOT eligible until the business decides.
         'discountable_categories' => ['program'],
 
-        // ClinicService.category (master data) => billing category.
-        // Specialist services are treatment programs; unknown => other.
+        // ClinicService.category (master data, matched case-insensitively) => billing category.
+        // Unknown / empty => other (never discounted).
         'service_category_map' => [
-            'Program' => 'program',
-            'Specialist' => 'program',
-            'Add-on' => 'add_on',
-            'Consultation' => 'consultation',
+            'program' => 'program',
+            'specialist' => 'specialist',
+            'add-on' => 'add_on',
+            'consultation' => 'consultation',
         ],
 
         // Category used for a manually typed service line (no master service).
-        'manual_service_default_category' => 'program',
+        // Non-discountable by default: the admin must explicitly pick "Program".
+        'manual_service_default_category' => 'other',
     ],
 
 ];

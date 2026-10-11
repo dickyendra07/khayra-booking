@@ -29,6 +29,7 @@ class Billing extends Model
         'payment_method',
         'payment_detail_notes',
         'notes',
+        'replaces_billing_id',
     ];
 
     protected $casts = [
@@ -47,6 +48,16 @@ class Billing extends Model
     public function items(): HasMany
     {
         return $this->hasMany(BillingItem::class);
+    }
+
+    public function replaces(): BelongsTo
+    {
+        return $this->belongsTo(Billing::class, 'replaces_billing_id');
+    }
+
+    public function replacedBy(): HasMany
+    {
+        return $this->hasMany(Billing::class, 'replaces_billing_id');
     }
 
     public function patient(): BelongsTo

@@ -73,15 +73,25 @@ it('discounts only the program and stores the correct invoice totals', function 
         ->and((float) $addOn->discount_amount)->toBe(0.0);
 });
 
-it('treats specialist services as programs', function () {
-    $this->post('/admin/cashier/checkout', checkoutPayload([
+it('does not discount specialist services until the business approves it', function () {
+    $response = $this->from('/admin/cashier')->post('/admin/cashier/checkout', checkoutPayload([
         ['description' => 'Uji Specialist', 'price' => 425000, 'service' => $this->specialist],
     ], ['promo_id' => $this->promo->id]));
 
-    $billing = Billing::firstOrFail();
+    // Hanya item specialist + promo: tidak ada item program, jadi promo ditolak dan tidak ada invoice.
+    $response->assertSessionHasErrors('promo_id');
+    expect(Billing::count())->toBe(0);
 
-    expect((float) $billing->discount_amount)->toBe(42500.0)
-        ->and((float) $billing->amount)->toBe(382500.0);
+    $this->post('/admin/cashier/checkout', checkoutPayload([
+        ['description' => 'Uji Specialist', 'price' => 425000, 'service' => $this->specialist],
+        ['description' => 'Uji Program', 'price' => 500000, 'service' => $this->program],
+    ], ['promo_id' => $this->promo->id]));
+
+    $billing = Billing::with('items')->firstOrFail();
+
+    expect((float) $billing->discount_amount)->toBe(50000.0)  // hanya dari program
+        ->and((float) $billing->amount)->toBe(875000.0)
+        ->and($billing->items->firstWhere('item_category', 'specialist')->is_discount_eligible)->toBeFalse();
 });
 
 it('ignores a client supplied category for a master add-on service', function () {
@@ -134,14 +144,14 @@ it('refuses a promo when the invoice has no program item and creates nothing', f
 
 it('keeps room charge and admin fee lines at full price next to a discounted program', function () {
     $this->post('/admin/cashier/checkout', checkoutPayload([
-        ['description' => 'Uji Program', 'price' => 300000, 'service' => $this->program],
+        ['description' => 'Uji Program', 'price' => 500000, 'service' => $this->program],
         ['description' => 'Biaya ruangan', 'price' => 100000, 'category' => 'room_charge'],
         ['description' => 'Admin awal kedatangan', 'price' => 35000, 'category' => 'admin_fee'],
     ], ['promo_id' => $this->promo->id]));
 
     $billing = Billing::with('items')->firstOrFail();
 
-    expect((float) $billing->amount)->toBe(405000.0) // 270,000 + 100,000 + 35,000
+    expect((float) $billing->amount)->toBe(585000.0) // 450,000 + 100,000 + 35,000
         ->and($billing->items->pluck('item_category')->all())->toBe(['program', 'room_charge', 'admin_fee']);
 });
 

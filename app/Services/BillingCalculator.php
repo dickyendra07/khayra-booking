@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\ClinicService;
 use App\Models\Promo;
 
 /**
@@ -38,7 +39,9 @@ class BillingCalculator
      */
     public static function categoryForService(?string $serviceCategory): string
     {
-        return config('clinic.billing.service_category_map', [])[$serviceCategory] ?? 'other';
+        $key = ClinicService::canonicalCategoryKey($serviceCategory);
+
+        return config('clinic.billing.service_category_map', [])[$key] ?? 'other';
     }
 
     /**
