@@ -223,7 +223,7 @@
 
                         <div class="field">
                             <label>Agama</label>
-                            <input type="text" name="religion" value="{{ old('religion') }}">
+                            @include('partials.patient-select', ['name' => 'religion', 'options' => \App\Support\PatientOptions::RELIGIONS])
                         </div>
 
                         <div class="field">
@@ -233,7 +233,7 @@
 
                         <div class="field">
                             <label>Pendidikan</label>
-                            <input type="text" name="education" value="{{ old('education') }}">
+                            @include('partials.patient-select', ['name' => 'education', 'options' => \App\Support\PatientOptions::EDUCATIONS])
                         </div>
 
                         <div class="field">

@@ -53,6 +53,13 @@
         .line-item { border: 1px solid #edf1f0; background: #fbfcfc; border-radius: 20px; padding: 16px; margin-bottom: 12px; }
         .line-grid { display: grid; grid-template-columns: 120px 1.15fr 135px 1.15fr 90px 130px 130px auto; gap: 12px; align-items: end; }
 
+        .category-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+        .category-row label { margin: 0; font-size: 12px; font-weight: 700; }
+        .category-row select { width: auto; min-width: 180px; }
+        .category-row select.locked { pointer-events: none; opacity: .75; }
+        .discount-badge { display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+        .discount-badge.yes { background: #dcfce7; color: #166534; }
+        .discount-badge.no { background: #f1f5f9; color: #475569; }
         .inventory-select-wrap { display: none; }
         .line-item[data-type="inventory"] .inventory-select-wrap { display: block; }
         .line-item[data-type="inventory"] .description-wrap { display: none; }
@@ -140,6 +147,7 @@
                         <h3>Contoh Promo</h3>
                         <p>
                             Gunakan kode seperti KHAYRA10 lalu pilih diskon persen 10, atau gunakan diskon nominal seperti 50000 untuk potongan langsung.
+                            <strong>Diskon hanya berlaku untuk item Program / Treatment.</strong> Add-on, produk, biaya admin, booking fee, dan biaya ruangan tidak didiskon.
                         </p>
                     </div>
                 </div>
@@ -277,6 +285,11 @@
                             </div>
 
                             <div class="summary-row">
+                                <span>Dasar Diskon (Program)</span>
+                                <strong id="discountBaseText">Rp 0</strong>
+                            </div>
+
+                            <div class="summary-row">
                                 <span>Diskon / Promo</span>
                                 <strong id="discountText">Rp 0</strong>
                             </div>
@@ -333,12 +346,13 @@
 
             <div class="field service-master-wrap">
                 <label>Master Layanan</label>
-                <select class="service-master-select" onchange="handleClinicServiceChange(this)">
+                <select name="clinic_service_id[]" class="service-master-select" onchange="handleClinicServiceChange(this)">
                     <option value="">Manual / pilih layanan</option>
                     @foreach(($clinicServices ?? collect()) as $service)
                         <option
                             value="{{ $service->id }}"
                             data-name="{{ $service->name }}"
+                            data-category="{{ \App\Services\BillingCalculator::categoryForService($service->category) }}"
                             data-price="{{ $service->price_per_visit }}"
                             data-package-3x="{{ $service->package_3x_price }}"
                             data-package-6x="{{ $service->package_6x_price }}"
@@ -404,11 +418,33 @@
             </div>
         </div>
 
+        <div class="category-row">
+            <label>Kategori Item</label>
+            <select name="item_category[]" class="category-select" onchange="calculateTotals()">
+                @foreach(\App\Services\BillingCalculator::categories() as $categoryKey => $categoryLabel)
+                    <option value="{{ $categoryKey }}" {{ $categoryKey === config('clinic.billing.manual_service_default_category') ? 'selected' : '' }}>{{ $categoryLabel }}</option>
+                @endforeach
+            </select>
+            <span class="discount-badge no category-badge">Tidak kena diskon</span>
+            <span class="hint category-hint" style="margin:0;"></span>
+        </div>
+
         <div class="hint inventory-hint"></div>
     </div>
 </template>
 
 <script>
+    const DISCOUNTABLE_CATEGORIES = @json(config('clinic.billing.discountable_categories'));
+    const MANUAL_DEFAULT_CATEGORY = @json(config('clinic.billing.manual_service_default_category'));
+
+    function setRowCategory(row, category, locked, hint) {
+        const select = row.querySelector('.category-select');
+        select.value = category;
+        select.classList.toggle('locked', !!locked);
+        select.tabIndex = locked ? -1 : 0;
+        row.querySelector('.category-hint').innerText = hint || '';
+    }
+
     function formatRupiah(value) {
         return 'Rp ' + Number(value || 0).toLocaleString('id-ID');
     }
@@ -447,8 +483,10 @@
             }
             descriptionInput.value = '';
             priceInput.value = 0;
+            setRowCategory(row, 'product', true, 'Produk tidak termasuk diskon.');
             handleInventoryChange(inventorySelect);
         } else {
+            setRowCategory(row, MANUAL_DEFAULT_CATEGORY, false, '');
             inventorySelect.value = '';
             descriptionInput.value = descriptionInput.value || 'Fisioterapi Umum';
             if (Number(priceInput.value || 0) === 0) {
@@ -507,8 +545,12 @@
         const packageSelect = row.querySelector('.package-price-select');
 
         if (!selected || !selected.value) {
+            setRowCategory(row, MANUAL_DEFAULT_CATEGORY, false, '');
+            calculateTotals();
             return;
         }
+
+        setRowCategory(row, selected.dataset.category || 'other', true, 'Kategori mengikuti master layanan.');
 
         syncPackageOptions(row);
 
@@ -588,6 +630,7 @@
         if (serviceSelect) serviceSelect.value = '';
         if (packageSelect) packageSelect.value = 'visit';
 
+        setRowCategory(row, 'booking_fee', false, '');
         descriptionInput.value = 'Booking Fee Non-Paket';
         qtyInput.value = 1;
         priceInput.value = 50000;
@@ -622,13 +665,24 @@
 
     function calculateTotals() {
         let subtotal = 0;
+        let discountBase = 0;
 
         document.querySelectorAll('.line-item').forEach(row => {
             const qty = Number(row.querySelector('.qty-input').value || 0);
             const price = Number(row.querySelector('.price-input').value || 0);
             const lineTotal = qty * price;
+            const category = row.querySelector('.category-select').value;
+            const eligible = DISCOUNTABLE_CATEGORIES.includes(category);
 
             subtotal += lineTotal;
+
+            if (eligible) {
+                discountBase += lineTotal;
+            }
+
+            const badge = row.querySelector('.category-badge');
+            badge.innerText = eligible ? 'Kena diskon promo' : 'Tidak kena diskon';
+            badge.className = 'discount-badge category-badge ' + (eligible ? 'yes' : 'no');
             row.querySelector('.line-total-box').innerText = formatRupiah(lineTotal);
         });
 
@@ -646,24 +700,27 @@
             const maxDiscount = Number(promoOption.dataset.max || 0);
             const code = promoOption.dataset.code || '';
 
-            if (minimum > 0 && subtotal < minimum) {
+            if (discountBase <= 0) {
                 discountAmount = 0;
-                promoHint = 'Promo ' + code + ' butuh minimum transaksi ' + formatRupiah(minimum) + '.';
+                promoHint = 'Promo ' + code + ' hanya berlaku untuk item Program / Treatment. Belum ada item program.';
+            } else if (minimum > 0 && discountBase < minimum) {
+                discountAmount = 0;
+                promoHint = 'Promo ' + code + ' butuh minimum item program ' + formatRupiah(minimum) + '.';
             } else {
                 if (discountType === 'nominal') {
                     discountAmount = discountValue;
                 }
 
                 if (discountType === 'percent') {
-                    discountAmount = subtotal * Math.min(discountValue, 100) / 100;
+                    discountAmount = discountBase * Math.min(discountValue, 100) / 100;
                 }
 
                 if (maxDiscount > 0) {
                     discountAmount = Math.min(discountAmount, maxDiscount);
                 }
 
-                discountAmount = Math.min(discountAmount, subtotal);
-                promoHint = 'Promo ' + code + ' aktif. Potongan: ' + formatRupiah(discountAmount) + '.';
+                discountAmount = Math.min(discountAmount, discountBase);
+                promoHint = 'Promo ' + code + ' aktif. Potongan ' + formatRupiah(discountAmount) + ' dari dasar diskon (item program) ' + formatRupiah(discountBase) + '. Add-on, produk, dan biaya lain tidak didiskon.';
             }
         }
 
@@ -685,6 +742,7 @@
         statusPreview.className = 'status-preview ' + status;
 
         document.getElementById('subtotalText').innerText = formatRupiah(subtotal);
+        document.getElementById('discountBaseText').innerText = formatRupiah(discountBase);
         document.getElementById('discountText').innerText = formatRupiah(discountAmount);
         document.getElementById('paidText').innerText = formatRupiah(paidAmount);
         document.getElementById('changeText').innerText = formatRupiah(changeAmount);

@@ -444,6 +444,7 @@
 
         .mini-detail { background: #eef7f5; color: #2f7c7a; border-color: #d8ebe7; }
         .mini-print { background: #eef2ff; color: #3457d5; border-color: #dde5ff; }
+        .mini-wa { background: #e9fbef; color: #15803d; border-color: #bbf0cf; }
         .mini-edit { background: #fff7ed; color: #c2410c; border-color: #fed7aa; }
         .mini-void { background: #fff1f2; color: #be123c; border-color: #ffe0e6; }
 
@@ -757,6 +758,9 @@
                                         <div class="action-stack">
                                             <a href="/admin/billings/{{ $billing->id }}" class="mini-btn mini-detail">Detail</a>
                                             <a href="/admin/billings/{{ $billing->id }}/print" target="_blank" class="mini-btn mini-print">Print</a>
+                                            @if($billing->payment_status !== 'void')
+                                                <a href="/admin/billings/{{ $billing->id }}/whatsapp" target="_blank" rel="noopener" class="mini-btn mini-wa" title="Buka WhatsApp dengan ringkasan invoice (PDF tidak terlampir otomatis)">WA</a>
+                                            @endif
 
                                             @if($billing->payment_status !== 'void')
                                                 <a href="/admin/billings/{{ $billing->id }}/edit" class="mini-btn mini-edit">Edit</a>

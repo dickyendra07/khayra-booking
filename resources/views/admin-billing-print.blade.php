@@ -665,6 +665,7 @@
                             <tr>
                                 <td class="col-desc">
                                     <div class="item-name">{{ $item->description }}</div>
+                                    @include('partials.billing-item-category', ['item' => $item, 'billing' => $billing, 'class' => 'item-meta'])
                                     @if($item->inventoryItem)
                                         <div class="item-meta">
                                             SKU: {{ $item->inventoryItem->sku ?: '-' }} · Unit: {{ $item->inventoryItem->unit ?: '-' }}

@@ -461,6 +461,7 @@
                             <tr>
                                 <td>
                                     <div class="primary-text">{{ $item->description }}</div>
+                                    @include('partials.billing-item-category', ['item' => $item, 'billing' => $billing, 'class' => 'secondary-text'])
                                     @if($item->inventoryItem)
                                         <div class="secondary-text">SKU: {{ $item->inventoryItem->sku ?: '-' }}</div>
                                     @endif

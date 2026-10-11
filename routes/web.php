@@ -26,6 +26,9 @@ use App\Models\InventoryStockMovement;
 use App\Models\PatientProgressEntry;
 use App\Models\HomeExerciseTemplate;
 use App\Models\ClinicService;
+use App\Services\BillingCalculator;
+use App\Services\InvoiceWhatsappMessage;
+use App\Support\WhatsappLink;
 use App\Models\PackageTreatmentDocument;
 use App\Models\TherapistLeaveRequest;
 
@@ -915,9 +918,9 @@ Route::post('/admin/patients', function (Request $request) {
         'whatsapp' => 'required|string|max:50',
         'address' => 'nullable|string',
         'nik' => 'nullable|string|max:30',
-        'religion' => 'nullable|string|max:100',
+        'religion' => \App\Support\PatientOptions::rule(\App\Support\PatientOptions::RELIGIONS),
         'occupation' => 'nullable|string|max:100',
-        'education' => 'nullable|string|max:100',
+        'education' => \App\Support\PatientOptions::rule(\App\Support\PatientOptions::EDUCATIONS),
         'marital_status' => 'nullable|in:Cerai hidup,Cerai mati,Kawin,Belum kawin',
     ]);
 
@@ -1139,9 +1142,9 @@ Route::post('/admin/patients/{id}/update', function (Request $request, $id) {
         'whatsapp' => 'required|string|max:50',
         'address' => 'nullable|string',
         'nik' => 'nullable|string|max:30',
-        'religion' => 'nullable|string|max:100',
+        'religion' => \App\Support\PatientOptions::rule(\App\Support\PatientOptions::RELIGIONS, $patient->religion),
         'occupation' => 'nullable|string|max:100',
-        'education' => 'nullable|string|max:100',
+        'education' => \App\Support\PatientOptions::rule(\App\Support\PatientOptions::EDUCATIONS, $patient->education),
         'marital_status' => 'nullable|in:Cerai hidup,Cerai mati,Kawin,Belum kawin',
     ]);
 
@@ -3575,10 +3578,13 @@ Route::post('/admin/cashier/checkout', function (Request $request) {
         'quantity' => 'required|array|min:1',
         'unit_price' => 'required|array|min:1',
         'inventory_item_id' => 'nullable|array',
+        'clinic_service_id' => 'nullable|array',
+        'item_category' => 'nullable|array',
     ]);
 
+    $clinicServices = ClinicService::whereIn('id', array_filter((array) $request->clinic_service_id))->get()->keyBy('id');
+
     $rows = [];
-    $subtotal = 0;
 
     foreach ($request->item_type as $index => $type) {
         $type = $type === 'inventory' ? 'inventory' : 'service';
@@ -3586,6 +3592,7 @@ Route::post('/admin/cashier/checkout', function (Request $request) {
         $quantity = (int) ($request->quantity[$index] ?? 0);
         $unitPrice = (float) ($request->unit_price[$index] ?? 0);
         $inventoryItemId = $request->inventory_item_id[$index] ?? null;
+        $clinicServiceId = $type === 'service' ? ($request->clinic_service_id[$index] ?? null) : null;
 
         if ($description === '' || $quantity <= 0 || $unitPrice < 0) {
             continue;
@@ -3595,43 +3602,67 @@ Route::post('/admin/cashier/checkout', function (Request $request) {
             return back()->withInput()->withErrors(['inventory_item_id' => 'Item inventory wajib dipilih untuk baris produk.']);
         }
 
-        $lineTotal = $quantity * $unitPrice;
-        $subtotal += $lineTotal;
+        // Category (and therefore discount eligibility) is decided on the server:
+        // products are always "product", master services follow their master
+        // category, and only manual lines use the category chosen by the admin.
+        if ($type === 'inventory') {
+            $category = 'product';
+        } elseif ($clinicServiceId && $clinicServices->has($clinicServiceId)) {
+            $category = BillingCalculator::categoryForService($clinicServices[$clinicServiceId]->category);
+        } else {
+            $clinicServiceId = null;
+            $requestedCategory = $request->item_category[$index] ?? null;
+            $category = BillingCalculator::isValidCategory($requestedCategory) && $requestedCategory !== 'product'
+                ? $requestedCategory
+                : config('clinic.billing.manual_service_default_category');
+        }
 
         $rows[] = [
             'item_type' => $type,
+            'category' => $category,
             'description' => $description,
             'quantity' => $quantity,
             'unit_price' => $unitPrice,
-            'line_total' => $lineTotal,
             'inventory_item_id' => $type === 'inventory' ? $inventoryItemId : null,
+            'clinic_service_id' => $clinicServiceId,
         ];
     }
 
-    if (count($rows) === 0 || $subtotal <= 0) {
+    $promo = $request->promo_id ? Promo::findOrFail($request->promo_id) : null;
+
+    // Single calculation path: discounts apply to program items only.
+    $calculation = (new BillingCalculator)->calculate($rows, $promo);
+
+    if (count($rows) === 0 || $calculation['subtotal'] <= 0) {
         return back()->withInput()->withErrors(['items' => 'Minimal isi 1 item transaksi dengan nominal lebih dari 0.']);
     }
 
-    $promo = null;
-    $discountType = 'none';
-    $discountValue = 0;
-    $discountAmount = 0;
-    $promoCode = null;
-
-    if ($request->promo_id) {
-        $promo = Promo::findOrFail($request->promo_id);
-
-        if (!$promo->isAvailableForSubtotal($subtotal)) {
-            return back()->withInput()->withErrors(['promo_id' => 'Promo tidak aktif, tidak sesuai tanggal, atau subtotal belum memenuhi minimum transaksi.']);
-        }
-
-        $discountType = $promo->discount_type;
-        $discountValue = $promo->discount_value;
-        $discountAmount = $promo->calculateDiscount($subtotal);
-        $promoCode = $promo->code;
+    if ($promo && !$calculation['promo_applied']) {
+        return back()->withInput()->withErrors(['promo_id' => $calculation['promo_error']]);
     }
 
-    $grandTotal = max($subtotal - $discountAmount, 0);
+    $rows = array_map(function ($line) {
+        return [
+            'item_type' => $line['item_type'],
+            'item_category' => $line['category'],
+            'description' => $line['description'],
+            'quantity' => $line['quantity'],
+            'unit_price' => $line['unit_price'],
+            'line_total' => $line['line_total'],
+            'is_discount_eligible' => $line['is_discount_eligible'],
+            'discount_amount' => $line['discount_amount'],
+            'inventory_item_id' => $line['inventory_item_id'],
+            'clinic_service_id' => $line['clinic_service_id'],
+        ];
+    }, $calculation['lines']);
+
+    $subtotal = $calculation['subtotal'];
+    $discountType = $promo ? $promo->discount_type : 'none';
+    $discountValue = $promo ? $promo->discount_value : 0;
+    $discountAmount = $calculation['discount_amount'];
+    $promoCode = $promo ? $promo->code : null;
+
+    $grandTotal = $calculation['grand_total'];
 
     $paidAmount = (float) ($request->paid_amount ?: 0);
     $changeAmount = max($paidAmount - $grandTotal, 0);
@@ -6394,6 +6425,30 @@ Route::get('/admin/billings/{id}/print', function ($id) {
 
     $billing = Billing::with(['patient', 'visit', 'items.inventoryItem'])->findOrFail($id);
     return view('admin-billing-print', compact('billing'));
+});
+
+// Manual WhatsApp sharing: opens a pre-filled chat for the admin to review and send.
+// Nothing is sent automatically and no PDF is attached by this route.
+Route::get('/admin/billings/{id}/whatsapp', function ($id) {
+    if (!session('admin_logged_in')) {
+        return redirect('/admin/login');
+    }
+
+    $billing = Billing::with(['patient', 'items'])->findOrFail($id);
+
+    if ($billing->payment_status === 'void' || $billing->voided_at) {
+        return redirect('/admin/billings/' . $billing->id)
+            ->with('error', 'Invoice yang sudah di-void tidak bisa dikirim via WhatsApp.');
+    }
+
+    $number = WhatsappLink::normalize(optional($billing->patient)->whatsapp);
+
+    if (!$number) {
+        return redirect('/admin/billings/' . $billing->id)
+            ->with('error', 'Nomor WhatsApp pasien kosong atau tidak valid. Perbarui data pasien terlebih dahulu.');
+    }
+
+    return redirect()->away(WhatsappLink::url($number, (new InvoiceWhatsappMessage)->build($billing)));
 });
 
 Route::post('/admin/billings/{id}/status', function (Request $request, $id) {

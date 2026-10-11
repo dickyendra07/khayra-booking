@@ -96,6 +96,11 @@
             border: 1px solid #dde5ff;
         }
 
+        .btn-wa {
+            background: #25d366;
+            color: #ffffff;
+        }
+
         .alert {
             padding: 14px 16px;
             border-radius: 16px;
@@ -109,6 +114,12 @@
             background: #ecfdf5;
             color: #166534;
             border: 1px solid #bbf7d0;
+        }
+
+        .alert-error {
+            background: #fff1f2;
+            color: #be123c;
+            border: 1px solid #ffe0e6;
         }
 
         .hero {
@@ -406,11 +417,26 @@
                         </a>
                     @endif
 <a href="/admin/billings/{{ $billing->id }}/print" class="btn btn-primary" target="_blank">Print / Save PDF</a>
+                    @if($billing->payment_status !== 'void')
+                        <a href="/admin/billings/{{ $billing->id }}/whatsapp" class="btn btn-wa" target="_blank" rel="noopener"
+                           title="Membuka WhatsApp dengan pesan ringkasan invoice. PDF tidak terlampir otomatis.">Kirim via WhatsApp</a>
+                    @endif
                 </div>
             </div>
 
             @if(session('success'))
                 <div class="alert alert-success">{{ session('success') }}</div>
+            @endif
+
+            @if(session('error'))
+                <div class="alert alert-error">{{ session('error') }}</div>
+            @endif
+
+            @if($billing->payment_status !== 'void')
+                <div class="alert" style="background:#f1f5f9;color:#334155;border:1px solid #e2e8f0;font-size:13px;">
+                    <strong>Kirim via WhatsApp</strong> membuka chat pasien dengan ringkasan invoice. Pesan dikirim manual oleh admin.
+                    Untuk melampirkan PDF: klik <em>Print / Save PDF</em>, simpan sebagai PDF, lalu lampirkan sendiri di chat WhatsApp.
+                </div>
             @endif
 
             <section class="hero">
@@ -516,6 +542,7 @@
                                 <tr>
                                     <td>
                                         <div class="primary-text">{{ $item->description }}</div>
+                                        @include('partials.billing-item-category', ['item' => $item, 'billing' => $billing, 'class' => 'secondary-text'])
                                         @if($item->inventoryItem)
                                             <div class="secondary-text">
                                                 SKU: {{ $item->inventoryItem->sku ?: '-' }} · Stock item: {{ $item->inventoryItem->stock }} {{ $item->inventoryItem->unit }}
