@@ -763,7 +763,7 @@
                                             <a href="/admin/billings/{{ $billing->id }}" class="mini-btn mini-detail">Detail</a>
                                             <a href="/admin/billings/{{ $billing->id }}/print" target="_blank" class="mini-btn mini-print">Print</a>
                                             @if($billing->payment_status !== 'void')
-                                                <a href="/admin/billings/{{ $billing->id }}/whatsapp" target="_blank" rel="noopener" class="mini-btn mini-wa" title="Buka WhatsApp dengan ringkasan invoice (PDF tidak terlampir otomatis)">WA</a>
+                                                <a href="/admin/billings/{{ $billing->id }}/whatsapp" class="mini-btn mini-wa" title="Periksa nomor tujuan & pesan sebelum membuka WhatsApp (PDF tidak terlampir otomatis)">WA</a>
                                             @endif
 
                                             @if($billing->payment_status !== 'void')

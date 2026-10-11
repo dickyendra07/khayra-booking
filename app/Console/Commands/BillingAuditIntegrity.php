@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Billing;
 use App\Models\FinanceMonthlyClosing;
+use App\Services\BillingMoney;
 use App\Support\InvoiceNumberIndex;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -66,7 +67,7 @@ class BillingAuditIntegrity extends Command
         foreach (FinanceMonthlyClosing::active()->get() as $closing) {
             $live = Billing::whereBetween('invoice_date', [$closing->period_start->toDateString(), $closing->period_end->toDateString()])
                 ->where('payment_status', '!=', 'void')->get()
-                ->sum(fn ($b) => ($b->payment_status === 'paid' && (float) $b->paid_amount <= 0) ? (float) $b->amount : (float) $b->paid_amount);
+                ->sum(fn ($b) => BillingMoney::paid($b));
 
             if (abs($live - (float) $closing->billing_income) >= 1) {
                 $drift[] = "bulan {$closing->month}: snapshot ".(float) $closing->billing_income.', data billing saat ini '.$live;
@@ -74,6 +75,22 @@ class BillingAuditIntegrity extends Command
         }
 
         $findings += $this->section('8. Closing aktif yang berbeda dari data billing saat ini (pemasukan invoice)', $drift);
+
+        // Dampak zona waktu: aplikasi memakai UTC, klinik WIB (UTC+7). Invoice yang dibuat antara
+        // 00:00-07:00 WIB bertanggal hari sebelumnya. Hanya informasi; tidak dihitung sebagai temuan.
+        $shifted = Billing::whereNotNull('created_at')->get()->filter(function ($b) {
+            $utcDate = $b->created_at->copy()->setTimezone('UTC')->toDateString();
+            $wibDate = $b->created_at->copy()->setTimezone('Asia/Jakarta')->toDateString();
+
+            return $utcDate !== $wibDate && $b->invoice_date && $b->invoice_date->toDateString() === $utcDate;
+        });
+
+        $this->line('<options=bold>9. Dampak zona waktu UTC vs WIB (informasi)</>');
+        $this->line('   Invoice bertanggal hari UTC padahal dibuat pada hari berikutnya menurut WIB: '.$shifted->count()
+            .' dari '.Billing::count());
+        $this->line('   Di antaranya melintasi batas BULAN (berisiko pada closing): '
+            .$shifted->filter(fn ($b) => $b->created_at->copy()->setTimezone('Asia/Jakarta')->format('Y-m') !== $b->invoice_date->format('Y-m'))->count());
+        $this->newLine();
 
         $this->info($findings === 0 ? 'Tidak ada temuan.' : "Total kelompok temuan: {$findings}");
 

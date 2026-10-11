@@ -2,6 +2,7 @@
 
 use App\Models\Billing;
 use App\Models\Patient;
+use App\Services\InvoiceWhatsappMessage;
 use App\Support\WhatsappLink;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -41,40 +42,62 @@ it('requires an admin session', function () {
     $this->get("/admin/billings/{$billing->id}/whatsapp")->assertRedirect('/admin/login');
 });
 
-it('opens a prefilled WhatsApp chat with the invoice summary', function () {
+it('menampilkan nomor tujuan dan pratinjau pesan sebelum WhatsApp dibuka (tanpa redirect otomatis)', function () {
     $this->withSession(['admin_logged_in' => true]);
     $billing = makeBilling();
 
     $response = $this->get("/admin/billings/{$billing->id}/whatsapp");
-    $location = $response->headers->get('Location');
 
-    $response->assertRedirect();
-    expect($location)->toStartWith('https://wa.me/6281234567890?text=');
-
-    $text = urldecode(substr($location, strlen('https://wa.me/6281234567890?text=')));
-
-    expect($text)->toContain('Siti Aminah')
-        ->toContain('INV-TEST-1')
-        ->toContain('Musculoskeletal Program x1 = Rp500.000')
-        ->toContain('+ USG x1 = Rp100.000')
-        ->toContain('Diskon: -Rp50.000')
-        ->toContain('Total tagihan: Rp550.000')
-        ->toContain('Status: Belum dibayar')
-        ->toContain('Portal Pasien')
-        ->not->toContain('/patient/invoices')   // no direct invoice URL
-        ->not->toContain('PDF');                 // never claims an attachment
+    $response->assertOk()
+        ->assertSee('Nomor tujuan')
+        ->assertSee('+62 812-3456-7890')
+        ->assertSee('Siti Aminah')                      // nama lengkap hanya untuk admin di layar konfirmasi
+        ->assertSee('Pratinjau pesan')
+        ->assertSee('Buka WhatsApp')
+        ->assertSee('https://wa.me/6281234567890?text=', false);
+    expect($response->headers->get('Location'))->toBeNull();
 });
 
-it('reports a partial payment with the remaining balance', function () {
+it('pesan WhatsApp minimal: tanpa nama layanan, rincian item, diskon, atau tautan invoice', function () {
+    $this->withSession(['admin_logged_in' => true]);
+    $billing = makeBilling();
+
+    $html = $this->get("/admin/billings/{$billing->id}/whatsapp")->getContent();
+    preg_match('/wa\.me\/\d+\?text=([^"]+)"/', $html, $match);
+    $text = urldecode(html_entity_decode($match[1]));
+
+    expect($text)->toContain('Halo Siti,')                // hanya nama depan
+        ->toContain('INV-TEST-1')
+        ->toContain('Total tagihan: Rp550.000')
+        ->toContain('Status: Belum dibayar')
+        ->toContain('Sisa tagihan: Rp550.000')
+        ->toContain('Portal Pasien')
+        ->not->toContain('Aminah')                        // nama belakang tidak dikirim
+        ->not->toContain('Musculoskeletal')               // nama layanan tidak dikirim
+        ->not->toContain('USG')
+        ->not->toContain('Rincian')
+        ->not->toContain('Diskon')
+        ->not->toContain('Subtotal')
+        ->not->toContain('/patient/invoices')             // tidak ada URL invoice langsung
+        ->not->toContain('PDF');                          // tidak mengklaim lampiran
+});
+
+it('pesan tidak pernah memuat data klinis atau identitas sensitif pasien', function () {
+    $this->withSession(['admin_logged_in' => true]);
+    $billing = makeBilling(['full_name' => 'Siti Aminah', 'nik' => '3273010101010001', 'address' => 'Jl. Rahasia 1', 'medical_record_number' => 'KP-B-01-00099', 'birth_date' => '1990-05-17']);
+
+    $text = (new InvoiceWhatsappMessage)->build($billing);
+
+    expect($text)->not->toContain('3273010101010001')->not->toContain('Rahasia')->not->toContain('KP-B-01')->not->toContain('1990');
+});
+
+it('melaporkan sisa tagihan untuk pembayaran sebagian', function () {
     $this->withSession(['admin_logged_in' => true]);
     $billing = makeBilling([], ['payment_status' => 'partial', 'paid_amount' => 200000, 'remaining_amount' => 350000]);
 
-    $location = $this->get("/admin/billings/{$billing->id}/whatsapp")->headers->get('Location');
-    $text = urldecode($location);
+    $text = (new InvoiceWhatsappMessage)->build($billing->fresh());
 
-    expect($text)->toContain('Status: Dibayar sebagian')
-        ->toContain('Sudah dibayar: Rp200.000')
-        ->toContain('Sisa tagihan: Rp350.000');
+    expect($text)->toContain('Status: Dibayar sebagian')->toContain('Sisa tagihan: Rp350.000')->not->toContain('Sudah dibayar');
 });
 
 it('refuses to send a voided invoice', function () {

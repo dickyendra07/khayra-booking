@@ -136,3 +136,18 @@ it('command audit melaporkan bersih pada data yang konsisten', function () {
 
     $this->artisan('billing:audit-integrity --strict')->expectsOutputToContain('Tidak ada temuan.')->assertSuccessful();
 });
+
+it('command audit melaporkan dampak zona waktu UTC vs WIB tanpa mengubah data', function () {
+    // Dibuat 20:30 UTC tanggal 31 Okt = 03:30 WIB tanggal 1 Nov: melintasi batas bulan.
+    $billing = Billing::create(['patient_id' => $this->patient->id, 'invoice_number' => 'INV-TZ', 'invoice_date' => '2026-10-31', 'amount' => 100000, 'payment_status' => 'unpaid']);
+    Billing::where('id', $billing->id)->update(['created_at' => '2026-10-31 20:30:00']);
+
+    $before = Billing::find($billing->id)->only(['invoice_date', 'amount']);
+
+    $this->artisan('billing:audit-integrity')
+        ->expectsOutputToContain('Dampak zona waktu UTC vs WIB')
+        ->expectsOutputToContain('melintasi batas BULAN (berisiko pada closing): 1')
+        ->assertSuccessful();
+
+    expect(Billing::find($billing->id)->only(['invoice_date', 'amount']))->toEqual($before);
+});

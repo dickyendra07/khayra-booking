@@ -261,6 +261,13 @@
         .unpaid { background: #fee2e2; color: #b91c1c; }
         .partial { background: #fef3c7; color: #92400e; }
         .void { background: #e5e7eb; color: #374151; }
+        @media (max-width: 700px) {
+            .audit-table, .audit-table tbody, .audit-table tr, .audit-table td { display: block; width: 100%; min-width: 0; }
+            .audit-table thead { display: none; }
+            .audit-table tr { border: 1px solid #e6ebea; border-radius: 14px; padding: 10px 12px; margin-bottom: 10px; background: #fbfcfc; }
+            .audit-table td { border: 0; padding: 4px 0; word-break: break-word; }
+            .audit-table td[data-label]::before { content: attr(data-label); display: block; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; color: #64748b; }
+        }
         .void-box { background:#fff1f2; border:1px solid #ffe0e6; color:#991b1b; border-radius:20px; padding:18px; margin-bottom:18px; }
         .void-box h3 { margin:0 0 8px; font-size:18px; }
         .void-box p { margin:0 0 12px; font-size:13px; line-height:1.7; }
@@ -418,8 +425,8 @@
                     @endif
 <a href="/admin/billings/{{ $billing->id }}/print" class="btn btn-primary" target="_blank">Print / Save PDF</a>
                     @if($billing->payment_status !== 'void')
-                        <a href="/admin/billings/{{ $billing->id }}/whatsapp" class="btn btn-wa" target="_blank" rel="noopener"
-                           title="Membuka WhatsApp dengan pesan ringkasan invoice. PDF tidak terlampir otomatis.">Kirim via WhatsApp</a>
+                        <a href="/admin/billings/{{ $billing->id }}/whatsapp" class="btn btn-wa"
+                           title="Tampilkan nomor tujuan dan pratinjau pesan. PDF tidak terlampir otomatis.">Kirim via WhatsApp</a>
                     @endif
                 </div>
             </div>
@@ -434,7 +441,7 @@
 
             @if($billing->payment_status !== 'void')
                 <div class="alert" style="background:#f1f5f9;color:#334155;border:1px solid #e2e8f0;font-size:13px;">
-                    <strong>Kirim via WhatsApp</strong> membuka chat pasien dengan ringkasan invoice. Pesan dikirim manual oleh admin.
+                    <strong>Kirim via WhatsApp</strong> menampilkan nomor tujuan dan pratinjau pesan ringkas (tanpa rincian layanan) sebelum WhatsApp dibuka. Pesan dikirim manual oleh admin.
                     Untuk melampirkan PDF: klik <em>Print / Save PDF</em>, simpan sebagai PDF, lalu lampirkan sendiri di chat WhatsApp.
                 </div>
             @endif
@@ -682,17 +689,17 @@
                 <h2 class="section-title">Riwayat Audit</h2>
                 <p class="section-subtitle">Catatan perubahan invoice (tidak dapat diubah atau dihapus).</p>
                 <div class="table-wrap">
-                    <table>
+                    <table class="audit-table">
                         <thead>
                             <tr><th>Waktu</th><th>Aksi</th><th>Oleh</th><th>Perubahan</th><th>Alasan</th></tr>
                         </thead>
                         <tbody>
                             @forelse($auditLogs as $log)
                                 <tr>
-                                    <td>{{ optional($log->created_at)->format('Y-m-d H:i') }}</td>
-                                    <td>{{ $log->action }}</td>
-                                    <td>{{ $log->actor ?: '-' }}</td>
-                                    <td>
+                                    <td data-label="Waktu">{{ optional($log->created_at)->format('Y-m-d H:i') }}</td>
+                                    <td data-label="Aksi">{{ $log->action }}</td>
+                                    <td data-label="Oleh">{{ $log->actor ?: '-' }}</td>
+                                    <td data-label="Perubahan">
                                         @if($log->action === 'created')
                                             Invoice dibuat (total Rp {{ number_format($log->after['amount'] ?? 0, 0, ',', '.') }})
                                         @else
@@ -703,7 +710,7 @@
                                             @endforeach
                                         @endif
                                     </td>
-                                    <td>{{ $log->reason ?: '-' }}</td>
+                                    <td data-label="Alasan">{{ $log->reason ?: '-' }}</td>
                                 </tr>
                             @empty
                                 <tr><td colspan="5">Belum ada catatan audit (invoice dibuat sebelum fitur audit aktif).</td></tr>

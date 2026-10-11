@@ -29,6 +29,7 @@ use App\Models\ClinicService;
 use App\Services\BillingAudit;
 use App\Services\BillingCalculator;
 use App\Services\BillingIntegrity;
+use App\Services\BillingMoney;
 use App\Services\InvoiceNumberGenerator;
 use App\Models\BillingAuditLog;
 use App\Models\FinanceMonthlyClosing;
@@ -2204,6 +2205,11 @@ Route::get('/admin/inventory/{id}/movements', function ($id) {
     return view('admin-inventory-movements', compact('item', 'movements', 'summary'));
 })->whereNumber('id');
 
+// Tautan sidebar lama yang sebelumnya 404 (harus di atas rute {id}).
+Route::get('/admin/inventory/movements', function () {
+    return redirect('/admin/inventory/stock-movements');
+});
+
 Route::get('/admin/inventory/{id}', function ($id) {
     if (!session('admin_logged_in')) {
         return redirect('/admin/login');
@@ -3794,6 +3800,9 @@ Route::post('/admin/cashier/checkout', function (Request $request) {
         $paymentStatus = 'paid';
     }
 
+    // Baris counter nomor invoice dibuat di luar transaction agar tidak deadlock pada invoice pertama bulan ini.
+    (new InvoiceNumberGenerator)->prepare();
+
     try {
         $billing = DB::transaction(function () use (
             $request,
@@ -3881,7 +3890,7 @@ Route::post('/admin/cashier/checkout', function (Request $request) {
             }
 
             return $billing;
-        });
+        }, 3);
     } catch (\RuntimeException $exception) {
         return back()->withInput()->withErrors(['stock' => $exception->getMessage()]);
     }
@@ -4022,20 +4031,7 @@ Route::get('/admin/owner-finance', function (Request $request) {
     $endDate = $startDate->copy()->endOfMonth();
     $monthLabel = $startDate->format('F Y');
 
-    $moneyPaid = function ($billing) {
-        if (($billing->payment_status ?? null) === 'void') {
-            return 0;
-        }
-
-        $paid = (float) ($billing->paid_amount ?? 0);
-        $amount = (float) ($billing->amount ?? 0);
-
-        if (($billing->payment_status ?? null) === 'paid' && $paid <= 0) {
-            return $amount;
-        }
-
-        return $paid;
-    };
+    $moneyPaid = fn ($billing) => BillingMoney::paid($billing);
 
     $billingIncomes = Billing::with(['patient', 'visit'])
         ->whereBetween('invoice_date', [$startDate->toDateString(), $endDate->toDateString()])
@@ -4141,20 +4137,7 @@ Route::get('/admin/owner-finance/print', function (Request $request) {
     $endDate = $startDate->copy()->endOfMonth();
     $monthLabel = $startDate->format('F Y');
 
-    $moneyPaid = function ($billing) {
-        if (($billing->payment_status ?? null) === 'void') {
-            return 0;
-        }
-
-        $paid = (float) ($billing->paid_amount ?? 0);
-        $amount = (float) ($billing->amount ?? 0);
-
-        if (($billing->payment_status ?? null) === 'paid' && $paid <= 0) {
-            return $amount;
-        }
-
-        return $paid;
-    };
+    $moneyPaid = fn ($billing) => BillingMoney::paid($billing);
 
     $billingIncomes = Billing::with(['patient', 'visit'])
         ->whereBetween('invoice_date', [$startDate->toDateString(), $endDate->toDateString()])
@@ -4252,20 +4235,7 @@ Route::post('/admin/owner-finance/close', function (Request $request) {
     $startDate = \Carbon\Carbon::parse($month . '-01')->startOfMonth();
     $endDate = $startDate->copy()->endOfMonth();
 
-    $moneyPaid = function ($billing) {
-        if (($billing->payment_status ?? null) === 'void') {
-            return 0;
-        }
-
-        $paid = (float) ($billing->paid_amount ?? 0);
-        $amount = (float) ($billing->amount ?? 0);
-
-        if (($billing->payment_status ?? null) === 'paid' && $paid <= 0) {
-            return $amount;
-        }
-
-        return $paid;
-    };
+    $moneyPaid = fn ($billing) => BillingMoney::paid($billing);
 
     $billingIncomes = Billing::with(['patient'])
         ->whereBetween('invoice_date', [$startDate->toDateString(), $endDate->toDateString()])
@@ -4510,36 +4480,9 @@ Route::get('/admin/owner-dashboard', function (Request $request) {
 
     $validBillings = $billings->where('payment_status', '!=', 'void');
 
-    $moneyPaid = function ($billing) {
-        if (($billing->payment_status ?? null) === 'void') {
-            return 0;
-        }
+    $moneyPaid = fn ($billing) => BillingMoney::paid($billing);
 
-        $paid = (float) ($billing->paid_amount ?? 0);
-        $amount = (float) ($billing->amount ?? 0);
-
-        if (($billing->payment_status ?? null) === 'paid' && $paid <= 0) {
-            return $amount;
-        }
-
-        return $paid;
-    };
-
-    $moneyOutstanding = function ($billing) {
-        if (($billing->payment_status ?? null) === 'void') {
-            return 0;
-        }
-
-        $total = (float) ($billing->grand_total ?? $billing->total_amount ?? $billing->amount ?? 0);
-        $paid = (float) ($billing->paid_amount ?? 0);
-        $status = $billing->payment_status ?: 'unpaid';
-
-        if ($status === 'paid') {
-            return 0;
-        }
-
-        return max($total - $paid, 0);
-    };
+    $moneyOutstanding = fn ($billing) => BillingMoney::outstanding($billing);
 
     $leaveRequests = class_exists(\App\Models\TherapistLeaveRequest::class)
         ? \App\Models\TherapistLeaveRequest::with('therapist')->latest()->take(8)->get()
@@ -4657,36 +4600,9 @@ Route::get('/admin/reports/monthly-clinic', function (Request $request) {
     $validBillings = $billings->where('payment_status', '!=', 'void');
 
 
-    $moneyPaid = function ($billing) {
-        if ($billing->payment_status === 'void') {
-            return 0;
-        }
+    $moneyPaid = fn ($billing) => BillingMoney::paid($billing);
 
-        $paid = (float) ($billing->paid_amount ?? 0);
-        $amount = (float) ($billing->amount ?? 0);
-
-        if ($billing->payment_status === 'paid' && $paid <= 0) {
-            return $amount;
-        }
-
-        return $paid;
-    };
-
-    $moneyOutstanding = function ($billing) {
-        if (($billing->payment_status ?? null) === 'void') {
-            return 0;
-        }
-
-        $total = (float) ($billing->grand_total ?? $billing->total_amount ?? $billing->amount ?? 0);
-        $paid = (float) ($billing->paid_amount ?? 0);
-        $status = $billing->payment_status ?: 'unpaid';
-
-        if ($status === 'paid') {
-            return 0;
-        }
-
-        return max($total - $paid, 0);
-    };
+    $moneyOutstanding = fn ($billing) => BillingMoney::outstanding($billing);
 
     $movements = InventoryStockMovement::with('item')
         ->whereBetween('created_at', [$startDate, $endDate])
@@ -4827,36 +4743,9 @@ Route::get('/admin/reports/revenue', function (Request $request) {
     $validBillings = $billings->where('payment_status', '!=', 'void');
 
 
-    $moneyPaid = function ($billing) {
-        if ($billing->payment_status === 'void') {
-            return 0;
-        }
+    $moneyPaid = fn ($billing) => BillingMoney::paid($billing);
 
-        $paid = (float) ($billing->paid_amount ?? 0);
-        $amount = (float) ($billing->amount ?? 0);
-
-        if ($billing->payment_status === 'paid' && $paid <= 0) {
-            return $amount;
-        }
-
-        return $paid;
-    };
-
-    $moneyOutstanding = function ($billing) {
-        if (($billing->payment_status ?? null) === 'void') {
-            return 0;
-        }
-
-        $total = (float) ($billing->grand_total ?? $billing->total_amount ?? $billing->amount ?? 0);
-        $paid = (float) ($billing->paid_amount ?? 0);
-        $status = $billing->payment_status ?: 'unpaid';
-
-        if ($status === 'paid') {
-            return 0;
-        }
-
-        return max($total - $paid, 0);
-    };
+    $moneyOutstanding = fn ($billing) => BillingMoney::outstanding($billing);
 
     $summary = [
         'transactions' => $billings->count(),
@@ -6004,36 +5893,9 @@ Route::get('/patient/dashboard', function () {
 
     $validBillings = $billings->where('payment_status', '!=', 'void');
 
-    $moneyPaid = function ($billing) {
-        if ($billing->payment_status === 'void') {
-            return 0;
-        }
+    $moneyPaid = fn ($billing) => BillingMoney::paid($billing);
 
-        $paid = (float) ($billing->paid_amount ?? 0);
-        $amount = (float) ($billing->amount ?? 0);
-
-        if ($billing->payment_status === 'paid' && $paid <= 0) {
-            return $amount;
-        }
-
-        return $paid;
-    };
-
-    $moneyOutstanding = function ($billing) {
-        if (($billing->payment_status ?? null) === 'void') {
-            return 0;
-        }
-
-        $total = (float) ($billing->grand_total ?? $billing->total_amount ?? $billing->amount ?? 0);
-        $paid = (float) ($billing->paid_amount ?? 0);
-        $status = $billing->payment_status ?: 'unpaid';
-
-        if ($status === 'paid') {
-            return 0;
-        }
-
-        return max($total - $paid, 0);
-    };
+    $moneyOutstanding = fn ($billing) => BillingMoney::outstanding($billing);
 
     $paidTotal = $validBillings->sum(fn ($billing) => $moneyPaid($billing));
     $outstandingTotal = $validBillings->sum(fn ($billing) => $moneyOutstanding($billing));
@@ -6506,36 +6368,9 @@ Route::get('/admin/billings', function (Request $request) {
 
     $summaryBillings = $summaryQuery->get();
 
-    $moneyPaid = function ($billing) {
-        if ($billing->payment_status === 'void') {
-            return 0;
-        }
+    $moneyPaid = fn ($billing) => BillingMoney::paid($billing);
 
-        $paid = (float) ($billing->paid_amount ?? 0);
-        $amount = (float) ($billing->amount ?? 0);
-
-        if ($billing->payment_status === 'paid' && $paid <= 0) {
-            return $amount;
-        }
-
-        return $paid;
-    };
-
-    $moneyOutstanding = function ($billing) {
-        if (($billing->payment_status ?? null) === 'void') {
-            return 0;
-        }
-
-        $total = (float) ($billing->grand_total ?? $billing->total_amount ?? $billing->amount ?? 0);
-        $paid = (float) ($billing->paid_amount ?? 0);
-        $status = $billing->payment_status ?: 'unpaid';
-
-        if ($status === 'paid') {
-            return 0;
-        }
-
-        return max($total - $paid, 0);
-    };
+    $moneyOutstanding = fn ($billing) => BillingMoney::outstanding($billing);
 
     $totalTransactions = $summaryBillings->count();
     $grossRevenue = $summaryBillings->where('payment_status', '!=', 'void')->sum('subtotal_amount');
@@ -6628,6 +6463,8 @@ Route::post('/admin/billings', function (Request $request) {
         return back()->withInput()->withErrors(['paid_amount' => 'Untuk status Partial, isi Paid Amount lebih dari 0 dan kurang dari total invoice.']);
     }
 
+    (new InvoiceNumberGenerator)->prepare();
+
     $billing = DB::transaction(function () use ($request, $amount, $partialPaid) {
         $billing = new Billing([
             'patient_id' => $request->patient_id,
@@ -6646,7 +6483,7 @@ Route::post('/admin/billings', function (Request $request) {
         BillingAudit::record('created', $billing, null, array_merge(BillingAudit::snapshot($billing), ['source' => 'manual']));
 
         return $billing;
-    });
+    }, 3);
 
     return redirect('/admin/billings')->with('success', 'Billing berhasil ditambahkan!');
 });
@@ -6783,8 +6620,8 @@ Route::get('/admin/billings/{id}/print', function ($id) {
     return view('admin-billing-print', compact('billing'));
 });
 
-// Manual WhatsApp sharing: opens a pre-filled chat for the admin to review and send.
-// Nothing is sent automatically and no PDF is attached by this route.
+// Manual WhatsApp sharing: shows the destination number and message preview; the admin then
+// opens a pre-filled chat and sends it. Nothing is sent automatically and no PDF is attached.
 Route::get('/admin/billings/{id}/whatsapp', function ($id) {
     if (!session('admin_logged_in')) {
         return redirect('/admin/login');
@@ -6804,7 +6641,15 @@ Route::get('/admin/billings/{id}/whatsapp', function ($id) {
             ->with('error', 'Nomor WhatsApp pasien kosong atau tidak valid. Perbarui data pasien terlebih dahulu.');
     }
 
-    return redirect()->away(WhatsappLink::url($number, (new InvoiceWhatsappMessage)->build($billing)));
+    // Halaman konfirmasi: admin melihat nomor tujuan dan pratinjau pesan sebelum membuka WhatsApp.
+    $message = (new InvoiceWhatsappMessage)->build($billing);
+
+    return view('admin-billing-whatsapp', [
+        'billing' => $billing,
+        'message' => $message,
+        'displayNumber' => WhatsappLink::display($number),
+        'waUrl' => WhatsappLink::url($number, $message),
+    ]);
 });
 
 Route::post('/admin/billings/{id}/status', function (Request $request, $id) {
@@ -6941,4 +6786,10 @@ Route::post('/admin/billings/{id}/delete', function ($id) {
 
     return redirect('/admin/billings/' . $billing->id)
         ->with('error', 'Invoice tidak dapat dihapus karena merupakan catatan keuangan. Gunakan Void (dengan alasan) bila invoice salah, lalu Terbitkan Ulang bila perlu.');
+});
+
+// Tautan sidebar lama yang sebelumnya 404: arahkan ke halaman yang memang ada (tanpa fitur baru).
+Route::get('/admin/informed-consent/create', function () {
+    return redirect('/admin/patients')
+        ->with('success', 'Informed consent dibuat per pasien: pilih pasien, lalu buka menu Informed Consent pada profil pasien.');
 });
