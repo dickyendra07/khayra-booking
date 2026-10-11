@@ -21,6 +21,8 @@ class InformedConsent extends Model
         'emergency_contact_relation',
         'agreement_text',
         'notes',
+        'template_version',
+        'recorded_by',
     ];
 
     protected $casts = [

@@ -26,10 +26,15 @@ use App\Models\InventoryStockMovement;
 use App\Models\PatientProgressEntry;
 use App\Models\HomeExerciseTemplate;
 use App\Models\ClinicService;
+use App\Models\Room;
 use App\Services\BillingAudit;
 use App\Services\BillingCalculator;
 use App\Services\BillingIntegrity;
 use App\Services\BillingMoney;
+use App\Services\FinanceReport;
+use App\Services\PaymentLedger;
+use App\Services\ReferencedChargeGuard;
+use App\Support\ClinicTime;
 use App\Services\InvoiceNumberGenerator;
 use App\Models\BillingAuditLog;
 use App\Models\FinanceMonthlyClosing;
@@ -131,9 +136,9 @@ Route::get('/admin/dashboard', function () {
         return redirect('/admin/login');
     }
 
-    $today = now()->toDateString();
-    $monthStart = now()->copy()->startOfMonth()->toDateString();
-    $monthEnd = now()->copy()->endOfMonth()->toDateString();
+    $today = ClinicTime::today();
+    $monthStart = ClinicTime::now()->startOfMonth()->toDateString();
+    $monthEnd = ClinicTime::now()->endOfMonth()->toDateString();
 
     $totalBookings = Booking::count();
     $totalPatients = Patient::count();
@@ -144,7 +149,7 @@ Route::get('/admin/dashboard', function () {
     $todayBookings = Booking::whereDate('booking_date', $today)->count();
     $todayVisits = Visit::whereDate('visit_date', $today)->count();
 
-    $newPatientsThisMonth = Patient::whereBetween('created_at', [$monthStart . ' 00:00:00', $monthEnd . ' 23:59:59'])->count();
+    $newPatientsThisMonth = Patient::whereBetween('created_at', ClinicTime::utcRange($monthStart, $monthEnd))->count();
 
     $completedVisitsThisMonth = Visit::where('status', 'completed')
         ->whereBetween('visit_date', [$monthStart, $monthEnd])
@@ -162,9 +167,8 @@ Route::get('/admin/dashboard', function () {
     $inProgressVisits = Visit::where('status', 'in_progress')->count();
     $completedVisits = Visit::where('status', 'completed')->count();
 
-    $monthlyPaidAmount = Billing::whereBetween('invoice_date', [$monthStart, $monthEnd])
-        ->where('payment_status', '!=', 'void')
-        ->sum('paid_amount');
+    // Arus kas bulan ini dari satu sumber yang sama dengan Owner Finance (tanpa kembalian).
+    $monthlyPaidAmount = FinanceReport::billingCashRows($monthStart, $monthEnd)->sum('signed');
 
     $monthlyOutstanding = Billing::whereBetween('invoice_date', [$monthStart, $monthEnd])
         ->whereIn('payment_status', ['unpaid', 'partial'])
@@ -234,7 +238,7 @@ Route::get('/admin/dashboard', function () {
 
     $arrivalReminderBookings = Booking::with('patient')
         ->whereIn('status', ['pending', 'confirmed', 'arrived', 'in_treatment'])
-        ->whereBetween('booking_date', [now()->toDateString(), now()->addDay()->toDateString()])
+        ->whereBetween('booking_date', [ClinicTime::today(), ClinicTime::now()->addDay()->toDateString()])
         ->orderBy('booking_date')
         ->orderBy('booking_time')
         ->get();
@@ -307,7 +311,7 @@ Route::get('/admin/dashboard', function () {
 });
 
 Route::get('/booking', function (Request $request) {
-    $selectedDate = $request->query('date') ?: now()->format('Y-m-d');
+    $selectedDate = $request->query('date') ?: ClinicTime::today();
     $selectedDateCarbon = \Carbon\Carbon::parse($selectedDate);
     $dayOfWeek = (int) $selectedDateCarbon->isoWeekday();
 
@@ -479,7 +483,7 @@ Route::get('/admin/bookings', function (Request $request) {
 
     $search = $request->query('search');
     $status = $request->query('status');
-    $selectedDate = $request->query('date') ?: now()->toDateString();
+    $selectedDate = $request->query('date') ?: ClinicTime::today();
 
     $query = Booking::with(['patient', 'visits'])->latest();
 
@@ -505,8 +509,8 @@ Route::get('/admin/bookings', function (Request $request) {
         ->orderBy('booking_time')
         ->get();
 
-    $todayBookings = Booking::whereDate('booking_date', now()->toDateString())->get();
-    $tomorrowBookings = Booking::whereDate('booking_date', now()->addDay()->toDateString())->get();
+    $todayBookings = Booking::whereDate('booking_date', ClinicTime::today())->get();
+    $tomorrowBookings = Booking::whereDate('booking_date', ClinicTime::now()->addDay()->toDateString())->get();
 
     $pendingCount = $allBookings->where('status', 'pending')->count();
     $confirmedCount = $allBookings->where('status', 'confirmed')->count();
@@ -602,7 +606,7 @@ Route::get('/admin/bookings/calendar', function (Request $request) {
         return redirect('/admin/login');
     }
 
-    $selectedDate = $request->query('date', now()->toDateString());
+    $selectedDate = $request->query('date', ClinicTime::today());
     $date = \Carbon\Carbon::parse($selectedDate);
 
     $therapists = Therapist::where('status', 'active')
@@ -664,22 +668,11 @@ Route::get('/admin/bookings/create', function (Request $request) {
     $patients = Patient::orderBy('full_name')->get();
     $therapists = Therapist::where('status', 'active')->orderBy('full_name')->get();
     $services = ClinicService::where('status', 'active')->orderBy('name')->get();
-    $roomOptions = [
-        'VIP 1',
-        'VIP 2',
-        'R.1.1',
-        'R.2.1',
-        'R.2.2',
-        'R.2.3',
-        'R.2.4',
-        'R.2.5',
-        'R. GYM',
-        'R. Studio Pilates',
-    ];
+    $roomOptions = Room::options();
 
 
     $prefill = [
-        'booking_date' => $request->query('date', now()->toDateString()),
+        'booking_date' => $request->query('date', ClinicTime::today()),
         'booking_time' => $request->query('time', now()->format('H:i')),
         'therapist_id' => $request->query('therapist_id'),
         'room_name' => $request->query('room_name'),
@@ -760,18 +753,7 @@ Route::get('/admin/bookings/{id}/edit', function ($id) {
         ->orderBy('full_name')
         ->get();
 
-    $roomOptions = [
-        'VIP 1',
-        'VIP 2',
-        'R.1.1',
-        'R.2.1',
-        'R.2.2',
-        'R.2.3',
-        'R.2.4',
-        'R.2.5',
-        'R. GYM',
-        'R. Studio Pilates',
-    ];
+    $roomOptions = Room::options($booking->room_name);
 
     return view('admin-booking-edit', compact('booking', 'therapists', 'roomOptions'));
 });
@@ -1075,7 +1057,7 @@ Route::get('/admin/patients/{id}', function ($id) {
                 $query->whereNull('status')
                     ->orWhereNotIn('status', ['cancelled', 'canceled', 'void']);
             })
-            ->whereDate('visit_date', '<=', now()->toDateString());
+            ->whereDate('visit_date', '<=', ClinicTime::today());
 
         if ($startDate) {
             $visitQuery->whereDate('visit_date', '>=', $startDate);
@@ -1218,7 +1200,7 @@ Route::post('/admin/patients/{id}/informed-consent', function (Request $request,
         'visit_id' => 'nullable|exists:visits,id',
         'consent_date' => 'required|date',
         'status' => 'required|in:pending,signed',
-        'physiotherapy_name' => 'required|string|max:255',
+        'physiotherapy_name' => (config('clinic.consent.active_template_version', 1) >= 2 ? 'nullable' : 'required') . '|string|max:255',
         'treatment_location' => 'required|string|max:255',
         'representative_name' => 'nullable|string|max:255',
         'relationship_to_patient' => 'nullable|string|max:255',
@@ -1243,6 +1225,9 @@ Route::post('/admin/patients/{id}/informed-consent', function (Request $request,
         'emergency_contact_relation' => $request->emergency_contact_relation,
         'agreement_text' => $request->agreement_text,
         'notes' => $request->notes,
+        // Dokumen baru memakai versi template yang aktif (1 = template sekarang sampai klinik menyetujui yang baru).
+        'template_version' => (int) config('clinic.consent.active_template_version', 1),
+        'recorded_by' => session('admin_email') ?: 'admin',
     ]);
 
     return redirect('/admin/patients/' . $patient->id)->with('success', 'Informed consent berhasil disimpan!');
@@ -1315,8 +1300,8 @@ Route::get('/admin/inventory', function (Request $request) {
     $potentialSalesValue = $allItems->sum(fn ($item) => (float) $item->stock * (float) $item->selling_price);
     $needActionItems = $allItems->filter(fn ($item) => $item->status === 'active' && in_array($item->stock_status, ['low', 'empty']))->values();
 
-    $monthStart = now()->startOfMonth();
-    $monthEnd = now()->endOfMonth();
+    $monthStart = ClinicTime::now()->startOfMonth();
+    $monthEnd = ClinicTime::now()->endOfMonth();
 
     $monthlyMovements = InventoryStockMovement::whereBetween('created_at', [$monthStart, $monthEnd])->get();
     $monthlyMovementCount = $monthlyMovements->count();
@@ -1631,7 +1616,7 @@ Route::get('/admin/inventory/monthly-summary', function (Request $request) {
         return redirect('/admin/login');
     }
 
-    $month = $request->query('month', now()->format('Y-m'));
+    $month = $request->query('month', ClinicTime::monthKey());
     $start = \Carbon\Carbon::parse($month . '-01')->startOfMonth();
     $end = (clone $start)->endOfMonth();
 
@@ -2034,7 +2019,7 @@ Route::post('/admin/inventory/stock-opname', function (Request $request) {
             ->withErrors(['notes' => 'Catatan wajib diisi jika ada selisih antara stok sistem dan stok fisik.']);
     }
 
-    $reference = $request->reference ?: 'Stock Opname ' . now()->format('Y-m-d');
+    $reference = $request->reference ?: 'Stock Opname ' . ClinicTime::today();
 
     if ($stockBefore !== $stockAfter) {
         $item->update([
@@ -2066,7 +2051,7 @@ Route::get('/admin/inventory/monthly-summary', function (Request $request) {
         return redirect('/admin/login');
     }
 
-    $month = $request->query('month', now()->format('Y-m'));
+    $month = $request->query('month', ClinicTime::monthKey());
     $startDate = \Carbon\Carbon::parse($month . '-01')->startOfMonth();
     $endDate = $startDate->copy()->endOfMonth();
 
@@ -2114,7 +2099,7 @@ Route::get('/admin/inventory/product-usage', function (Request $request) {
     }
 
     $search = $request->query('search');
-    $month = $request->query('month', now()->format('Y-m'));
+    $month = $request->query('month', ClinicTime::monthKey());
     $startDate = \Carbon\Carbon::parse($month . '-01')->startOfMonth();
     $endDate = $startDate->copy()->endOfMonth();
 
@@ -2425,18 +2410,7 @@ Route::get('/admin/visits/create', function (Request $request) {
         $selectedBooking = Booking::with('patient')->find($request->query('booking_id'));
     }
 
-    $roomOptions = [
-        'VIP 1',
-        'VIP 2',
-        'R.1.1',
-        'R.2.1',
-        'R.2.2',
-        'R.2.3',
-        'R.2.4',
-        'R.2.5',
-        'R. GYM',
-        'R. Studio Pilates',
-    ];
+    $roomOptions = Room::options();
 
     return view('admin-visit-create', compact('patients', 'bookings', 'therapists', 'selectedBooking', 'roomOptions'));
 });
@@ -2486,18 +2460,7 @@ Route::get('/admin/visits/{id}/edit', function ($id) {
         ->latest()
         ->get();
 
-    $roomOptions = [
-        'VIP 1',
-        'VIP 2',
-        'R.1.1',
-        'R.2.1',
-        'R.2.2',
-        'R.2.3',
-        'R.2.4',
-        'R.2.5',
-        'R. GYM',
-        'R. Studio Pilates',
-    ];
+    $roomOptions = Room::options($visit->room_name);
 
     return view('admin-visit-edit', compact('visit', 'patients', 'bookings', 'therapists', 'roomOptions'));
 });
@@ -2731,7 +2694,7 @@ Route::get('/admin/therapist-availabilities', function (Request $request) {
         return redirect('/admin/login');
     }
 
-    $selectedMonth = $request->query('month') ?: now()->format('Y-m');
+    $selectedMonth = $request->query('month') ?: ClinicTime::monthKey();
     $monthStart = \Carbon\Carbon::parse($selectedMonth . '-01')->startOfMonth();
     $monthEnd = $monthStart->copy()->endOfMonth();
     $monthLabel = $monthStart->format('F Y');
@@ -2856,7 +2819,7 @@ Route::post('/admin/therapist-availabilities/{id}/delete', function ($id) {
     }
 
     $availability = TherapistAvailability::findOrFail($id);
-    $redirectMonth = $availability->valid_from ? $availability->valid_from->format('Y-m') : now()->format('Y-m');
+    $redirectMonth = $availability->valid_from ? $availability->valid_from->format('Y-m') : ClinicTime::monthKey();
 
     $availability->delete();
 
@@ -2937,7 +2900,7 @@ Route::get('/therapist/dashboard', function () {
     }
 
     $therapistId = session('therapist_id');
-    $today = now()->toDateString();
+    $today = ClinicTime::today();
 
     $assignedBookings = Booking::with(['patient', 'visits'])
         ->where('therapist_id', $therapistId)
@@ -2961,11 +2924,11 @@ Route::get('/therapist/dashboard', function () {
         });
 
     $todayAppointments = $clinicScheduleBookings
-        ->filter(fn ($booking) => $booking->booking_date == now()->toDateString())
+        ->filter(fn ($booking) => $booking->booking_date == ClinicTime::today())
         ->values();
 
     $upcomingAppointments = $clinicScheduleBookings
-        ->filter(fn ($booking) => $booking->booking_date >= now()->toDateString())
+        ->filter(fn ($booking) => $booking->booking_date >= ClinicTime::today())
         ->take(12)
         ->values();
 
@@ -3587,6 +3550,7 @@ Route::get('/admin/cashier', function (Request $request) {
 
     // Koreksi invoice: isi form kasir dari invoice void yang akan digantikan.
     $replaces = null;
+    $creditAvailable = 0.0;
     $prefillItems = [];
 
     if ($request->query('replaces')) {
@@ -3601,6 +3565,7 @@ Route::get('/admin/cashier', function (Request $request) {
         }
 
         $replaces = $original;
+        $creditAvailable = PaymentLedger::heldOnVoid($original);
         $selectedPatientId = $original->patient_id;
         $selectedVisitId = $original->visit_id;
         $prefillItems = $original->items->map(fn ($item) => [
@@ -3611,6 +3576,8 @@ Route::get('/admin/cashier', function (Request $request) {
             'category' => $item->item_category,
             'clinic_service_id' => $item->clinic_service_id,
             'inventory_item_id' => $item->inventory_item_id,
+            'reference_type' => $item->reference_type,
+            'reference_id' => $item->reference_id,
         ])->values()->all();
     }
 
@@ -3619,13 +3586,25 @@ Route::get('/admin/cashier', function (Request $request) {
         ->orderBy('name')
         ->get();
 
+    $roomRates = Room::where('status', 'active')->where('is_billable', true)->get()
+        ->filter(fn ($room) => $room->is_chargeable)
+        ->mapWithKeys(fn ($room) => [mb_strtolower($room->name) => [
+            'name' => $room->name, 'rate' => (float) $room->rate, 'unit' => $room->rate_unit, 'unitLabel' => $room->rate_unit_label,
+        ]]);
+    $billedVisitIds = ReferencedChargeGuard::billedVisitIds();
+    $adminFee = [
+        'enabled' => (bool) config('clinic.new_patient_admin_fee.enabled'),
+        'amount' => (float) config('clinic.new_patient_admin_fee.amount'),
+        'chargedPatientIds' => ReferencedChargeGuard::adminFeeChargedPatientIds(),
+    ];
+
 return view('admin-cashier-create', compact(
         'patients',
         'visits',
         'inventoryItems',
         'promos',
         'selectedPatientId',
-        'selectedVisitId', 'clinicServices', 'replaces', 'prefillItems'));
+        'selectedVisitId', 'clinicServices', 'replaces', 'prefillItems', 'creditAvailable', 'roomRates', 'billedVisitIds', 'adminFee'));
 });
 
 Route::post('/admin/cashier/checkout', function (Request $request) {
@@ -3650,8 +3629,19 @@ Route::post('/admin/cashier/checkout', function (Request $request) {
         'clinic_service_id' => 'nullable|array',
         'item_category' => 'nullable|array',
         'price_reason' => 'nullable|array',
+        'reference_type' => 'nullable|array',
+        'reference_id' => 'nullable|array',
         'replaces_billing_id' => 'nullable|exists:billings,id',
+        'checkout_token' => 'nullable|string|max:64',
     ]);
+
+    // Anti klik-ganda / kirim ulang: token yang sama tidak membuat invoice kedua.
+    $checkoutToken = $request->checkout_token ?: null;
+
+    if ($checkoutToken && ($existingCheckout = Billing::where('checkout_token', $checkoutToken)->first())) {
+        return redirect('/admin/billings/' . $existingCheckout->id)
+            ->with('success', 'Checkout ini sudah tersimpan sebelumnya. Tidak dibuat invoice ganda.');
+    }
 
     // Periode yang sudah tutup buku tidak boleh menerima invoice baru.
     if (BillingIntegrity::isPeriodClosed($request->invoice_date)) {
@@ -3714,11 +3704,32 @@ Route::post('/admin/cashier/checkout', function (Request $request) {
                 : config('clinic.billing.manual_service_default_category');
         }
 
+        // Baris berreferensi (biaya ruangan per visit / biaya admin pasien baru): kategori, harga acuan,
+        // dan satuan ditentukan server dari data master, bukan dari form.
+        $referenceType = $type === 'service' ? ($request->reference_type[$index] ?? null) : null;
+        $referenceId = $referenceType ? (int) ($request->reference_id[$index] ?? 0) : null;
+        $rateUnit = null;
+        $resolvedReference = null;
+
+        if ($referenceType) {
+            try {
+                $resolvedReference = ReferencedChargeGuard::resolve($referenceType, $referenceId, (int) $request->patient_id);
+            } catch (\DomainException $exception) {
+                return back()->withInput()->withErrors(['checkout' => $exception->getMessage()]);
+            }
+
+            $category = $resolvedReference['category'];
+            $rateUnit = $resolvedReference['rate_unit'];
+            $clinicServiceId = null;
+        }
+
         // Harga di luar daftar harga master wajib disertai alasan dan dicatat di audit.
         $referencePrices = [];
 
         if ($type === 'inventory' && $inventoryReference->has($inventoryItemId)) {
             $referencePrices = [(float) $inventoryReference[$inventoryItemId]->selling_price];
+        } elseif ($resolvedReference) {
+            $referencePrices = $resolvedReference['reference_prices'];
         } elseif ($clinicServiceId) {
             $master = $clinicServices[$clinicServiceId];
             $referencePrices = array_map('floatval', array_filter([
@@ -3748,6 +3759,9 @@ Route::post('/admin/cashier/checkout', function (Request $request) {
             'inventory_item_id' => $type === 'inventory' ? $inventoryItemId : null,
             'clinic_service_id' => $clinicServiceId,
             'notes' => $lineNotes,
+            'reference_type' => $resolvedReference['reference_type'] ?? null,
+            'reference_id' => $resolvedReference['reference_id'] ?? null,
+            'rate_unit' => $rateUnit,
         ];
     }
 
@@ -3777,6 +3791,9 @@ Route::post('/admin/cashier/checkout', function (Request $request) {
             'inventory_item_id' => $line['inventory_item_id'],
             'clinic_service_id' => $line['clinic_service_id'],
             'notes' => $line['notes'],
+            'reference_type' => $line['reference_type'],
+            'reference_id' => $line['reference_id'],
+            'rate_unit' => $line['rate_unit'],
         ];
     }, $calculation['lines']);
 
@@ -3788,17 +3805,8 @@ Route::post('/admin/cashier/checkout', function (Request $request) {
 
     $grandTotal = $calculation['grand_total'];
 
-    $paidAmount = (float) ($request->paid_amount ?: 0);
-    $changeAmount = max($paidAmount - $grandTotal, 0);
-    $remainingAmount = max($grandTotal - $paidAmount, 0);
-
-    if ($paidAmount <= 0) {
-        $paymentStatus = 'unpaid';
-    } elseif ($paidAmount < $grandTotal) {
-        $paymentStatus = 'partial';
-    } else {
-        $paymentStatus = 'paid';
-    }
+    // Uang yang DISERAHKAN pasien. Penerimaan bersih, kembalian, dan status dihitung oleh buku pembayaran.
+    $tendered = (float) ($request->paid_amount ?: 0);
 
     // Baris counter nomor invoice dibuat di luar transaction agar tidak deadlock pada invoice pertama bulan ini.
     (new InvoiceNumberGenerator)->prepare();
@@ -3813,13 +3821,14 @@ Route::post('/admin/cashier/checkout', function (Request $request) {
             $discountAmount,
             $promoCode,
             $grandTotal,
-            $paidAmount,
-            $changeAmount,
-            $remainingAmount,
-            $paymentStatus,
+            $tendered,
+            $checkoutToken,
             $replacedBilling,
             $priceOverrides
         ) {
+            // Biaya berreferensi (ruangan per visit / admin pasien baru) tidak boleh ditagihkan ganda.
+            ReferencedChargeGuard::assertNotAlreadyCharged($rows);
+
             // Nomor unik & aman untuk checkout bersamaan (counter dikunci di dalam transaction ini).
             $invoiceNumber = (new InvoiceNumberGenerator)->next();
 
@@ -3834,10 +3843,12 @@ Route::post('/admin/cashier/checkout', function (Request $request) {
                 'discount_amount' => $discountAmount,
                 'promo_code' => $promoCode,
                 'amount' => $grandTotal,
-                'paid_amount' => $paidAmount,
-                'change_amount' => $changeAmount,
-                'remaining_amount' => $remainingAmount,
-                'payment_status' => $paymentStatus,
+                'paid_amount' => 0,
+                'change_amount' => 0,
+                'remaining_amount' => $grandTotal,
+                'payment_status' => 'unpaid',
+                'payment_model' => 'ledger',
+                'checkout_token' => $checkoutToken,
                 'payment_method' => $request->payment_method,
                 'payment_detail_notes' => $request->payment_detail_notes,
                 'notes' => $request->notes,
@@ -3873,6 +3884,20 @@ Route::post('/admin/cashier/checkout', function (Request $request) {
                 }
             }
 
+            // Kredit dari invoice yang digantikan dipindahkan (non-kas), lalu uang yang diterima dicatat bersih.
+            $ledger = new PaymentLedger;
+
+            if ($replacedBilling) {
+                $ledger->transferCredit($replacedBilling, $billing);
+                $billing = $billing->fresh();
+            }
+
+            if ($tendered > 0 && PaymentLedger::outstanding($billing) > 0) {
+                $ledger->applyPayment($billing, $tendered, $request->payment_method);
+            }
+
+            $billing = $billing->fresh();
+
             BillingAudit::record('created', $billing, null, array_merge(BillingAudit::snapshot($billing), [
                 'items' => array_map(fn ($row) => [
                     'description' => $row['description'],
@@ -3891,6 +3916,18 @@ Route::post('/admin/cashier/checkout', function (Request $request) {
 
             return $billing;
         }, 3);
+    } catch (\Illuminate\Database\UniqueConstraintViolationException $exception) {
+        // Dua pengiriman bersamaan dengan token yang sama: pemenangnya sudah menyimpan invoice.
+        $existingCheckout = $checkoutToken ? Billing::where('checkout_token', $checkoutToken)->first() : null;
+
+        if (!$existingCheckout) {
+            throw $exception;
+        }
+
+        return redirect('/admin/billings/' . $existingCheckout->id)
+            ->with('success', 'Checkout ini sudah tersimpan sebelumnya. Tidak dibuat invoice ganda.');
+    } catch (\DomainException $exception) {
+        return back()->withInput()->withErrors(['checkout' => $exception->getMessage()]);
     } catch (\RuntimeException $exception) {
         return back()->withInput()->withErrors(['stock' => $exception->getMessage()]);
     }
@@ -4026,79 +4063,14 @@ Route::get('/admin/owner-finance', function (Request $request) {
         return redirect('/admin/login');
     }
 
-    $month = $request->query('month', now()->format('Y-m'));
+    $month = $request->query('month', ClinicTime::monthKey());
     $startDate = \Carbon\Carbon::parse($month . '-01')->startOfMonth();
-    $endDate = $startDate->copy()->endOfMonth();
     $monthLabel = $startDate->format('F Y');
 
-    $moneyPaid = fn ($billing) => BillingMoney::paid($billing);
-
-    $billingIncomes = Billing::with(['patient', 'visit'])
-        ->whereBetween('invoice_date', [$startDate->toDateString(), $endDate->toDateString()])
-        ->where('payment_status', '!=', 'void')
-        ->get()
-        ->map(function ($billing) use ($moneyPaid) {
-            $paidAmount = $moneyPaid($billing);
-
-            return [
-                'kind' => 'auto_billing',
-                'id' => $billing->id,
-                'date' => $billing->invoice_date,
-                'type' => 'income',
-                'source' => 'Auto Billing',
-                'category' => 'Treatment Revenue',
-                'title' => $billing->invoice_number ?: ('Invoice #' . $billing->id),
-                'description' => optional($billing->patient)->full_name ?: 'Patient belum terhubung',
-                'amount' => $paidAmount,
-                'payment_method' => $billing->payment_method_label ?? '-',
-                'editable' => false,
-                'url' => '/admin/billings/' . $billing->id,
-            ];
-        })
-        ->filter(fn ($row) => (float) $row['amount'] > 0)
-        ->values();
-
-    $manualTransactions = \App\Models\FinanceTransaction::whereBetween('transaction_date', [$startDate->toDateString(), $endDate->toDateString()])
-        ->latest('transaction_date')
-        ->latest('id')
-        ->get();
-
-    $manualRows = $manualTransactions->map(function ($transaction) {
-        return [
-            'kind' => 'manual',
-            'id' => $transaction->id,
-            'date' => $transaction->transaction_date,
-            'type' => $transaction->type,
-            'source' => $transaction->source_label,
-            'category' => $transaction->category ?: '-',
-            'title' => $transaction->title ?: $transaction->source_label,
-            'description' => $transaction->notes ?: '',
-            'amount' => (float) $transaction->amount,
-            'payment_method' => $transaction->payment_method_label,
-            'editable' => true,
-            'url' => null,
-        ];
-    });
-
-    $transactions = $billingIncomes
-        ->concat($manualRows)
-        ->sortByDesc(fn ($row) => ((string) $row['date']) . '-' . str_pad((string) $row['id'], 8, '0', STR_PAD_LEFT))
-        ->values();
-
-    $billingIncome = $billingIncomes->sum('amount');
-    $manualIncome = $manualTransactions->where('type', 'income')->sum('amount');
-    $manualExpense = $manualTransactions->where('type', 'expense')->sum('amount');
-    $totalIncome = $billingIncome + $manualIncome;
-    $netCashflow = $totalIncome - $manualExpense;
-
-    $summary = [
-        'billing_income' => $billingIncome,
-        'manual_income' => $manualIncome,
-        'total_income' => $totalIncome,
-        'expense' => $manualExpense,
-        'net_cashflow' => $netCashflow,
-        'transaction_count' => $transactions->count(),
-    ];
+    // Satu sumber perhitungan: arus kas berdasarkan tanggal pembayaran, omzet berdasarkan tanggal invoice.
+    $report = FinanceReport::forMonth($month, true);
+    $transactions = $report['rows'];
+    $summary = $report['summary'];
 
     $closing = \App\Models\FinanceMonthlyClosing::active()->where('month', $month)->first();
 
@@ -4132,75 +4104,13 @@ Route::get('/admin/owner-finance/print', function (Request $request) {
         return redirect('/admin/login');
     }
 
-    $month = $request->query('month', now()->format('Y-m'));
+    $month = $request->query('month', ClinicTime::monthKey());
     $startDate = \Carbon\Carbon::parse($month . '-01')->startOfMonth();
-    $endDate = $startDate->copy()->endOfMonth();
     $monthLabel = $startDate->format('F Y');
 
-    $moneyPaid = fn ($billing) => BillingMoney::paid($billing);
-
-    $billingIncomes = Billing::with(['patient', 'visit'])
-        ->whereBetween('invoice_date', [$startDate->toDateString(), $endDate->toDateString()])
-        ->where('payment_status', '!=', 'void')
-        ->get()
-        ->map(function ($billing) use ($moneyPaid) {
-            $paidAmount = $moneyPaid($billing);
-
-            return [
-                'kind' => 'auto_billing',
-                'id' => $billing->id,
-                'date' => $billing->invoice_date,
-                'type' => 'income',
-                'source' => 'Auto Billing',
-                'category' => 'Treatment Revenue',
-                'title' => $billing->invoice_number ?: ('Invoice #' . $billing->id),
-                'description' => optional($billing->patient)->full_name ?: 'Patient belum terhubung',
-                'amount' => $paidAmount,
-                'payment_method' => $billing->payment_method_label ?? '-',
-            ];
-        })
-        ->filter(fn ($row) => (float) $row['amount'] > 0)
-        ->values();
-
-    $manualTransactions = \App\Models\FinanceTransaction::whereBetween('transaction_date', [$startDate->toDateString(), $endDate->toDateString()])
-        ->latest('transaction_date')
-        ->latest('id')
-        ->get();
-
-    $manualRows = $manualTransactions->map(function ($transaction) {
-        return [
-            'kind' => 'manual',
-            'id' => $transaction->id,
-            'date' => $transaction->transaction_date,
-            'type' => $transaction->type,
-            'source' => $transaction->source_label,
-            'category' => $transaction->category ?: '-',
-            'title' => $transaction->title ?: $transaction->source_label,
-            'description' => $transaction->notes ?: '',
-            'amount' => (float) $transaction->amount,
-            'payment_method' => $transaction->payment_method_label,
-        ];
-    });
-
-    $transactions = $billingIncomes
-        ->concat($manualRows)
-        ->sortBy(fn ($row) => ((string) $row['date']) . '-' . str_pad((string) $row['id'], 8, '0', STR_PAD_LEFT))
-        ->values();
-
-    $billingIncome = $billingIncomes->sum('amount');
-    $manualIncome = $manualTransactions->where('type', 'income')->sum('amount');
-    $manualExpense = $manualTransactions->where('type', 'expense')->sum('amount');
-    $totalIncome = $billingIncome + $manualIncome;
-    $netCashflow = $totalIncome - $manualExpense;
-
-    $summary = [
-        'billing_income' => $billingIncome,
-        'manual_income' => $manualIncome,
-        'total_income' => $totalIncome,
-        'expense' => $manualExpense,
-        'net_cashflow' => $netCashflow,
-        'transaction_count' => $transactions->count(),
-    ];
+    $report = FinanceReport::forMonth($month, false);
+    $transactions = $report['rows'];
+    $summary = $report['summary'];
 
     $closing = \App\Models\FinanceMonthlyClosing::active()->where('month', $month)->first();
 
@@ -4235,64 +4145,27 @@ Route::post('/admin/owner-finance/close', function (Request $request) {
     $startDate = \Carbon\Carbon::parse($month . '-01')->startOfMonth();
     $endDate = $startDate->copy()->endOfMonth();
 
-    $moneyPaid = fn ($billing) => BillingMoney::paid($billing);
+    // Satu sumber perhitungan yang sama dengan halaman Owner Finance.
+    $report = FinanceReport::forMonth($month, false);
+    $transactions = $report['rows']->map(function ($row) {
+        unset($row['editable'], $row['url']);
+        $row['date'] = $row['date'] instanceof \DateTimeInterface ? $row['date']->format('Y-m-d') : (string) $row['date'];
 
-    $billingIncomes = Billing::with(['patient'])
-        ->whereBetween('invoice_date', [$startDate->toDateString(), $endDate->toDateString()])
-        ->where('payment_status', '!=', 'void')
-        ->get()
-        ->map(function ($billing) use ($moneyPaid) {
-            return [
-                'kind' => 'auto_billing',
-                'id' => $billing->id,
-                'date' => (string) $billing->invoice_date,
-                'type' => 'income',
-                'source' => 'Auto Billing',
-                'category' => 'Treatment Revenue',
-                'title' => $billing->invoice_number ?: ('Invoice #' . $billing->id),
-                'description' => optional($billing->patient)->full_name ?: 'Patient belum terhubung',
-                'amount' => $moneyPaid($billing),
-                'payment_method' => $billing->payment_method_label ?? '-',
-            ];
-        })
-        ->filter(fn ($row) => (float) $row['amount'] > 0)
-        ->values();
+        return $row;
+    })->values();
 
-    $manualTransactions = \App\Models\FinanceTransaction::whereBetween('transaction_date', [$startDate->toDateString(), $endDate->toDateString()])
-        ->latest('transaction_date')
-        ->latest('id')
-        ->get();
-
-    $manualRows = $manualTransactions->map(function ($transaction) {
-        return [
-            'kind' => 'manual',
-            'id' => $transaction->id,
-            'date' => (string) $transaction->transaction_date,
-            'type' => $transaction->type,
-            'source' => $transaction->source_label,
-            'category' => $transaction->category ?: '-',
-            'title' => $transaction->title ?: $transaction->source_label,
-            'description' => $transaction->notes ?: '',
-            'amount' => (float) $transaction->amount,
-            'payment_method' => $transaction->payment_method_label,
-        ];
-    });
-
-    $transactions = $billingIncomes
-        ->concat($manualRows)
-        ->sortBy(fn ($row) => ((string) $row['date']) . '-' . str_pad((string) $row['id'], 8, '0', STR_PAD_LEFT))
-        ->values();
-
-    $billingIncome = $billingIncomes->sum('amount');
-    $manualIncome = $manualTransactions->where('type', 'income')->sum('amount');
-    $manualExpense = $manualTransactions->where('type', 'expense')->sum('amount');
-    $totalIncome = $billingIncome + $manualIncome;
-    $netCashflow = $totalIncome - $manualExpense;
+    $billingIncome = $report['summary']['billing_income'];
+    $manualIncome = $report['summary']['manual_income'];
+    $manualExpense = $report['summary']['expense'];
+    $totalIncome = $report['summary']['total_income'];
+    $netCashflow = $report['summary']['net_cashflow'];
+    $invoiceRevenue = $report['summary']['invoice_revenue'];
 
     // Closing sebelumnya (yang sudah dibuka kembali) dicatat di audit sebelum diganti.
     $previousClosing = FinanceMonthlyClosing::where('month', $month)->first();
 
     $closingSummary = [
+        'invoice_revenue' => $invoiceRevenue,
         'billing_income' => $billingIncome,
         'manual_income' => $manualIncome,
         'total_income' => $totalIncome,
@@ -4301,7 +4174,7 @@ Route::post('/admin/owner-finance/close', function (Request $request) {
         'transaction_count' => $transactions->count(),
     ];
 
-    DB::transaction(function () use ($month, $previousClosing, $closingSummary, $validated, $startDate, $endDate, $billingIncome, $manualIncome, $totalIncome, $manualExpense, $netCashflow, $transactions) {
+    DB::transaction(function () use ($month, $previousClosing, $closingSummary, $validated, $startDate, $endDate, $billingIncome, $manualIncome, $totalIncome, $manualExpense, $netCashflow, $transactions, $invoiceRevenue) {
         BillingAudit::record(
             'period_closed',
             null,
@@ -4329,7 +4202,11 @@ Route::post('/admin/owner-finance/close', function (Request $request) {
                 'closed_at' => now(),
                 'notes' => $validated['notes'] ?? null,
                 'snapshot' => [
+                    // basis: arus kas (invoice baru per tanggal pembayaran, invoice lama per tanggal invoice).
+                    // invoice_revenue: omzet per tanggal invoice (informasi, tidak masuk arus kas).
+                    'basis' => 'cash_v2',
                     'summary' => [
+                        'invoice_revenue' => $invoiceRevenue,
                         'billing_income' => $billingIncome,
                         'manual_income' => $manualIncome,
                         'total_income' => $totalIncome,
@@ -4442,7 +4319,7 @@ Route::post('/admin/owner-finance/transactions/{id}/delete', function ($id) {
     }
 
     $transaction = \App\Models\FinanceTransaction::findOrFail($id);
-    $month = $transaction->transaction_date ? $transaction->transaction_date->format('Y-m') : now()->format('Y-m');
+    $month = $transaction->transaction_date ? $transaction->transaction_date->format('Y-m') : ClinicTime::monthKey();
 
     if (FinanceMonthlyClosing::isClosed($month)) {
         return redirect('/admin/owner-finance?month=' . $month)->with('error', 'Bulan ini sudah tutup buku. Transaksi manual tidak bisa dihapus.');
@@ -4459,7 +4336,7 @@ Route::get('/admin/owner-dashboard', function (Request $request) {
         return redirect('/admin/login');
     }
 
-    $month = $request->query('month', now()->format('Y-m'));
+    $month = $request->query('month', ClinicTime::monthKey());
     $startDate = \Carbon\Carbon::parse($month . '-01')->startOfMonth();
     $endDate = $startDate->copy()->endOfMonth();
     $monthLabel = $startDate->format('F Y');
@@ -4472,7 +4349,7 @@ Route::get('/admin/owner-dashboard', function (Request $request) {
         ->whereBetween('visit_date', [$startDate->toDateString(), $endDate->toDateString()])
         ->get();
 
-    $patients = Patient::whereBetween('created_at', [$startDate, $endDate])->get();
+    $patients = Patient::whereBetween('created_at', ClinicTime::utcRange($startDate->toDateString(), $endDate->toDateString()))->get();
 
     $billings = Billing::with(['patient', 'visit'])
         ->whereBetween('invoice_date', [$startDate->toDateString(), $endDate->toDateString()])
@@ -4536,7 +4413,7 @@ Route::get('/admin/reports', function (Request $request) {
         return redirect('/admin/login');
     }
 
-    $month = now()->format('Y-m');
+    $month = ClinicTime::monthKey();
 
     $cards = [
         [
@@ -4577,7 +4454,7 @@ Route::get('/admin/reports/monthly-clinic', function (Request $request) {
         return redirect('/admin/login');
     }
 
-    $month = $request->query('month', now()->format('Y-m'));
+    $month = $request->query('month', ClinicTime::monthKey());
     $export = $request->query('export');
 
     $startDate = \Carbon\Carbon::parse($month . '-01')->startOfMonth();
@@ -4591,7 +4468,7 @@ Route::get('/admin/reports/monthly-clinic', function (Request $request) {
         ->whereBetween('visit_date', [$startDate->toDateString(), $endDate->toDateString()])
         ->get();
 
-    $patients = Patient::whereBetween('created_at', [$startDate, $endDate])->get();
+    $patients = Patient::whereBetween('created_at', ClinicTime::utcRange($startDate->toDateString(), $endDate->toDateString()))->get();
 
     $billings = Billing::with(['patient', 'visit', 'items.inventoryItem'])
         ->whereBetween('invoice_date', [$startDate->toDateString(), $endDate->toDateString()])
@@ -4708,8 +4585,8 @@ Route::get('/admin/reports/revenue', function (Request $request) {
         return redirect('/admin/login');
     }
 
-    $dateFrom = $request->query('date_from', now()->startOfMonth()->toDateString());
-    $dateTo = $request->query('date_to', now()->endOfMonth()->toDateString());
+    $dateFrom = $request->query('date_from', ClinicTime::now()->startOfMonth()->toDateString());
+    $dateTo = $request->query('date_to', ClinicTime::now()->endOfMonth()->toDateString());
     $paymentMethod = $request->query('payment_method');
     $status = $request->query('status');
     $search = trim((string) $request->query('search'));
@@ -4823,7 +4700,7 @@ Route::get('/admin/reports/inventory', function (Request $request) {
         return redirect('/admin/login');
     }
 
-    $month = $request->query('month', now()->format('Y-m'));
+    $month = $request->query('month', ClinicTime::monthKey());
     $export = $request->query('export');
 
     $startDate = \Carbon\Carbon::parse($month . '-01')->startOfMonth();
@@ -5195,7 +5072,7 @@ Route::get('/admin/package-treatments', function (Request $request) {
                 $query->whereNull('status')
                     ->orWhereNotIn('status', ['cancelled', 'canceled', 'void']);
             })
-            ->whereDate('visit_date', '<=', now()->toDateString());
+            ->whereDate('visit_date', '<=', ClinicTime::today());
 
         if ($startDate) {
             $visitQuery->whereDate('visit_date', '>=', $startDate);
@@ -5261,8 +5138,8 @@ Route::get('/admin/package-treatments/create', function (Request $request) {
         'package_type' => '',
         'total_sessions' => 3,
         'package_price' => 0,
-        'buying_date' => now()->format('Y-m-d'),
-        'valid_until' => now()->addMonths(3)->format('Y-m-d'),
+        'buying_date' => ClinicTime::today(),
+        'valid_until' => ClinicTime::now()->addMonths(3)->format('Y-m-d'),
     ];
 
     if ($selectedBillingId) {
@@ -5288,11 +5165,11 @@ Route::get('/admin/package-treatments/create', function (Request $request) {
                 $prefill['package_type'] = $sessions === 3 ? 'Light Package' : ($sessions === 6 ? 'Medium Package' : ($sessions === 12 ? 'Full Package' : 'Custom Package'));
                 $prefill['total_sessions'] = $sessions;
                 $prefill['package_price'] = $packageItem->subtotal ?? (($packageItem->quantity ?? 1) * ($packageItem->unit_price ?? 0));
-                $prefill['buying_date'] = optional($selectedBilling->invoice_date)->format('Y-m-d') ?: now()->format('Y-m-d');
+                $prefill['buying_date'] = optional($selectedBilling->invoice_date)->format('Y-m-d') ?: ClinicTime::today();
                 $prefill['valid_until'] = \Carbon\Carbon::parse($prefill['buying_date'])->addMonths($sessions >= 12 ? 6 : 3)->format('Y-m-d');
             } else {
                 $prefill['package_price'] = $selectedBilling->grand_total ?? $selectedBilling->amount ?? 0;
-                $prefill['buying_date'] = optional($selectedBilling->invoice_date)->format('Y-m-d') ?: now()->format('Y-m-d');
+                $prefill['buying_date'] = optional($selectedBilling->invoice_date)->format('Y-m-d') ?: ClinicTime::today();
             }
         }
     }
@@ -5331,8 +5208,8 @@ Route::post('/admin/package-treatments', function (Request $request) {
 
     $document = PackageTreatmentDocument::create(array_merge($data, [
         'document_number' => $documentNumber,
-        'document_date' => $data['document_date'] ?: now()->toDateString(),
-        'buying_date' => $data['buying_date'] ?: now()->toDateString(),
+        'document_date' => $data['document_date'] ?: ClinicTime::today(),
+        'buying_date' => $data['buying_date'] ?: ClinicTime::today(),
     ]));
 
     return redirect('/admin/package-treatments/' . $document->id . '/print')
@@ -6465,25 +6342,42 @@ Route::post('/admin/billings', function (Request $request) {
 
     (new InvoiceNumberGenerator)->prepare();
 
-    $billing = DB::transaction(function () use ($request, $amount, $partialPaid) {
-        $billing = new Billing([
-            'patient_id' => $request->patient_id,
-            'visit_id' => $request->visit_id ?: null,
-            'invoice_number' => (new InvoiceNumberGenerator)->next(),
-            'invoice_date' => $request->invoice_date,
-            'amount' => $amount,
-            'payment_method' => $request->payment_method,
-            'payment_detail_notes' => $request->payment_detail_notes,
-            'notes' => $request->notes,
-        ]);
+    try {
+        $billing = DB::transaction(function () use ($request, $amount, $partialPaid) {
+            $billing = new Billing([
+                'patient_id' => $request->patient_id,
+                'visit_id' => $request->visit_id ?: null,
+                'invoice_number' => (new InvoiceNumberGenerator)->next(),
+                'invoice_date' => $request->invoice_date,
+                'amount' => $amount,
+                'payment_method' => $request->payment_method,
+                'payment_detail_notes' => $request->payment_detail_notes,
+                'notes' => $request->notes,
+                'payment_model' => 'ledger',
+            ]);
 
-        BillingIntegrity::applyStatus($billing, $request->payment_status ?: 'unpaid', $partialPaid);
-        $billing->save();
+            BillingIntegrity::applyStatus($billing, 'unpaid');
+            $billing->save();
 
-        BillingAudit::record('created', $billing, null, array_merge(BillingAudit::snapshot($billing), ['source' => 'manual']));
+            // Pembayaran dicatat di buku pembayaran (net, dengan tanggal dan metode).
+            $toPay = match ($request->payment_status) {
+                'paid' => $amount,
+                'partial' => $partialPaid,
+                default => 0.0,
+            };
 
-        return $billing;
-    }, 3);
+            if ($toPay > 0) {
+                (new PaymentLedger)->applyPayment($billing, $toPay, $request->payment_method);
+                $billing = $billing->fresh();
+            }
+
+            BillingAudit::record('created', $billing, null, array_merge(BillingAudit::snapshot($billing), ['source' => 'manual']));
+
+            return $billing;
+        }, 3);
+    } catch (\DomainException $exception) {
+        return back()->withInput()->withErrors(['paid_amount' => $exception->getMessage()]);
+    }
 
     return redirect('/admin/billings')->with('success', 'Billing berhasil ditambahkan!');
 });
@@ -6498,7 +6392,12 @@ Route::get('/admin/billings/{id}', function ($id) {
     $replacedBy = Billing::where('replaces_billing_id', $billing->id)->get();
     $auditLogs = BillingAuditLog::where('billing_id', $billing->id)->latest('id')->limit(30)->get();
 
-    return view('admin-billing-detail', compact('billing', 'lock', 'replacedBy', 'auditLogs'));
+    // Buku pembayaran (hanya invoice baru / ledger).
+    $payments = $billing->is_ledger ? $billing->payments()->orderBy('id')->get() : collect();
+    $outstanding = $billing->is_ledger && !$lock['void'] ? PaymentLedger::outstanding($billing) : 0.0;
+    $heldMoney = PaymentLedger::heldOnVoid($billing);
+
+    return view('admin-billing-detail', compact('billing', 'lock', 'replacedBy', 'auditLogs', 'payments', 'outstanding', 'heldMoney'));
 });
 
 Route::get('/admin/billings/{id}/edit', function ($id) {
@@ -6580,6 +6479,10 @@ Route::post('/admin/billings/{id}/update', function (Request $request, $id) {
     // Status: hanya transisi yang aman (unpaid -> paid). Selain itu wajib lewat Void + Terbitkan Ulang.
     $requestedStatus = !$lock['status_locked'] ? $request->payment_status : null;
     $currentStatus = $billing->payment_status ?: 'unpaid';
+
+    if ($requestedStatus && $requestedStatus !== $currentStatus && $billing->is_ledger) {
+        return back()->withInput()->withErrors(['payment_status' => 'Status invoice ini mengikuti riwayat pembayaran. Gunakan "Catat Pembayaran" di halaman detail invoice.']);
+    }
 
     if ($requestedStatus && $requestedStatus !== $currentStatus) {
         if (!BillingIntegrity::transitionAllowed($currentStatus, $requestedStatus)) {
@@ -6679,6 +6582,10 @@ Route::post('/admin/billings/{id}/status', function (Request $request, $id) {
         return redirect('/admin/billings')->with('success', 'Status billing tidak berubah.');
     }
 
+    if ($billing->is_ledger) {
+        return redirect('/admin/billings/' . $billing->id)->with('error', 'Status invoice ini mengikuti riwayat pembayaran. Gunakan "Catat Pembayaran" di halaman detail invoice.');
+    }
+
     if (!BillingIntegrity::transitionAllowed($from, $to)) {
         return redirect('/admin/billings')->with('error', 'Perubahan status ' . $from . ' -> ' . $to . ' tidak diizinkan karena akan menghapus atau mengubah histori pembayaran. Gunakan Void lalu Terbitkan Ulang untuk koreksi.');
     }
@@ -6712,6 +6619,8 @@ Route::post('/admin/billings/{id}/void', function (Request $request, $id) {
 
     $request->validate([
         'void_reason' => 'required|string|max:1000',
+        'money_disposition' => 'nullable|in:refund,credit',
+        'refund_method' => 'nullable|in:cash,qr,debit,credit,bank_bca,bank_bni,bank_mandiri,insurance',
     ]);
 
     $billing = Billing::with(['items.inventoryItem'])->findOrFail($id);
@@ -6724,9 +6633,33 @@ Route::post('/admin/billings/{id}/void', function (Request $request, $id) {
         return redirect('/admin/billings/' . $billing->id)->with('error', BillingIntegrity::closedPeriodMessage($billing->invoice_date));
     }
 
+    // Invoice yang sudah menerima uang: nasib uangnya wajib ditentukan (refund atau kredit untuk invoice pengganti).
+    $heldMoney = $billing->is_ledger ? PaymentLedger::paidTotal($billing) : 0.0;
+    $disposition = $request->money_disposition;
+
+    if ($heldMoney > 0 && !$disposition) {
+        return back()->withInput()->withErrors(['money_disposition' => 'Invoice ini sudah menerima Rp' . number_format($heldMoney, 0, ',', '.') . '. Pilih: dikembalikan ke pasien (refund) atau ditahan sebagai kredit untuk invoice pengganti.']);
+    }
+
+    if ($heldMoney > 0 && $disposition === 'refund' && !$request->refund_method) {
+        return back()->withInput()->withErrors(['refund_method' => 'Metode pengembalian uang wajib dipilih untuk refund.']);
+    }
+
     $voidBefore = BillingAudit::snapshot($billing);
 
-    DB::transaction(function () use ($billing, $request, $voidBefore) {
+    try {
+    DB::transaction(function () use ($billing, $request, $voidBefore, $heldMoney, $disposition) {
+        // Kunci invoice agar tidak ada pembayaran yang masuk bersamaan dengan void.
+        $locked = Billing::lockForUpdate()->findOrFail($billing->id);
+
+        if ($locked->payment_status === 'void' || $locked->voided_at) {
+            return;
+        }
+
+        if ($locked->is_ledger && round(PaymentLedger::paidTotal($locked), 2) !== round($heldMoney, 2)) {
+            throw new \DomainException('Ada pembayaran yang baru masuk pada invoice ini. Muat ulang halaman lalu ulangi void.');
+        }
+
         foreach ($billing->items as $billingItem) {
             if ($billingItem->item_type !== 'inventory' || !$billingItem->inventory_item_id) {
                 continue;
@@ -6768,10 +6701,79 @@ Route::post('/admin/billings/{id}/void', function (Request $request, $id) {
 
         // Jumlah yang pernah dibayar tetap tercatat di audit (before) walaupun kolom dinolkan.
         [$changedBefore, $changedAfter] = BillingAudit::diff($voidBefore, BillingAudit::snapshot($billing->fresh()));
+        $changedAfter['money_disposition'] = $heldMoney > 0 ? $disposition : null;
         BillingAudit::record('voided', $billing, $changedBefore, $changedAfter, $request->void_reason);
-    });
 
-    return redirect('/admin/billings/' . $billing->id)->with('success', 'Billing berhasil di-void dan stok inventory sudah dikembalikan.');
+        // Void tidak menghapus jejak penerimaan kas: baris pembayaran tetap ada. Refund = transaksi tersendiri.
+        if ($heldMoney > 0 && $disposition === 'refund') {
+            (new PaymentLedger)->refund($billing->fresh(), $heldMoney, $request->refund_method, 'Void invoice: ' . $request->void_reason);
+        }
+    });
+    } catch (\DomainException $exception) {
+        return back()->withInput()->withErrors(['money_disposition' => $exception->getMessage()]);
+    }
+
+    $message = 'Billing berhasil di-void dan stok inventory sudah dikembalikan.';
+
+    if ($heldMoney > 0) {
+        $message .= $disposition === 'refund'
+            ? ' Refund Rp' . number_format($heldMoney, 0, ',', '.') . ' tercatat.'
+            : ' Uang Rp' . number_format($heldMoney, 0, ',', '.') . ' ditahan sebagai kredit untuk invoice pengganti (Terbitkan Ulang).';
+    }
+
+    return redirect('/admin/billings/' . $billing->id)->with('success', $message);
+});
+
+// Catat pembayaran (cicilan / pelunasan) pada invoice yang memakai buku pembayaran.
+Route::post('/admin/billings/{id}/payments', function (Request $request, $id) {
+    if (!session('admin_logged_in')) {
+        return redirect('/admin/login');
+    }
+
+    $data = $request->validate([
+        'tendered_amount' => 'required|numeric|min:0.01',
+        'method' => 'required|in:cash,qr,debit,credit,bank_bca,bank_bni,bank_mandiri,insurance',
+        'reference' => 'nullable|string|max:255',
+    ]);
+
+    $billing = Billing::findOrFail($id);
+
+    try {
+        $payment = (new PaymentLedger)->recordPayment($billing, (float) $data['tendered_amount'], $data['method'], $data['reference'] ?? null);
+    } catch (\DomainException $exception) {
+        return redirect('/admin/billings/' . $billing->id)->with('error', $exception->getMessage());
+    }
+
+    $message = 'Pembayaran Rp' . number_format((float) $payment->amount, 0, ',', '.') . ' tercatat.';
+
+    if ((float) $payment->change_amount > 0) {
+        $message .= ' Kembalian Rp' . number_format((float) $payment->change_amount, 0, ',', '.') . ' (bukan pendapatan).';
+    }
+
+    return redirect('/admin/billings/' . $billing->id)->with('success', $message);
+});
+
+// Refund uang yang tertahan pada invoice void (transaksi tersendiri, alasan wajib).
+Route::post('/admin/billings/{id}/refunds', function (Request $request, $id) {
+    if (!session('admin_logged_in')) {
+        return redirect('/admin/login');
+    }
+
+    $data = $request->validate([
+        'amount' => 'required|numeric|min:0.01',
+        'method' => 'required|in:cash,qr,debit,credit,bank_bca,bank_bni,bank_mandiri,insurance',
+        'reason' => 'required|string|min:5|max:1000',
+    ]);
+
+    $billing = Billing::findOrFail($id);
+
+    try {
+        $refund = (new PaymentLedger)->refund($billing, (float) $data['amount'], $data['method'], $data['reason']);
+    } catch (\DomainException $exception) {
+        return redirect('/admin/billings/' . $billing->id)->with('error', $exception->getMessage());
+    }
+
+    return redirect('/admin/billings/' . $billing->id)->with('success', 'Refund Rp' . number_format((float) $refund->amount, 0, ',', '.') . ' tercatat.');
 });
 
 
@@ -6786,6 +6788,42 @@ Route::post('/admin/billings/{id}/delete', function ($id) {
 
     return redirect('/admin/billings/' . $billing->id)
         ->with('error', 'Invoice tidak dapat dihapus karena merupakan catatan keuangan. Gunakan Void (dengan alasan) bila invoice salah, lalu Terbitkan Ulang bila perlu.');
+});
+
+// Master ruangan. Semua ruangan default non-billable; biaya ruangan TIDAK ditagih otomatis dan
+// hanya disarankan di kasir untuk ruangan berbayar yang tarif dan satuannya sudah lengkap.
+Route::get('/admin/rooms', function () {
+    if (!session('admin_logged_in')) {
+        return redirect('/admin/login');
+    }
+
+    $rooms = Room::orderBy('id')->get();
+
+    return view('admin-rooms', compact('rooms'));
+});
+
+Route::post('/admin/rooms', function (Request $request) {
+    if (!session('admin_logged_in')) {
+        return redirect('/admin/login');
+    }
+
+    $data = Room::validated($request, null);
+    Room::create($data);
+
+    return redirect('/admin/rooms')->with('success', 'Ruangan ditambahkan (default non-billable).');
+});
+
+Route::post('/admin/rooms/{id}/update', function (Request $request, $id) {
+    if (!session('admin_logged_in')) {
+        return redirect('/admin/login');
+    }
+
+    $room = Room::findOrFail($id);
+    $data = Room::validated($request, $room);
+    unset($data['name']); // nama tidak diubah agar booking/visit lama tetap cocok
+    $room->update($data);
+
+    return redirect('/admin/rooms')->with('success', 'Ruangan ' . $room->name . ' diperbarui.');
 });
 
 // Tautan sidebar lama yang sebelumnya 404: arahkan ke halaman yang memang ada (tanpa fitur baru).

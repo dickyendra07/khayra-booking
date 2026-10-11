@@ -99,7 +99,7 @@
 
                         <div class="field">
                             <label>Tanggal Summary</label>
-                            <input type="date" name="summary_date" value="{{ old('summary_date', now()->format('Y-m-d')) }}" required>
+                            <input type="date" name="summary_date" value="{{ old('summary_date', \App\Support\ClinicTime::today()) }}" required>
                         </div>
 
                         <div class="field">

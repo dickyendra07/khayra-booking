@@ -3,8 +3,10 @@
 namespace App\Console\Commands;
 
 use App\Models\Billing;
+use App\Models\BillingPayment;
 use App\Models\FinanceMonthlyClosing;
 use App\Services\BillingMoney;
+use App\Services\PaymentLedger;
 use App\Support\InvoiceNumberIndex;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -75,6 +77,34 @@ class BillingAuditIntegrity extends Command
         }
 
         $findings += $this->section('8. Closing aktif yang berbeda dari data billing saat ini (pemasukan invoice)', $drift);
+
+        // Rekonsiliasi buku pembayaran (invoice baru / ledger). Hanya membaca.
+        $ledgerInvoices = Billing::where('payment_model', 'ledger')->get();
+
+        $findings += $this->section('10. Invoice ledger: paid/status tidak sesuai buku pembayaran',
+            $ledgerInvoices->filter(function ($b) {
+                if ($b->payment_status === 'void') {
+                    return false;
+                }
+
+                $paid = PaymentLedger::paidTotal($b);
+                $expected = $paid <= 0 ? 'unpaid' : ($paid < (float) $b->amount ? 'partial' : 'paid');
+
+                return abs((float) $b->paid_amount - $paid) > 0.5 || $b->payment_status !== $expected;
+            })->map(fn ($b) => "billing #{$b->id}: paid_amount {$b->paid_amount}, buku ".PaymentLedger::paidTotal($b).", status {$b->payment_status}")->values()->all());
+
+        $creditIn = BillingPayment::where('type', BillingPayment::TYPE_CREDIT_IN)->sum('amount');
+        $creditOut = BillingPayment::where('type', BillingPayment::TYPE_CREDIT_OUT)->sum('amount');
+        $findings += $this->section('11. Pemindahan kredit tidak seimbang (credit_in != credit_out)',
+            abs((float) $creditIn - (float) $creditOut) > 0.5 ? ["credit_in {$creditIn} vs credit_out {$creditOut}"] : []);
+
+        $findings += $this->section('12. Invoice void dengan saldo tertahan atau refund melebihi pembayaran',
+            $ledgerInvoices->filter(fn ($b) => $b->payment_status === 'void' && PaymentLedger::paidTotal($b) < -0.5)
+                ->map(fn ($b) => "billing #{$b->id}: saldo ".PaymentLedger::paidTotal($b).' (refund/kredit melebihi pembayaran)')->values()->all());
+
+        $held = $ledgerInvoices->filter(fn ($b) => $b->payment_status === 'void' && PaymentLedger::paidTotal($b) > 0.5);
+        $this->line('   Informasi: '.$held->count().' invoice void dengan kredit tertahan, total Rp '.number_format((float) $held->sum(fn ($b) => PaymentLedger::paidTotal($b)), 0, ',', '.').' (belum direfund / dipindahkan).');
+        $this->newLine();
 
         // Dampak zona waktu: aplikasi memakai UTC, klinik WIB (UTC+7). Invoice yang dibuat antara
         // 00:00-07:00 WIB bertanggal hari sebelumnya. Hanya informasi; tidak dihitung sebagai temuan.

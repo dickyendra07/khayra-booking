@@ -119,7 +119,7 @@
 
                         <div>
                             <label>Tanggal Dokumen</label>
-                            <input type="date" name="document_date" value="{{ old('document_date', now()->format('Y-m-d')) }}">
+                            <input type="date" name="document_date" value="{{ old('document_date', \App\Support\ClinicTime::today()) }}">
                         </div>
 
                         <div class="full">
@@ -150,7 +150,7 @@
 
                         <div>
                             <label>Date Buying Package</label>
-                            <input type="date" name="buying_date" value="{{ old('buying_date', $prefill['buying_date'] ?? now()->format('Y-m-d')) }}">
+                            <input type="date" name="buying_date" value="{{ old('buying_date', $prefill['buying_date'] ?? \App\Support\ClinicTime::today()) }}">
                         </div>
 
                         <div>

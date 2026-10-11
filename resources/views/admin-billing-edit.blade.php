@@ -217,14 +217,20 @@
                         <div class="field">
                             <label>Payment Status</label>
                             @php($currentStatus = $billing->payment_status ?: 'unpaid')
-                            <select name="payment_status" required {{ ($lock['status_locked'] || $currentStatus === 'paid') ? 'disabled' : '' }}>
+                            <select name="payment_status" required {{ ($lock['status_locked'] || $currentStatus === 'paid' || $billing->is_ledger) ? 'disabled' : '' }}>
                                 {{-- Hanya transisi aman: status sekarang atau Paid. Koreksi lain lewat Void + Terbitkan Ulang. --}}
                                 @if($currentStatus !== 'paid')
                                     <option value="{{ $currentStatus }}" selected>{{ ucfirst($currentStatus) }} (saat ini)</option>
                                 @endif
                                 <option value="paid" {{ $currentStatus === 'paid' ? 'selected' : '' }}>Paid</option>
                             </select>
-                            <div class="hint">Status tidak dapat diturunkan. Pembayaran sebagian dicatat saat invoice dibuat.</div>
+                            <div class="hint">
+                                @if($billing->is_ledger)
+                                    Status mengikuti riwayat pembayaran. Gunakan "Catat Pembayaran" di halaman detail invoice.
+                                @else
+                                    Status tidak dapat diturunkan. Pembayaran sebagian dicatat saat invoice dibuat.
+                                @endif
+                            </div>
                         </div>
 
                         <div class="field">

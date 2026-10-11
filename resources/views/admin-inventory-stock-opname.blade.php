@@ -400,7 +400,7 @@
 
                                 <div>
                                     <label>Reference</label>
-                                    <input type="text" name="reference" value="{{ old('reference', 'Stock Opname ' . now()->format('Y-m-d')) }}">
+                                    <input type="text" name="reference" value="{{ old('reference', 'Stock Opname ' . \App\Support\ClinicTime::today()) }}">
                                     <div class="helper">Contoh: Stock Opname akhir bulan, koreksi audit, atau opname shift pagi.</div>
                                 </div>
 

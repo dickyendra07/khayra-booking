@@ -1269,8 +1269,8 @@
 
                     
                 <div class="scheduler-action-row">
-                    <a href="/admin/bookings/calendar?date={{ $selectedDate ?? now()->toDateString() }}" class="scheduler-action-btn primary">Calendar View</a>
-                    <a href="/admin/bookings/create?date={{ $selectedDate ?? now()->toDateString() }}" class="scheduler-action-btn soft">+ Buat Appointment</a>
+                    <a href="/admin/bookings/calendar?date={{ $selectedDate ?? \App\Support\ClinicTime::today() }}" class="scheduler-action-btn primary">Calendar View</a>
+                    <a href="/admin/bookings/create?date={{ $selectedDate ?? \App\Support\ClinicTime::today() }}" class="scheduler-action-btn soft">+ Buat Appointment</a>
                 </div>
 <form method="GET" action="/admin/bookings" class="date-form">
                         <div class="field">

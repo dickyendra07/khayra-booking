@@ -38,12 +38,13 @@ it('preflight menandai cache array sebagai tidak efektif untuk throttling', func
     $this->artisan('khayra:preflight')->expectsOutputToContain('TIDAK efektif')->assertFailed();
 });
 
-it('preflight memberi peringatan zona waktu UTC dan format password teks biasa', function () {
+it('preflight memeriksa zona waktu penyimpanan UTC + zona operasional klinik dan memberi peringatan format password teks biasa', function () {
     config(['khayra_auth.admin.email' => 'admin@uji.test', 'khayra_auth.admin.password' => 'x-uji', 'cache.default' => 'file']);
 
     Artisan::call('khayra:preflight', ['--json' => true]);
     $rows = collect(json_decode(Artisan::output(), true));
 
-    expect($rows->firstWhere('check', 'Zona waktu aplikasi')['status'])->toBe('WARN')
+    expect($rows->firstWhere('check', 'Zona waktu penyimpanan')['status'])->toBe('PASS')
+        ->and($rows->firstWhere('check', 'Zona waktu operasional klinik')['status'])->toBe('PASS')
         ->and($rows->firstWhere('check', 'Format password admin')['status'])->toBe('WARN');
 });

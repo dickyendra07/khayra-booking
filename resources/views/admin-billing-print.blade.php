@@ -749,7 +749,7 @@
 
             <footer class="footer">
                 <div>Terima kasih telah menggunakan layanan Khayra Physio.</div>
-                <div>Generated: {{ now()->format('Y-m-d H:i') }}</div>
+                <div>Generated: {{ \App\Support\ClinicTime::now()->format('Y-m-d H:i') }}</div>
             </footer>
         </main>
     </div>

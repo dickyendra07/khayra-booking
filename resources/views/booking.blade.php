@@ -681,8 +681,8 @@
                             type="date"
                             id="booking_date"
                             name="booking_date"
-                            value="{{ old('booking_date', $selectedDate ?? now()->toDateString()) }}"
-                            min="{{ now()->toDateString() }}"
+                            value="{{ old('booking_date', $selectedDate ?? \App\Support\ClinicTime::today()) }}"
+                            min="{{ \App\Support\ClinicTime::today() }}"
                         >
                         <div class="helper">Pilih tanggal terapi yang Anda inginkan. Slot jam akan mengikuti tanggal ini.</div>
                     </div>

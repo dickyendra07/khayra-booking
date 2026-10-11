@@ -20,6 +20,9 @@ class BillingItem extends Model
         'line_total',
         'is_discount_eligible',
         'discount_amount',
+        'reference_type',
+        'reference_id',
+        'rate_unit',
         'notes',
     ];
 

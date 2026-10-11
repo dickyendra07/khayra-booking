@@ -3,6 +3,12 @@
 Deliverable Workstream B. **Ini rancangan dan analisis dampak. Belum ada tabel `billing_payments`, belum ada perubahan
 semantik keuangan, dan zona waktu aplikasi belum diubah.** Semua perubahan menunggu persetujuan.
 
+> **Status implementasi (Finalization Sprint, setelah persetujuan Kara Digital):** rancangan bagian 2-4 dan 7 sudah **diimplementasikan secara lokal** dan
+> diuji (227 test lulus di SQLite dan MySQL 8.4; konkurensi 20-80 proses): tabel `billing_payments` (`PaymentLedger`), pemisahan omzet vs arus kas
+> (`FinanceReport`), refund dan pemindahan kredit non-kas, serta opsi A zona waktu (`ClinicTime`, penyimpanan tetap UTC). Invoice lama bertanda `legacy`
+> dan **tidak dihitung ulang**. Temuan F1-F5 di bawah berlaku untuk invoice lama (dijaga sebagai test karakterisasi) dan **teratasi untuk invoice baru**.
+> Backfill invoice lama (fase 5) **tidak dilakukan**. Rincian rilis ada di `04-rencana-rilis-dan-verifikasi.md`.
+
 ## 1. Kondisi saat ini (terbukti dengan test karakterisasi)
 
 Satu invoice hanya memiliki satu kolom `paid_amount` (+ `change_amount`, `remaining_amount`, `payment_status`). Tidak ada tabel pembayaran.

@@ -533,9 +533,25 @@
                 <div class="void-box">
                     <h3>Billing ini sudah di-void</h3>
                     <p>
-                        Transaksi dibatalkan pada {{ $billing->voided_at ? $billing->voided_at->format('Y-m-d H:i') : '-' }}.
+                        Transaksi dibatalkan pada {{ \App\Support\ClinicTime::display($billing->voided_at) }} WIB.
                         Reason: {{ $billing->void_reason ?: '-' }}
                     </p>
+                    @if($heldMoney > 0)
+                        <div style="background:#fffbeb;border:1px solid #fde68a;color:#92400e;border-radius:14px;padding:12px 14px;margin:0 0 12px;font-size:13px;">
+                            <strong>Kredit tertahan: Rp {{ number_format($heldMoney, 0, ',', '.') }}</strong> (uang sudah diterima, belum direfund atau dipindahkan).
+                            Akan dipindahkan otomatis ke invoice pengganti, atau direfund di bawah.
+                            <form method="POST" action="/admin/billings/{{ $billing->id }}/refunds" style="margin-top:10px;display:grid;gap:8px;">
+                                @csrf
+                                <input type="number" name="amount" step="1" min="1" max="{{ $heldMoney }}" value="{{ $heldMoney }}" required>
+                                <select name="method" required>
+                                    <option value="cash">Cash</option><option value="qr">QR</option><option value="debit">Debit</option>
+                                    <option value="bank_bca">Bank BCA</option><option value="bank_bni">Bank BNI</option><option value="bank_mandiri">Bank Mandiri</option>
+                                </select>
+                                <input type="text" name="reason" minlength="5" placeholder="Alasan refund (wajib)" required>
+                                <button type="submit" class="btn btn-void">Catat Refund</button>
+                            </form>
+                        </div>
+                    @endif
                     @if($replacedBy->where('payment_status', '!=', 'void')->isEmpty() && !$lock['closed'])
                         <a href="/admin/cashier?replaces={{ $billing->id }}" class="btn btn-primary">Terbitkan Ulang (Koreksi)</a>
                     @elseif($lock['closed'])
@@ -556,6 +572,20 @@
                     <form method="POST" action="/admin/billings/{{ $billing->id }}/void" class="void-form" onsubmit="return confirm('Yakin VOID billing ini? Inventory akan dikembalikan dan invoice tidak boleh dipakai lagi.')">
                         @csrf
                         <textarea name="void_reason" placeholder="Tulis alasan void, contoh: salah input item / pasien batal transaksi" required></textarea>
+
+                        @if($billing->is_ledger && $payments->isNotEmpty() && \App\Services\PaymentLedger::paidTotal($billing) > 0)
+                            <div style="margin:12px 0;font-size:13px;">
+                                <strong>Invoice ini sudah menerima Rp {{ number_format(\App\Services\PaymentLedger::paidTotal($billing), 0, ',', '.') }}. Nasib uangnya:</strong>
+                                <label style="display:block;margin-top:6px;"><input type="radio" name="money_disposition" value="refund" required> Dikembalikan ke pasien (refund, tercatat sebagai transaksi tersendiri)</label>
+                                <label style="display:block;margin-top:6px;"><input type="radio" name="money_disposition" value="credit" required> Ditahan sebagai kredit untuk invoice pengganti (bukan penerimaan kas baru)</label>
+                                <select name="refund_method" style="margin-top:8px;">
+                                    <option value="">Metode pengembalian (untuk refund)</option>
+                                    <option value="cash">Cash</option><option value="qr">QR</option><option value="debit">Debit</option>
+                                    <option value="bank_bca">Bank BCA</option><option value="bank_bni">Bank BNI</option><option value="bank_mandiri">Bank Mandiri</option>
+                                </select>
+                            </div>
+                        @endif
+
                         <button type="submit" class="btn btn-void">VOID Billing</button>
                     </form>
                 </div>
@@ -685,6 +715,61 @@
                 </div>
             </section>
 
+            @if($billing->is_ledger)
+                <section class="section-card">
+                    <h2 class="section-title">Riwayat Pembayaran</h2>
+                    <p class="section-subtitle">
+                        Setiap pembayaran, refund, dan pemindahan kredit tercatat terpisah (tidak dapat diubah atau dihapus).
+                        Kembalian bukan pendapatan: yang dihitung adalah penerimaan bersih.
+                    </p>
+                    <div class="table-wrap">
+                        <table class="audit-table">
+                            <thead>
+                                <tr><th>Tanggal</th><th>Jenis</th><th>Metode</th><th>Diserahkan</th><th>Kembalian</th><th>Bersih</th><th>Oleh / Catatan</th></tr>
+                            </thead>
+                            <tbody>
+                                @forelse($payments as $payment)
+                                    <tr>
+                                        <td data-label="Tanggal">{{ \App\Support\ClinicTime::display($payment->paid_at) }}</td>
+                                        <td data-label="Jenis">{{ $payment->type_label }}</td>
+                                        <td data-label="Metode">{{ $payment->is_cash ? $payment->method_label : '-' }}</td>
+                                        <td data-label="Diserahkan">{{ $payment->is_cash ? 'Rp ' . number_format($payment->tendered_amount, 0, ',', '.') : '-' }}</td>
+                                        <td data-label="Kembalian">{{ (float) $payment->change_amount > 0 ? 'Rp ' . number_format($payment->change_amount, 0, ',', '.') : '-' }}</td>
+                                        <td data-label="Bersih"><strong>{{ $payment->type === 'refund' || $payment->type === 'credit_out' ? '-' : '' }}Rp {{ number_format($payment->amount, 0, ',', '.') }}</strong></td>
+                                        <td data-label="Oleh / Catatan">{{ $payment->recorded_by ?: '-' }}@if($payment->reason) · {{ $payment->reason }}@endif @if($payment->reference) · ref {{ $payment->reference }}@endif</td>
+                                    </tr>
+                                @empty
+                                    <tr><td colspan="7">Belum ada pembayaran tercatat.</td></tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+
+                    @if(!$lock['void'])
+                        <p style="margin:14px 0 6px;font-size:14px;"><strong>Sisa tagihan: Rp {{ number_format($outstanding, 0, ',', '.') }}</strong></p>
+                    @endif
+
+                    @if(!$lock['void'] && $outstanding > 0)
+                        <form method="POST" action="/admin/billings/{{ $billing->id }}/payments" style="display:grid;gap:10px;max-width:480px;margin-top:10px;">
+                            @csrf
+                            <label style="font-weight:800;font-size:13px;">Catat Pembayaran (uang yang diserahkan pasien)</label>
+                            <input type="number" name="tendered_amount" min="1" step="1" required placeholder="Jumlah diserahkan, mis. {{ (int) $outstanding }}">
+                            <select name="method" required>
+                                <option value="cash">Cash</option><option value="qr">QR</option><option value="debit">Debit</option>
+                                <option value="credit">Credit Card</option><option value="bank_bca">Bank BCA</option><option value="bank_bni">Bank BNI</option>
+                                <option value="bank_mandiri">Bank Mandiri</option><option value="insurance">Insurance</option>
+                            </select>
+                            <input type="text" name="reference" maxlength="255" placeholder="No. referensi (opsional)">
+                            <button type="submit" class="btn btn-primary">Catat Pembayaran</button>
+                        </form>
+                    @endif
+                </section>
+            @else
+                <div class="alert" style="background:#f1f5f9;color:#475569;border:1px solid #e2e8f0;font-size:13px;">
+                    Invoice lama (dibuat sebelum buku pembayaran): satu nilai pembayaran tanpa rincian tanggal/cicilan. Angka historisnya tidak diubah.
+                </div>
+            @endif
+
             <section class="section-card">
                 <h2 class="section-title">Riwayat Audit</h2>
                 <p class="section-subtitle">Catatan perubahan invoice (tidak dapat diubah atau dihapus).</p>
@@ -696,7 +781,7 @@
                         <tbody>
                             @forelse($auditLogs as $log)
                                 <tr>
-                                    <td data-label="Waktu">{{ optional($log->created_at)->format('Y-m-d H:i') }}</td>
+                                    <td data-label="Waktu">{{ \App\Support\ClinicTime::display($log->created_at) }}</td>
                                     <td data-label="Aksi">{{ $log->action }}</td>
                                     <td data-label="Oleh">{{ $log->actor ?: '-' }}</td>
                                     <td data-label="Perubahan">

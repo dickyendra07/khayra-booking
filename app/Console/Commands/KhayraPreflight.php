@@ -166,8 +166,14 @@ class KhayraPreflight extends Command
         $pending = $this->pendingMigrations();
         $this->add($pending === 0 ? 'PASS' : 'WARN', 'Migration', $pending === 0 ? 'semua sudah dijalankan' : "{$pending} migration belum dijalankan (jalankan migrate --pretend dulu)");
 
-        foreach (['billing_audit_logs', 'invoice_sequences'] as $table) {
+        foreach (['billing_audit_logs', 'invoice_sequences', 'billing_payments', 'rooms'] as $table) {
             $this->add(Schema::hasTable($table) ? 'PASS' : 'WARN', "Tabel {$table}", Schema::hasTable($table) ? 'ada' : 'belum ada (migration P1 belum dijalankan)');
+        }
+
+        if (Schema::hasTable('billings') && Schema::hasColumn('billings', 'payment_model')) {
+            $legacy = DB::table('billings')->where('payment_model', 'legacy')->count();
+            $ledger = DB::table('billings')->where('payment_model', 'ledger')->count();
+            $this->add('PASS', 'Model pembayaran invoice', "legacy: {$legacy} (tidak dihitung ulang), ledger: {$ledger}");
         }
 
         if (Schema::hasTable('billings')) {
@@ -193,14 +199,11 @@ class KhayraPreflight extends Command
     private function checkTimezone(): void
     {
         $tz = config('app.timezone');
-        $detail = "app.timezone = {$tz}";
+        $clinicTz = config('clinic.timezone');
 
-        if ($tz === 'UTC') {
-            $this->add('WARN', 'Zona waktu aplikasi', $detail.'. Klinik berada di WIB (UTC+7): tanggal invoice, periode closing, dan nomor invoice mengikuti UTC. '
-                .'Antara 00:00-07:00 WIB tanggalnya masih hari sebelumnya. Lihat dokumen analisis zona waktu sebelum mengubah.');
-        } else {
-            $this->add('PASS', 'Zona waktu aplikasi', $detail);
-        }
+        // Penyimpanan tetap UTC (tidak menggeser timestamp historis); tanggal bisnis memakai zona waktu klinik.
+        $this->add($tz === 'UTC' ? 'PASS' : 'WARN', 'Zona waktu penyimpanan', "app.timezone = {$tz}".($tz === 'UTC' ? ' (benar: timestamp database tetap UTC)' : ' (tidak UTC: timestamp lama akan terbaca bergeser)'));
+        $this->add($clinicTz ? 'PASS' : 'FAIL', 'Zona waktu operasional klinik', 'clinic.timezone = '.($clinicTz ?: 'KOSONG').' (dipakai untuk tanggal invoice, pembayaran, closing, nomor invoice)');
     }
 
     private function pendingMigrations(): int

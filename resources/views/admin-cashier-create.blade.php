@@ -155,12 +155,17 @@
 
             <form method="POST" action="/admin/cashier/checkout" id="checkoutForm">
                 @csrf
+                {{-- Token anti klik-ganda: pengiriman ulang formulir yang sama tidak membuat invoice kedua. --}}
+                <input type="hidden" name="checkout_token" value="{{ \Illuminate\Support\Str::uuid() }}">
 
                 @if(isset($replaces) && $replaces)
                     <input type="hidden" name="replaces_billing_id" value="{{ $replaces->id }}">
                     <div class="error-box" style="background:#eff6ff;border-color:#bfdbfe;color:#1e40af;">
                         <strong>Invoice pengganti (koreksi).</strong>
                         Menggantikan invoice void {{ $replaces->invoice_number ?: '#' . $replaces->id }}. Periksa item dan harga, lalu simpan.
+                        @if(($creditAvailable ?? 0) > 0)
+                            <br><strong>Kredit tersedia Rp {{ number_format($creditAvailable, 0, ',', '.') }}</strong> dari invoice lama akan dipakai otomatis (bukan penerimaan kas baru).
+                        @endif
                         Invoice lama tetap tersimpan sebagai riwayat dan tertaut ke invoice baru ini.
                     </div>
                 @endif
@@ -180,7 +185,7 @@
                     <div class="form-grid">
                         <div class="field">
                             <label>Patient</label>
-                            <select name="patient_id" required>
+                            <select name="patient_id" id="patientSelect" required onchange="refreshSuggestions()">
                                 <option value="">Pilih Patient</option>
                                 @foreach($patients as $patient)
                                     <option value="{{ $patient->id }}" {{ old('patient_id', $selectedPatientId) == $patient->id ? 'selected' : '' }}>
@@ -192,10 +197,10 @@
 
                         <div class="field">
                             <label>Visit Terkait</label>
-                            <select name="visit_id">
+                            <select name="visit_id" id="visitSelect" onchange="refreshSuggestions()">
                                 <option value="">Pilih Visit (opsional)</option>
                                 @foreach($visits as $visit)
-                                    <option value="{{ $visit->id }}" {{ old('visit_id', $selectedVisitId) == $visit->id ? 'selected' : '' }}>
+                                    <option value="{{ $visit->id }}" data-room="{{ $visit->room_name }}" {{ old('visit_id', $selectedVisitId) == $visit->id ? 'selected' : '' }}>
                                         #{{ $visit->id }} - {{ optional($visit->patient)->full_name ?: 'Patient' }} - {{ $visit->visit_date ?: '-' }}
                                     </option>
                                 @endforeach
@@ -204,7 +209,7 @@
 
                         <div class="field">
                             <label>Invoice Date</label>
-                            <input type="date" name="invoice_date" value="{{ old('invoice_date', now()->format('Y-m-d')) }}" required>
+                            <input type="date" name="invoice_date" value="{{ old('invoice_date', \App\Support\ClinicTime::today()) }}" required>
                         </div>
 
                         <div class="field">
@@ -242,6 +247,8 @@
                         </div>
                     </div>
 
+                    <div id="chargeSuggestions" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;"></div>
+
                     <div id="lineItems"></div>
                 </section>
 
@@ -273,8 +280,9 @@
                                 </div>
 
                                 <div class="field">
-                                    <label>Paid Amount</label>
-                                    <input type="number" name="paid_amount" id="paidAmount" min="0" step="1" value="{{ old('paid_amount', 0) }}" oninput="calculateTotals()" placeholder="Jumlah dibayar pasien">
+                                    <label>Uang Diserahkan Pasien</label>
+                                    <input type="number" name="paid_amount" id="paidAmount" min="0" step="1" value="{{ old('paid_amount', 0) }}" oninput="calculateTotals()" placeholder="Jumlah diserahkan pasien">
+                                    <div class="hint">Kembalian tidak dihitung sebagai pendapatan; yang tercatat adalah penerimaan bersih.</div>
                                 </div>
 
                                 <div class="field">
@@ -427,6 +435,9 @@
             </div>
         </div>
 
+        <input type="hidden" name="reference_type[]" class="ref-type" value="">
+        <input type="hidden" name="reference_id[]" class="ref-id" value="">
+
         <div class="price-reason-row" style="display:none; margin-top:10px;">
             <label style="font-size:12px;font-weight:700;">Alasan harga berbeda dari master (wajib, tercatat di audit)</label>
             <input type="text" name="price_reason[]" class="price-reason-input" maxlength="300" placeholder="Contoh: promo khusus disetujui owner / koreksi harga input">
@@ -449,6 +460,73 @@
 
 <script>
     const DISCOUNTABLE_CATEGORIES = @json(config('clinic.billing.discountable_categories'));
+    const CREDIT_AVAILABLE = @json((float) ($creditAvailable ?? 0));
+    const ROOM_RATES = @json($roomRates ?? new stdClass);
+    const BILLED_VISITS = @json($billedVisitIds ?? []);
+    const ADMIN_FEE = @json($adminFee ?? ['enabled' => false, 'amount' => 0, 'chargedPatientIds' => []]);
+
+    function hasReferenceLine(type, id) {
+        return Array.from(document.querySelectorAll('.line-item')).some(row =>
+            row.querySelector('.ref-type').value === type && String(row.querySelector('.ref-id').value) === String(id));
+    }
+
+    // Baris berreferensi: kategori, harga acuan, dan satuan divalidasi ulang oleh server.
+    function addReferenceLine(opts) {
+        addLineItem();
+        const rows = document.querySelectorAll('.line-item');
+        const row = rows[rows.length - 1];
+        row.querySelector('.line-type').value = 'service';
+        row.dataset.type = 'service';
+        row.querySelector('.service-master-select').value = '';
+        row.querySelector('.description-input').value = opts.description;
+        row.querySelector('.qty-input').value = opts.quantity || 1;
+        row.querySelector('.price-input').value = opts.price;
+        row.querySelector('.ref-type').value = opts.type;
+        row.querySelector('.ref-id').value = opts.id;
+        setRowCategory(row, opts.category, true, opts.hint || 'Kategori ditentukan sistem.');
+        calculateTotals();
+        refreshSuggestions();
+    }
+
+    // Saran biaya (bukan penagihan otomatis): muncul hanya bila syaratnya terpenuhi.
+    function refreshSuggestions() {
+        const box = document.getElementById('chargeSuggestions');
+        if (!box) { return; }
+        box.innerHTML = '';
+
+        const visitSelect = document.getElementById('visitSelect');
+        const visitOption = visitSelect && visitSelect.options[visitSelect.selectedIndex];
+        const roomName = visitOption && visitOption.value ? (visitOption.dataset.room || '') : '';
+        const room = roomName ? ROOM_RATES[roomName.toLowerCase()] : null;
+
+        if (room && visitOption.value && !BILLED_VISITS.includes(Number(visitOption.value)) && !hasReferenceLine('visit_room', visitOption.value)) {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'btn btn-soft';
+            button.textContent = '+ Biaya ruangan ' + room.name + ' (Rp ' + Number(room.rate).toLocaleString('id-ID') + ' ' + room.unitLabel.toLowerCase() + ')';
+            button.onclick = () => addReferenceLine({
+                type: 'visit_room', id: visitOption.value, category: 'room_charge', price: room.rate, quantity: 1,
+                description: 'Biaya ruangan ' + room.name + ' (' + room.unitLabel.toLowerCase() + ')',
+                hint: 'Biaya ruangan: komponen tersendiri, tidak didiskon. Ubah jumlah sesuai satuan tarif.',
+            });
+            box.appendChild(button);
+        }
+
+        const patientSelect = document.getElementById('patientSelect');
+
+        if (ADMIN_FEE.enabled && patientSelect && patientSelect.value
+            && !ADMIN_FEE.chargedPatientIds.includes(Number(patientSelect.value)) && !hasReferenceLine('patient_admin_fee', patientSelect.value)) {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'btn btn-soft';
+            button.textContent = '+ Biaya administrasi pasien baru (Rp ' + Number(ADMIN_FEE.amount).toLocaleString('id-ID') + ')';
+            button.onclick = () => addReferenceLine({
+                type: 'patient_admin_fee', id: patientSelect.value, category: 'admin_fee', price: ADMIN_FEE.amount, quantity: 1,
+                description: 'Biaya Administrasi Awal Kedatangan', hint: 'Biaya admin: komponen tersendiri, tidak didiskon.',
+            });
+            box.appendChild(button);
+        }
+    }
     const MANUAL_DEFAULT_CATEGORY = @json(config('clinic.billing.manual_service_default_category'));
 
     function setRowCategory(row, category, locked, hint) {
@@ -726,6 +804,12 @@
         row.querySelector('.qty-input').value = item.quantity;
         row.querySelector('.price-input').value = item.unit_price;
 
+        if (item.reference_type) {
+            row.querySelector('.ref-type').value = item.reference_type;
+            row.querySelector('.ref-id').value = item.reference_id;
+            setRowCategory(row, item.category, true, 'Biaya berreferensi dari invoice sebelumnya; divalidasi ulang oleh sistem.');
+        }
+
         const hasMaster = row.querySelector('.service-master-select').value !== '';
 
         if (item.type === 'service' && !hasMaster && item.category) {
@@ -803,13 +887,16 @@
         document.getElementById('promoHint').innerText = promoHint;
 
         const grandTotal = Math.max(subtotal - discountAmount, 0);
-        const changeAmount = Math.max(paidAmount - grandTotal, 0);
-        const remainingAmount = Math.max(grandTotal - paidAmount, 0);
+        // Kredit dari invoice yang digantikan menutup sebagian tagihan (bukan kas baru).
+        const credit = Math.min(CREDIT_AVAILABLE, grandTotal);
+        const dueAfterCredit = grandTotal - credit;
+        const changeAmount = Math.max(paidAmount - dueAfterCredit, 0);
+        const remainingAmount = Math.max(dueAfterCredit - paidAmount, 0);
 
         let status = 'unpaid';
-        if (paidAmount >= grandTotal && grandTotal > 0) {
+        if (grandTotal > 0 && (credit + Math.min(paidAmount, dueAfterCredit)) >= grandTotal) {
             status = 'paid';
-        } else if (paidAmount > 0) {
+        } else if (credit + paidAmount > 0) {
             status = 'partial';
         }
 
@@ -838,6 +925,7 @@
         }
 
         calculateTotals();
+        refreshSuggestions();
     });
 </script>
 <script>

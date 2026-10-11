@@ -2,92 +2,90 @@
 
 use App\Models\Billing;
 use App\Models\BillingAuditLog;
-use App\Models\FinanceTransaction;
 use App\Models\Patient;
+use App\Support\ClinicTime;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
 /**
- * TEST KARAKTERISASI: mendokumentasikan perilaku keuangan SAAT INI (sebelum rancangan pembayaran
- * disetujui). Test ini bukan pernyataan bahwa perilakunya benar; tujuannya (1) membuktikan temuan
- * audit dan (2) membuat perubahan semantik tidak terjadi tanpa sengaja. Bila rancangan
- * billing_payments disetujui dan semantik berubah, test ini diperbarui secara eksplisit.
+ * TEST KARAKTERISASI INVOICE LAMA (payment_model = legacy).
+ *
+ * Invoice yang dibuat sebelum buku pembayaran TIDAK dihitung ulang: semantik historisnya dijaga
+ * persis seperti sebelumnya (angka laporan lama harus tetap dapat direproduksi). Invoice baru
+ * memakai buku pembayaran dan perilakunya diuji di PaymentLedgerTest.
  */
 beforeEach(function () {
     $this->withSession(['admin_logged_in' => true, 'admin_email' => 'admin@uji.test']);
     $this->patient = Patient::create(['full_name' => 'Pasien Karakter', 'whatsapp' => '081234567890']);
 });
 
-function chCheckout($test, int $price, int $tendered, ?string $date = null)
+function legacyInvoice(array $attrs = []): Billing
 {
-    return $test->post('/admin/cashier/checkout', [
-        'patient_id' => Patient::firstOrFail()->id, 'invoice_date' => $date ?? now()->toDateString(), 'paid_amount' => $tendered, 'payment_method' => 'cash',
-        'item_type' => ['service'], 'description' => ['Jasa'], 'quantity' => [1], 'unit_price' => [$price],
-        'inventory_item_id' => [''], 'clinic_service_id' => [''], 'item_category' => ['other'],
-    ]);
+    // Billing::create tanpa payment_model => default database 'legacy' (seperti semua invoice lama).
+    return Billing::create(array_merge([
+        'patient_id' => Patient::firstOrFail()->id, 'invoice_number' => 'INV-OLD-'.uniqid(), 'invoice_date' => ClinicTime::today(),
+        'subtotal_amount' => 550000, 'amount' => 550000, 'paid_amount' => 550000, 'remaining_amount' => 0, 'payment_status' => 'paid',
+    ], $attrs));
 }
 
-function chFinance($test, ?string $month = null)
+function financeOf($test, ?string $month = null)
 {
-    return $test->get('/admin/owner-finance?month='.($month ?? now()->format('Y-m')))->viewData('summary');
+    return $test->get('/admin/owner-finance?month='.($month ?? ClinicTime::monthKey()))->viewData('summary');
 }
 
-it('[TEMUAN] uang kembalian ikut tercatat sebagai pemasukan: bayar 600.000 untuk invoice 550.000', function () {
-    chCheckout($this, 550000, 600000);
-
-    $billing = Billing::firstOrFail();
-
-    expect((float) $billing->amount)->toBe(550000.0)
-        ->and((float) $billing->paid_amount)->toBe(600000.0)      // uang yang DISERAHKAN pasien
-        ->and((float) $billing->change_amount)->toBe(50000.0)
-        ->and((float) chFinance($this)['billing_income'])->toBe(600000.0);   // pemasukan = 600.000, bukan 550.000
+it('invoice lama memakai model legacy secara default', function () {
+    expect(legacyInvoice()->fresh()->payment_model)->toBe('legacy');
 });
 
-it('[TEMUAN] invoice yang di-void menghapus uang yang diterima dari laporan finance tanpa catatan refund', function () {
-    chCheckout($this, 550000, 550000);
-    $billing = Billing::firstOrFail();
-    expect((float) chFinance($this)['billing_income'])->toBe(550000.0);
+it('[LEGACY] invoice lama dengan paid_amount lebih besar dari amount tetap dihitung apa adanya (tidak dihitung ulang)', function () {
+    legacyInvoice(['paid_amount' => 600000, 'change_amount' => 50000]);
+
+    expect((float) financeOf($this)['billing_income'])->toBe(600000.0);
+});
+
+it('[LEGACY] void invoice lama mengeluarkan paid dari laporan seperti semula', function () {
+    $billing = legacyInvoice();
+    expect((float) financeOf($this)['billing_income'])->toBe(550000.0);
 
     $this->post("/admin/billings/{$billing->id}/void", ['void_reason' => 'Salah input']);
 
-    $billing->refresh();
     $audit = BillingAuditLog::where('billing_id', $billing->id)->where('action', 'voided')->firstOrFail();
 
-    expect((float) chFinance($this)['billing_income'])->toBe(0.0)           // uang 550.000 lenyap dari laporan
-        ->and((float) $billing->paid_amount)->toBe(0.0)
-        ->and((float) $audit->before['paid_amount'])->toBe(550000.0)         // hanya tersisa di audit log
-        ->and(FinanceTransaction::count())->toBe(0);             // tidak ada catatan refund/pengeluaran
+    expect((float) financeOf($this)['billing_income'])->toBe(0.0)
+        ->and((float) $audit->before['paid_amount'])->toBe(550000.0);
 });
 
-it('[TEMUAN] pembayaran dihitung pada bulan INVOICE, bukan bulan uang diterima', function () {
+it('[LEGACY] pembayaran invoice lama dicatat pada bulan invoice', function () {
     $lastMonthDate = now()->subMonthNoOverflow()->startOfMonth()->addDays(9)->toDateString();
     $lastMonth = now()->subMonthNoOverflow()->format('Y-m');
 
-    chCheckout($this, 400000, 0, $lastMonthDate);            // belum dibayar saat dibuat
-    $billing = Billing::firstOrFail();
+    legacyInvoice(['invoice_date' => $lastMonthDate]);
 
-    $this->post("/admin/billings/{$billing->id}/status", ['payment_status' => 'paid']);   // dilunasi HARI INI
-
-    expect((float) chFinance($this, $lastMonth)['billing_income'])->toBe(400000.0)       // masuk ke bulan lalu
-        ->and((float) chFinance($this)['billing_income'])->toBe(0.0);                    // bulan ini 0
+    expect((float) financeOf($this, $lastMonth)['billing_income'])->toBe(550000.0)
+        ->and((float) financeOf($this)['billing_income'])->toBe(0.0);
 });
 
-it('[TEMUAN] dashboard dan finance berbeda untuk invoice lama berstatus paid dengan paid_amount 0', function () {
-    Billing::create(['patient_id' => $this->patient->id, 'invoice_number' => 'INV-LEGACY', 'invoice_date' => now()->toDateString(), 'amount' => 300000, 'paid_amount' => 0, 'payment_status' => 'paid']);
+it('invoice lama berstatus paid dengan paid_amount 0 dihitung sama di dashboard dan finance (inkonsistensi lama teratasi)', function () {
+    legacyInvoice(['amount' => 300000, 'paid_amount' => 0]);
 
-    expect((float) chFinance($this)['billing_income'])->toBe(300000.0);   // finance memakai fallback amount
+    expect((float) financeOf($this)['billing_income'])->toBe(300000.0);
 
     $this->get('/admin/dashboard')->assertOk()
-        ->assertViewHas('monthlyPaidAmount', fn ($value) => (float) $value === 0.0);   // dashboard menjumlah paid_amount mentah
+        ->assertViewHas('monthlyPaidAmount', fn ($value) => (float) $value === 300000.0);
 });
 
-it('pembayaran sebagian dihitung sebesar paid_amount dan sisa tagihan terpisah', function () {
-    chCheckout($this, 500000, 200000);
+it('[LEGACY] pembayaran sebagian invoice lama dihitung sebesar paid_amount', function () {
+    $billing = legacyInvoice(['amount' => 500000, 'paid_amount' => 200000, 'remaining_amount' => 300000, 'payment_status' => 'partial']);
 
-    $billing = Billing::firstOrFail();
+    expect((float) financeOf($this)['billing_income'])->toBe(200000.0)
+        ->and($billing->fresh()->payment_model)->toBe('legacy');
+});
 
-    expect($billing->payment_status)->toBe('partial')
-        ->and((float) chFinance($this)['billing_income'])->toBe(200000.0)
-        ->and((float) $billing->remaining_amount)->toBe(300000.0);
+it('invoice lama tidak dapat menerima pembayaran lewat buku pembayaran (tidak diubah semantiknya)', function () {
+    $billing = legacyInvoice(['amount' => 500000, 'paid_amount' => 200000, 'remaining_amount' => 300000, 'payment_status' => 'partial']);
+
+    $this->post("/admin/billings/{$billing->id}/payments", ['tendered_amount' => 300000, 'method' => 'cash'])->assertSessionHas('error');
+
+    expect((float) $billing->fresh()->paid_amount)->toBe(200000.0)->and($billing->payments()->count())->toBe(0);
 });

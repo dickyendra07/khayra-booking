@@ -203,9 +203,9 @@
 
         <div class="meta">
             <span class="status">{{ $closing ? 'Closed Book' : 'Draft Report' }}</span><br>
-            Generated: {{ now()->format('Y-m-d H:i') }}<br>
+            Generated: {{ \App\Support\ClinicTime::now()->format('Y-m-d H:i') }}<br>
             @if($closing)
-                Closed: {{ optional($closing->closed_at)->format('Y-m-d H:i') ?: '-' }}<br>
+                Closed: {{ \App\Support\ClinicTime::display($closing->closed_at) ?: '-' }}<br>
                 Closed by: {{ $closing->closed_by ?: '-' }}
             @endif
         </div>
@@ -213,8 +213,13 @@
 
     <div class="summary-grid">
         <div class="summary-card">
-            <div class="summary-label">Billing Income</div>
+            <div class="summary-label">Billing Income (Arus Kas)</div>
             <div class="summary-value green">Rp {{ number_format($summary['billing_income'], 0, ',', '.') }}</div>
+        </div>
+
+        <div class="summary-card">
+            <div class="summary-label">Omzet (Tanggal Invoice)</div>
+            <div class="summary-value">Rp {{ number_format($summary['invoice_revenue'] ?? 0, 0, ',', '.') }}</div>
         </div>
 
         <div class="summary-card">

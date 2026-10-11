@@ -499,12 +499,12 @@
                     <a class="btn btn-soft" href="/admin/bookings/calendar?date={{ $date->copy()->subDay()->toDateString() }}">← Previous</a>
                     <input type="date" name="date" value="{{ $selectedDate }}">
                     <button class="btn btn-primary" type="submit">Select Date</button>
-                    <a class="btn btn-soft" href="/admin/bookings/calendar?date={{ now()->toDateString() }}">Today</a>
+                    <a class="btn btn-soft" href="/admin/bookings/calendar?date={{ \App\Support\ClinicTime::today() }}">Today</a>
                     <a class="btn btn-soft" href="/admin/bookings/calendar?date={{ $date->copy()->addDay()->toDateString() }}">Next →</a>
                 </form>
                 <div class="date-title">
                     <strong>{{ $date->translatedFormat('l, d F Y') }}</strong>
-                    @if($selectedDate === now()->toDateString())
+                    @if($selectedDate === \App\Support\ClinicTime::today())
                         <span class="today-pill">Today</span>
                     @endif
                 </div>

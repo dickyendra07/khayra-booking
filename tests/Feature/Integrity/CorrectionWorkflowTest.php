@@ -5,6 +5,8 @@ use App\Models\BillingAuditLog;
 use App\Models\ClinicService;
 use App\Models\InventoryItem;
 use App\Models\Patient;
+use App\Services\PaymentLedger;
+use App\Support\ClinicTime;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -36,8 +38,9 @@ it('alur koreksi: void invoice lunas lalu terbitkan ulang menghasilkan invoice b
     $this->post("/admin/billings/{$original->id}/update", ['patient_id' => $this->patient->id, 'invoice_date' => now()->toDateString(), 'amount' => 1, 'payment_status' => 'paid'])->assertRedirect();
     expect((float) $original->fresh()->amount)->toBe(580000.0);
 
-    // 1) Void dengan alasan.
-    $this->post("/admin/billings/{$original->id}/void", ['void_reason' => 'Jumlah tape salah'])->assertRedirect();
+    // 1) Void dengan alasan; uang Rp580.000 yang sudah diterima ditahan sebagai kredit untuk invoice pengganti.
+    $this->post("/admin/billings/{$original->id}/void", ['void_reason' => 'Jumlah tape salah'])->assertSessionHasErrors('money_disposition');
+    $this->post("/admin/billings/{$original->id}/void", ['void_reason' => 'Jumlah tape salah', 'money_disposition' => 'credit'])->assertRedirect();
     expect($this->product->fresh()->stock)->toBe(10);
 
     // 2) Form kasir terisi dari invoice lama.
@@ -46,9 +49,9 @@ it('alur koreksi: void invoice lunas lalu terbitkan ulang menghasilkan invoice b
         ->assertSee('name="replaces_billing_id"', false)
         ->assertSee('Tape');
 
-    // 3) Simpan invoice pengganti (qty tape dikoreksi).
+    // 3) Simpan invoice pengganti (qty tape dikoreksi); tidak ada uang tunai baru, kredit yang dipakai.
     $this->post('/admin/cashier/checkout', [
-        'patient_id' => $this->patient->id, 'invoice_date' => now()->toDateString(), 'paid_amount' => 540000, 'payment_method' => 'cash',
+        'patient_id' => $this->patient->id, 'invoice_date' => now()->toDateString(), 'paid_amount' => 0, 'payment_method' => 'cash',
         'replaces_billing_id' => $original->id,
         'item_type' => ['service', 'inventory'], 'description' => ['Prog', 'Tape'], 'quantity' => [1, 1], 'unit_price' => [500000, 40000],
         'inventory_item_id' => ['', $this->product->id], 'clinic_service_id' => [$this->program->id, ''], 'item_category' => ['', ''], 'price_reason' => ['', ''],
@@ -61,15 +64,24 @@ it('alur koreksi: void invoice lunas lalu terbitkan ulang menghasilkan invoice b
         ->and($replacement->invoice_number)->not->toBe($original->invoice_number)
         ->and($this->product->fresh()->stock)->toBe(9)
         ->and($original->payment_status)->toBe('void')
+        ->and($replacement->payment_status)->toBe('paid')
+        ->and((float) $replacement->paid_amount)->toBe(540000.0)            // dibayar dari kredit
         ->and((float) $original->amount)->toBe(580000.0)                    // nominal asli tetap tersimpan
         ->and($original->items()->count())->toBe(2)                         // item asli tetap ada
         ->and(Billing::count())->toBe(2)
         ->and(BillingAuditLog::where('billing_id', $original->id)->pluck('action')->all())->toContain('created', 'voided', 'replaced_by')
         ->and(BillingAuditLog::where('billing_id', $replacement->id)->where('action', 'created')->exists())->toBeTrue();
 
-    // Owner finance: hanya invoice pengganti yang dihitung.
-    $this->get('/admin/owner-finance?month='.now()->format('Y-m'))
-        ->assertViewHas('summary', fn ($s) => (float) $s['billing_income'] === 540000.0);
+    // Sisa kredit Rp40.000 (580.000 - 540.000) tertahan di invoice lama sampai direfund; belum ada uang yang kembali.
+    expect(PaymentLedger::heldOnVoid($original))->toBe(40000.0);
+
+    $this->post("/admin/billings/{$original->id}/refunds", ['amount' => 40000, 'method' => 'cash', 'reason' => 'Selisih koreksi harga'])->assertSessionHas('success');
+
+    // Arus kas bulan ini: uang diterima 580.000 dikurangi refund 40.000 = 540.000 = nilai invoice pengganti
+    // (pemindahan kredit tidak dihitung sebagai kas baru). Omzet hanya invoice pengganti.
+    $this->get('/admin/owner-finance?month='.ClinicTime::monthKey())
+        ->assertViewHas('summary', fn ($s) => (float) $s['billing_income'] === 540000.0 && (float) $s['invoice_revenue'] === 540000.0);
+    expect(PaymentLedger::heldOnVoid($original->fresh()))->toBe(0.0);
 
     // Halaman detail menampilkan tautan kedua arah.
     $this->get("/admin/billings/{$original->id}")->assertOk()->assertSee('digantikan oleh')->assertSee($replacement->invoice_number);
@@ -87,7 +99,7 @@ it('hanya invoice void yang bisa diganti dan tidak bisa diganti dua kali', funct
         'inventory_item_id' => [''], 'clinic_service_id' => [$this->program->id], 'item_category' => [''],
     ])->assertSessionHasErrors('replaces_billing_id');
 
-    $this->post("/admin/billings/{$original->id}/void", ['void_reason' => 'koreksi']);
+    $this->post("/admin/billings/{$original->id}/void", ['void_reason' => 'koreksi', 'money_disposition' => 'credit']);
 
     $payload = [
         'patient_id' => $this->patient->id, 'invoice_date' => now()->toDateString(), 'replaces_billing_id' => $original->id,

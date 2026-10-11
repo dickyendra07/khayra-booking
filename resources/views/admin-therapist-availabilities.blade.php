@@ -418,7 +418,7 @@
 </head>
 <body>
 @php
-    $selectedMonth = $selectedMonth ?? request('month', now()->format('Y-m'));
+    $selectedMonth = $selectedMonth ?? request('month', \App\Support\ClinicTime::monthKey());
     $monthStart = $monthStart ?? \Carbon\Carbon::parse($selectedMonth . '-01')->startOfMonth();
     $monthEnd = $monthEnd ?? \Carbon\Carbon::parse($selectedMonth . '-01')->endOfMonth();
     $monthLabel = $monthLabel ?? $monthStart->format('F Y');

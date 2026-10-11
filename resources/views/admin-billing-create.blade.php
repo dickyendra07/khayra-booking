@@ -261,7 +261,7 @@
 
                         <div class="field">
                             <label>Invoice Date</label>
-                            <input type="date" name="invoice_date" value="{{ old('invoice_date', now()->format('Y-m-d')) }}" required>
+                            <input type="date" name="invoice_date" value="{{ old('invoice_date', \App\Support\ClinicTime::today()) }}" required>
                         </div>
 
                         <div class="field">

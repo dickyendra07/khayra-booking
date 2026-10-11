@@ -358,7 +358,7 @@
                 <div class="closing-alert">
                     <div>
                         <strong>Bulan {{ $monthLabel }} sudah tutup buku.</strong><br>
-                        Closed at {{ optional($closing->closed_at)->format('Y-m-d H:i') ?: '-' }} oleh {{ $closing->closed_by ?: '-' }}.
+                        Closed at {{ \App\Support\ClinicTime::display($closing->closed_at) ?: '-' }} oleh {{ $closing->closed_by ?: '-' }}.
                         @if($closing->notes)
                             <br>Notes: {{ $closing->notes }}
                         @endif
@@ -398,9 +398,21 @@
 
             <section class="stats-grid">
                 <div class="stat-card">
-                    <div class="stat-label">Billing Income</div>
+                    <div class="stat-label">Billing Income (Arus Kas)</div>
                     <div class="stat-value money-positive">Rp {{ number_format($summary['billing_income'], 0, ',', '.') }}</div>
-                    <div class="stat-sub">Auto dari billing paid/partial.</div>
+                    <div class="stat-sub">Uang yang masuk bersih (tanpa kembalian) menurut tanggal pembayaran, dikurangi refund. Invoice lama: menurut tanggal invoice.</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-label">Omzet (Tanggal Invoice)</div>
+                    <div class="stat-value">Rp {{ number_format($summary['invoice_revenue'] ?? 0, 0, ',', '.') }}</div>
+                    <div class="stat-sub">Total invoice non-void bulan ini, terlepas dari kapan dibayar. Bukan arus kas.</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-label">Refund &amp; Kredit Tertahan</div>
+                    <div class="stat-value money-negative">Rp {{ number_format($summary['refunds'] ?? 0, 0, ',', '.') }}</div>
+                    <div class="stat-sub">Refund bulan ini (sudah mengurangi Billing Income). Kredit tertahan pada invoice void: Rp {{ number_format($summary['held_credit'] ?? 0, 0, ',', '.') }}.</div>
                 </div>
 
                 <div class="stat-card">
@@ -451,7 +463,7 @@
                         <div class="form-grid">
                             <div>
                                 <label>Tanggal</label>
-                                <input type="date" name="transaction_date" value="{{ old('transaction_date', now()->toDateString()) }}" required>
+                                <input type="date" name="transaction_date" value="{{ old('transaction_date', \App\Support\ClinicTime::today()) }}" required>
                             </div>
 
                             <div>
@@ -569,7 +581,7 @@
                                         </span>
                                     </td>
                                     <td>
-                                        <span class="pill {{ $transaction['kind'] === 'auto_billing' ? 'pill-blue' : 'pill-slate' }}">
+                                        <span class="pill {{ $transaction['kind'] !== 'manual' ? 'pill-blue' : 'pill-slate' }}">
                                             {{ $transaction['source'] }}
                                         </span>
                                     </td>
@@ -579,7 +591,8 @@
                                         Rp {{ number_format($transaction['amount'], 0, ',', '.') }}
                                     </td>
                                     <td>
-                                        @if($transaction['kind'] === 'auto_billing')
+                                        @if($transaction['kind'] !== 'manual')
+                                            {{-- Baris dari invoice (pembayaran/refund/invoice lama) tidak dapat dihapus di sini. --}}
                                             <a class="btn btn-soft" href="{{ $transaction['url'] }}">Open Billing</a>
                                         @elseif(!$closing)
                                             <form method="POST" action="/admin/owner-finance/transactions/{{ $transaction['id'] }}/delete" onsubmit="return confirm('Hapus transaksi manual ini?')">
@@ -626,7 +639,7 @@
                         </form>
                     @else
                         <div class="empty">
-                            Bulan {{ $monthLabel }} sudah ditutup pada {{ optional($closing->closed_at)->format('Y-m-d H:i') ?: '-' }}.
+                            Bulan {{ $monthLabel }} sudah ditutup pada {{ \App\Support\ClinicTime::display($closing->closed_at) ?: '-' }}.
                             Gunakan tombol Print Monthly Report untuk mencetak laporan final.
                             Closing tidak dapat ditimpa; invoice dan transaksi bulan ini dikunci.
                         </div>
@@ -656,7 +669,7 @@
                             <strong>Riwayat tutup / buka buku {{ $monthLabel }}</strong>
                             @foreach($reopenLogs as $log)
                                 <div>
-                                    {{ optional($log->created_at)->format('Y-m-d H:i') }} · {{ $log->action === 'period_reopened' ? 'Dibuka kembali' : 'Ditutup' }}
+                                    {{ \App\Support\ClinicTime::display($log->created_at) }} · {{ $log->action === 'period_reopened' ? 'Dibuka kembali' : 'Ditutup' }}
                                     oleh {{ $log->actor ?: '-' }}@if($log->reason) · {{ $log->reason }}@endif
                                 </div>
                             @endforeach

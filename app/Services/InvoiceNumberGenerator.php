@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Billing;
+use App\Support\ClinicTime;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\DB;
 
@@ -29,7 +30,7 @@ class InvoiceNumberGenerator
     public function prepare(?CarbonInterface $at = null): void
     {
         DB::table('invoice_sequences')->insertOrIgnore([
-            'period' => ($at ?? now())->format('Ym'),
+            'period' => ($at ?? ClinicTime::now())->format('Ym'),
             'last_number' => 0,
             'created_at' => now(),
             'updated_at' => now(),
@@ -38,7 +39,7 @@ class InvoiceNumberGenerator
 
     public function next(?CarbonInterface $at = null): string
     {
-        $period = ($at ?? now())->format('Ym');
+        $period = ($at ?? ClinicTime::now())->format('Ym');
 
         return DB::transaction(function () use ($period) {
             do {

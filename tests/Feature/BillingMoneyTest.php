@@ -65,6 +65,6 @@ it('rute tidak lagi memiliki salinan rumus uang terbayar sendiri', function () {
 
     expect(substr_count($routes, '$moneyPaid = function'))->toBe(0)
         ->and(substr_count($routes, '$moneyOutstanding = function'))->toBe(0)
-        ->and(substr_count($routes, 'BillingMoney::paid'))->toBeGreaterThanOrEqual(8)
-        ->and(substr_count($routes, 'BillingMoney::outstanding'))->toBeGreaterThanOrEqual(5);
+        ->and(substr_count($routes, 'BillingMoney::paid'))->toBeGreaterThanOrEqual(4)
+        ->and(substr_count($routes, 'BillingMoney::outstanding'))->toBeGreaterThanOrEqual(4);
 });

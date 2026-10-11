@@ -46,4 +46,37 @@ return [
         'manual_service_default_category' => 'other',
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Zona waktu operasional klinik
+    |--------------------------------------------------------------------------
+    |
+    | Database tetap menyimpan timestamp dalam UTC (app.timezone). Tanggal bisnis
+    | (tanggal invoice, tanggal pembayaran, periode closing, nomor invoice, "hari ini"
+    | di dashboard) mengikuti zona waktu klinik melalui App\Support\ClinicTime.
+    |
+    */
+
+    'timezone' => env('CLINIC_TIMEZONE', 'Asia/Jakarta'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Fitur yang menunggu keputusan klinik (semua NONAKTIF)
+    |--------------------------------------------------------------------------
+    */
+
+    // REQ 6: biaya administrasi pasien baru. Tidak ditagih otomatis; aturan kelayakan belum disetujui.
+    'new_patient_admin_fee' => [
+        'enabled' => false,
+        'amount' => 35000,
+        // Kunci pencegah duplikat teknis. Aturan "sekali per pasien / per pendaftaran" masih keputusan klinik.
+        'scope' => 'once_per_patient',
+    ],
+
+    // REQ 7: versi template informed consent untuk dokumen BARU. 1 = template sekarang (dengan
+    // tanda tangan fisioterapis). Ubah ke 2 hanya setelah template baru disetujui tertulis oleh klinik.
+    'consent' => [
+        'active_template_version' => 1,
+    ],
+
 ];
