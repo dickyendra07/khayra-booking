@@ -1479,7 +1479,7 @@
                             <div class="progress-form-grid">
                                 <div class="progress-field">
                                     <label>Tanggal Progress</label>
-                                    <input type="date" name="entry_date" value="{{ now()->toDateString() }}" required>
+                                    <input type="date" name="entry_date" value="{{ \App\Support\ClinicTime::today() }}" required>
                                 </div>
 
                                 <div class="progress-field">

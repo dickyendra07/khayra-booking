@@ -329,7 +329,7 @@
 
                         <div class="field">
                             <label>Tanggal Consent</label>
-                            <input type="date" name="consent_date" value="{{ old('consent_date', now()->format('Y-m-d')) }}" required>
+                            <input type="date" name="consent_date" value="{{ old('consent_date', \App\Support\ClinicTime::today()) }}" required>
                         </div>
 
                         <div class="field">
@@ -354,7 +354,7 @@
 
                         <div class="field">
                             <label>Nama Physiotherapy</label>
-                            <input type="text" name="physiotherapy_name" value="{{ old('physiotherapy_name', 'Khayra Physio') }}" required>
+                            <input type="text" name="physiotherapy_name" value="{{ old('physiotherapy_name', 'Khayra Physio') }}" {{ config('clinic.consent.active_template_version', 1) >= 2 ? '' : 'required' }}>
                         </div>
 
                         <div class="field">

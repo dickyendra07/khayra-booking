@@ -341,11 +341,24 @@
                 <div class="alert">{{ session('success') }}</div>
             @endif
 
+            @if(session('error'))
+                <div class="alert" style="background:#fff1f2;color:#be123c;border:1px solid #ffe0e6;">{{ session('error') }}</div>
+            @endif
+
+            @if(!empty($closingDrift))
+                <div class="alert" style="background:#fffbeb;color:#92400e;border:1px solid #fde68a;">
+                    <strong>Peringatan: data berbeda dari snapshot closing.</strong>
+                    Total pemasukan snapshot saat tutup buku Rp {{ number_format($closingDrift['snapshot'], 0, ',', '.') }},
+                    sedangkan data billing saat ini Rp {{ number_format($closingDrift['live'], 0, ',', '.') }}.
+                    Ini bisa terjadi pada invoice yang diubah sebelum proteksi periode aktif. Snapshot tidak diubah; periksa invoice bulan ini.
+                </div>
+            @endif
+
             @if($closing)
                 <div class="closing-alert">
                     <div>
                         <strong>Bulan {{ $monthLabel }} sudah tutup buku.</strong><br>
-                        Closed at {{ optional($closing->closed_at)->format('Y-m-d H:i') ?: '-' }} oleh {{ $closing->closed_by ?: '-' }}.
+                        Closed at {{ \App\Support\ClinicTime::display($closing->closed_at) ?: '-' }} oleh {{ $closing->closed_by ?: '-' }}.
                         @if($closing->notes)
                             <br>Notes: {{ $closing->notes }}
                         @endif
@@ -385,9 +398,21 @@
 
             <section class="stats-grid">
                 <div class="stat-card">
-                    <div class="stat-label">Billing Income</div>
+                    <div class="stat-label">Billing Income (Arus Kas)</div>
                     <div class="stat-value money-positive">Rp {{ number_format($summary['billing_income'], 0, ',', '.') }}</div>
-                    <div class="stat-sub">Auto dari billing paid/partial.</div>
+                    <div class="stat-sub">Uang yang masuk bersih (tanpa kembalian) menurut tanggal pembayaran, dikurangi refund. Invoice lama: menurut tanggal invoice.</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-label">Omzet (Tanggal Invoice)</div>
+                    <div class="stat-value">Rp {{ number_format($summary['invoice_revenue'] ?? 0, 0, ',', '.') }}</div>
+                    <div class="stat-sub">Total invoice non-void bulan ini, terlepas dari kapan dibayar. Bukan arus kas.</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-label">Refund &amp; Kredit Tertahan</div>
+                    <div class="stat-value money-negative">Rp {{ number_format($summary['refunds'] ?? 0, 0, ',', '.') }}</div>
+                    <div class="stat-sub">Refund bulan ini (sudah mengurangi Billing Income). Kredit tertahan pada invoice void: Rp {{ number_format($summary['held_credit'] ?? 0, 0, ',', '.') }}.</div>
                 </div>
 
                 <div class="stat-card">
@@ -438,7 +463,7 @@
                         <div class="form-grid">
                             <div>
                                 <label>Tanggal</label>
-                                <input type="date" name="transaction_date" value="{{ old('transaction_date', now()->toDateString()) }}" required>
+                                <input type="date" name="transaction_date" value="{{ old('transaction_date', \App\Support\ClinicTime::today()) }}" required>
                             </div>
 
                             <div>
@@ -556,7 +581,7 @@
                                         </span>
                                     </td>
                                     <td>
-                                        <span class="pill {{ $transaction['kind'] === 'auto_billing' ? 'pill-blue' : 'pill-slate' }}">
+                                        <span class="pill {{ $transaction['kind'] !== 'manual' ? 'pill-blue' : 'pill-slate' }}">
                                             {{ $transaction['source'] }}
                                         </span>
                                     </td>
@@ -566,7 +591,8 @@
                                         Rp {{ number_format($transaction['amount'], 0, ',', '.') }}
                                     </td>
                                     <td>
-                                        @if($transaction['kind'] === 'auto_billing')
+                                        @if($transaction['kind'] !== 'manual')
+                                            {{-- Baris dari invoice (pembayaran/refund/invoice lama) tidak dapat dihapus di sini. --}}
                                             <a class="btn btn-soft" href="{{ $transaction['url'] }}">Open Billing</a>
                                         @elseif(!$closing)
                                             <form method="POST" action="/admin/owner-finance/transactions/{{ $transaction['id'] }}/delete" onsubmit="return confirm('Hapus transaksi manual ini?')">
@@ -613,8 +639,40 @@
                         </form>
                     @else
                         <div class="empty">
-                            Bulan {{ $monthLabel }} sudah ditutup pada {{ optional($closing->closed_at)->format('Y-m-d H:i') ?: '-' }}.
+                            Bulan {{ $monthLabel }} sudah ditutup pada {{ \App\Support\ClinicTime::display($closing->closed_at) ?: '-' }}.
                             Gunakan tombol Print Monthly Report untuk mencetak laporan final.
+                            Closing tidak dapat ditimpa; invoice dan transaksi bulan ini dikunci.
+                        </div>
+
+                        <details style="margin-top:16px;">
+                            <summary style="cursor:pointer;font-weight:800;color:#be123c;">Buka Kembali Buku (prosedur terkontrol)</summary>
+                            <form method="POST" action="/admin/owner-finance/reopen" style="margin-top:12px;" onsubmit="return confirm('Buka kembali buku {{ $monthLabel }}? Tindakan ini tercatat di audit.')">
+                                @csrf
+                                <input type="hidden" name="month" value="{{ $month }}">
+
+                                <label>Alasan (wajib, minimal 10 karakter)</label>
+                                <textarea name="reason" required minlength="10" placeholder="Contoh: koreksi invoice INV-... yang salah input nominal"></textarea>
+
+                                <label style="margin-top:10px;display:block;">Ketik bulan untuk konfirmasi ({{ $month }})</label>
+                                <input type="text" name="confirm_month" required autocomplete="off" placeholder="{{ $month }}">
+
+                                <label style="margin-top:10px;display:block;">Password admin</label>
+                                <input type="password" name="password" required autocomplete="current-password">
+
+                                <button type="submit" class="btn" style="margin-top:14px;background:#be123c;color:#fff;">Buka Kembali Buku</button>
+                            </form>
+                        </details>
+                    @endif
+
+                    @if(!empty($reopenLogs) && $reopenLogs->isNotEmpty())
+                        <div style="margin-top:18px;font-size:13px;">
+                            <strong>Riwayat tutup / buka buku {{ $monthLabel }}</strong>
+                            @foreach($reopenLogs as $log)
+                                <div>
+                                    {{ \App\Support\ClinicTime::display($log->created_at) }} · {{ $log->action === 'period_reopened' ? 'Dibuka kembali' : 'Ditutup' }}
+                                    oleh {{ $log->actor ?: '-' }}@if($log->reason) · {{ $log->reason }}@endif
+                                </div>
+                            @endforeach
                         </div>
                     @endif
                 </div>

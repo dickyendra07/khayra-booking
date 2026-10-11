@@ -29,6 +29,9 @@ class Billing extends Model
         'payment_method',
         'payment_detail_notes',
         'notes',
+        'replaces_billing_id',
+        'payment_model',
+        'checkout_token',
     ];
 
     protected $casts = [
@@ -43,10 +46,29 @@ class Billing extends Model
         'voided_at' => 'datetime',
     ];
 
-
     public function items(): HasMany
     {
         return $this->hasMany(BillingItem::class);
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(BillingPayment::class);
+    }
+
+    public function getIsLedgerAttribute(): bool
+    {
+        return $this->payment_model === 'ledger';
+    }
+
+    public function replaces(): BelongsTo
+    {
+        return $this->belongsTo(Billing::class, 'replaces_billing_id');
+    }
+
+    public function replacedBy(): HasMany
+    {
+        return $this->hasMany(Billing::class, 'replaces_billing_id');
     }
 
     public function patient(): BelongsTo
@@ -61,7 +83,7 @@ class Billing extends Model
 
     public function getIsVoidedAttribute(): bool
     {
-        return !is_null($this->voided_at) || $this->payment_status === 'void';
+        return ! is_null($this->voided_at) || $this->payment_status === 'void';
     }
 
     public function getPaymentMethodLabelAttribute(): string

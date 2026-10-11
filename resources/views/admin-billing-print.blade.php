@@ -665,6 +665,7 @@
                             <tr>
                                 <td class="col-desc">
                                     <div class="item-name">{{ $item->description }}</div>
+                                    @include('partials.billing-item-category', ['item' => $item, 'billing' => $billing, 'class' => 'item-meta'])
                                     @if($item->inventoryItem)
                                         <div class="item-meta">
                                             SKU: {{ $item->inventoryItem->sku ?: '-' }} · Unit: {{ $item->inventoryItem->unit ?: '-' }}
@@ -748,7 +749,7 @@
 
             <footer class="footer">
                 <div>Terima kasih telah menggunakan layanan Khayra Physio.</div>
-                <div>Generated: {{ now()->format('Y-m-d H:i') }}</div>
+                <div>Generated: {{ \App\Support\ClinicTime::now()->format('Y-m-d H:i') }}</div>
             </footer>
         </main>
     </div>

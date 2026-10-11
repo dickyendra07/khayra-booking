@@ -156,6 +156,21 @@
                     </div>
                 @endif
 
+                @if(!empty($lock['reasons']))
+                    <div class="error-box" style="background:#fffbeb;border-color:#fde68a;color:#92400e;">
+                        <strong>Sebagian data invoice dikunci demi integritas keuangan:</strong>
+                        <ul style="margin:8px 0 0 18px;">
+                            @foreach($lock['reasons'] as $reason)
+                                <li>{{ $reason }}</li>
+                            @endforeach
+                        </ul>
+                        <div style="margin-top:8px;">
+                            Untuk koreksi nominal, item, atau data utama: <strong>Void</strong> invoice (dengan alasan) di halaman detail,
+                            lalu klik <strong>Terbitkan Ulang</strong>. Semua tercatat di audit.
+                        </div>
+                    </div>
+                @endif
+
                 <form method="POST" action="/admin/billings/{{ $billing->id }}/update">
                     @csrf
 
@@ -167,7 +182,7 @@
 
                         <div class="field">
                             <label>Patient</label>
-                            <select name="patient_id" required>
+                            <select name="patient_id" required {{ $lock['identity_locked'] ? 'disabled' : '' }}>
                                 <option value="">Pilih Patient</option>
                                 @foreach($patients as $patient)
                                     <option value="{{ $patient->id }}" {{ old('patient_id', $billing->patient_id) == $patient->id ? 'selected' : '' }}>
@@ -179,7 +194,7 @@
 
                         <div class="field">
                             <label>Visit Terkait</label>
-                            <select name="visit_id">
+                            <select name="visit_id" {{ $lock['identity_locked'] ? 'disabled' : '' }}>
                                 <option value="">Pilih Visit (opsional)</option>
                                 @foreach($visits as $visit)
                                     <option value="{{ $visit->id }}" {{ old('visit_id', $billing->visit_id) == $visit->id ? 'selected' : '' }}>
@@ -191,27 +206,38 @@
 
                         <div class="field">
                             <label>Invoice Date</label>
-                            <input type="date" name="invoice_date" value="{{ old('invoice_date', $billing->invoice_date ? $billing->invoice_date->format('Y-m-d') : '') }}" required>
+                            <input type="date" name="invoice_date" value="{{ old('invoice_date', $billing->invoice_date ? $billing->invoice_date->format('Y-m-d') : '') }}" required {{ $lock['identity_locked'] ? 'disabled' : '' }}>
                         </div>
 
                         <div class="field">
                             <label>Amount</label>
-                            <input type="number" step="0.01" min="0" name="amount" value="{{ old('amount', $billing->amount) }}" required>
+                            <input type="number" step="0.01" min="0" name="amount" value="{{ old('amount', $billing->amount) }}" required {{ $lock['amount_locked'] ? 'disabled' : '' }}>
                         </div>
 
                         <div class="field">
                             <label>Payment Status</label>
-                            <select name="payment_status" required>
-                                <option value="paid" {{ old('payment_status', $billing->payment_status) == 'paid' ? 'selected' : '' }}>Paid</option>
-                                <option value="unpaid" {{ old('payment_status', $billing->payment_status) == 'unpaid' ? 'selected' : '' }}>Unpaid</option>
-                                <option value="partial" {{ old('payment_status', $billing->payment_status) == 'partial' ? 'selected' : '' }}>Partial</option>
+                            @php($currentStatus = $billing->payment_status ?: 'unpaid')
+                            <select name="payment_status" required {{ ($lock['status_locked'] || $currentStatus === 'paid' || $billing->is_ledger) ? 'disabled' : '' }}>
+                                {{-- Hanya transisi aman: status sekarang atau Paid. Koreksi lain lewat Void + Terbitkan Ulang. --}}
+                                @if($currentStatus !== 'paid')
+                                    <option value="{{ $currentStatus }}" selected>{{ ucfirst($currentStatus) }} (saat ini)</option>
+                                @endif
+                                <option value="paid" {{ $currentStatus === 'paid' ? 'selected' : '' }}>Paid</option>
                             </select>
+                            <div class="hint">
+                                @if($billing->is_ledger)
+                                    Status mengikuti riwayat pembayaran. Gunakan "Catat Pembayaran" di halaman detail invoice.
+                                @else
+                                    Status tidak dapat diturunkan. Pembayaran sebagian dicatat saat invoice dibuat.
+                                @endif
+                            </div>
                         </div>
 
                         <div class="field">
                             <label>Payment Method</label>
-                            <select name="payment_method">
+                            <select name="payment_method" {{ $lock['method_locked'] ? 'disabled' : '' }}>
                                 <option value="">Pilih Metode Pembayaran</option>
+                                <option value="cash" {{ old('payment_method', $billing->payment_method) == 'cash' ? 'selected' : '' }}>Cash</option>
                                 <option value="qr" {{ old('payment_method', $billing->payment_method) == 'qr' ? 'selected' : '' }}>QR</option>
                                 <option value="debit" {{ old('payment_method', $billing->payment_method) == 'debit' ? 'selected' : '' }}>Debit</option>
                                 <option value="credit" {{ old('payment_method', $billing->payment_method) == 'credit' ? 'selected' : '' }}>Credit Card</option>
@@ -230,6 +256,11 @@
                         <div class="field full">
                             <label>General Notes</label>
                             <textarea name="notes" rows="4">{{ old('notes', $billing->notes) }}</textarea>
+                        </div>
+
+                        <div class="field full">
+                            <label>Alasan Perubahan</label>
+                            <input type="text" name="change_reason" maxlength="1000" value="{{ old('change_reason') }}" placeholder="Wajib bila mengubah nominal, tanggal, pasien, visit, metode, atau status (tercatat di audit)">
                         </div>
                     </div>
 

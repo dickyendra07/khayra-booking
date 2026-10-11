@@ -32,6 +32,7 @@
                 ['key' => 'cashier', 'label' => 'Kasir Checkout', 'url' => '/admin/cashier'],
                 ['key' => 'promos', 'label' => 'Promo Setting', 'url' => '/admin/promos'],
                 ['key' => 'services', 'label' => 'Master Layanan', 'url' => '/admin/services'],
+                ['key' => 'rooms', 'label' => 'Master Ruangan', 'url' => '/admin/rooms'],
                 ['key' => 'package-treatments', 'label' => 'Dokumen Pembelian Paket', 'url' => '/admin/package-treatments'],
             ],
         ],

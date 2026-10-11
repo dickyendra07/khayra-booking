@@ -231,7 +231,7 @@
 
     $prefillPatientId = old('patient_id', optional(optional($selectedBooking)->patient)->id);
     $prefillBookingId = old('booking_id', optional($selectedBooking)->id);
-    $prefillVisitDate = old('visit_date', optional($selectedBooking)->booking_date ?? now()->format('Y-m-d'));
+    $prefillVisitDate = old('visit_date', optional($selectedBooking)->booking_date ?? \App\Support\ClinicTime::today());
     $prefillRoomName = old('room_name', optional($selectedBooking)->room_name);
     $prefillNotes = old('notes', $selectedBooking ? trim(
         "Keluhan awal dari booking: " . ($selectedBooking->complaint ?: '-') . "\n" .

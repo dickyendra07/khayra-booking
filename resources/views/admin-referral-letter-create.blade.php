@@ -105,7 +105,7 @@
 
                         <div class="field">
                             <label>Tanggal Surat</label>
-                            <input type="date" name="letter_date" value="{{ old('letter_date', now()->format('Y-m-d')) }}" required>
+                            <input type="date" name="letter_date" value="{{ old('letter_date', \App\Support\ClinicTime::today()) }}" required>
                         </div>
 
                         <div class="field">

@@ -596,13 +596,24 @@
                 </div>
             </div>
 
-            <div class="signature-box">
-                <div class="signature-label">Tanda Tangan Physiotherapy</div>
-                <div class="signature-line">
-                    {{ $consent->physiotherapy_name ?: 'Khayra Physio' }}
+            {{-- Template v1 (semua dokumen lama): kotak tanda tangan physiotherapy tetap seperti semula.
+                 Template v2 hanya berlaku untuk dokumen BARU setelah klinik menyetujui template tertulis. --}}
+            @if(($consent->template_version ?? 1) < 2)
+                <div class="signature-box">
+                    <div class="signature-label">Tanda Tangan Physiotherapy</div>
+                    <div class="signature-line">
+                        {{ $consent->physiotherapy_name ?: 'Khayra Physio' }}
+                    </div>
                 </div>
-            </div>
+            @endif
         </div>
+
+        @if(($consent->template_version ?? 1) >= 2)
+            <div class="footer" style="text-align:left;">
+                Dicatat oleh: {{ $consent->recorded_by ?: '-' }} pada {{ \App\Support\ClinicTime::display($consent->created_at) }} WIB
+                @if($consent->physiotherapy_name) · Pelaksana: {{ $consent->physiotherapy_name }} @endif
+            </div>
+        @endif
 
         <div class="footer">
             Dokumen ini dicetak melalui sistem internal Khayra Physio dan digunakan untuk kebutuhan administrasi layanan patient.
