@@ -14,10 +14,9 @@ use DomainException;
  *  - visit_room        : biaya ruangan untuk satu visit (Req 3)
  *  - patient_admin_fee : biaya administrasi pasien baru (Req 6)
  *
- * Kedua fitur NONAKTIF secara default: biaya ruangan hanya untuk ruangan billable dengan tarif
- * dan satuan lengkap; biaya admin hanya bila config('clinic.new_patient_admin_fee.enabled') true.
- * Aturan kelayakan lengkap menunggu keputusan klinik; kelas ini hanya menyediakan struktur dan
- * pencegah duplikasi, bukan penagihan otomatis.
+ * Biaya ruangan hanya untuk ruangan billable dengan tarif dan satuan lengkap (tarif belum disetujui, jadi
+ * nonaktif). Biaya admin dibuat otomatis oleh PatientRegistration; di sini ia hanya boleh muncul kembali
+ * untuk koreksi invoice yang di-void. Kelas ini menyediakan validasi dan pencegah duplikasi.
  */
 class ReferencedChargeGuard
 {
@@ -57,17 +56,23 @@ class ReferencedChargeGuard
         }
 
         if ($type === self::PATIENT_ADMIN_FEE) {
-            if (! config('clinic.new_patient_admin_fee.enabled')) {
-                throw new DomainException('Biaya administrasi pasien baru belum diaktifkan (menunggu persetujuan aturan oleh klinik).');
-            }
-
             if ($referenceId !== $patientId || ! Patient::find($patientId)) {
                 throw new DomainException('Biaya administrasi harus untuk pasien pada invoice ini.');
             }
 
+            // Biaya administrasi hanya dibuat otomatis saat registrasi pertama. Baris ini di kasir HANYA untuk koreksi
+            // (Terbitkan Ulang invoice administrasi yang di-void); pasien lama tidak pernah ditagih retroaktif.
+            if (! NewPatientAdminFee::registrationInvoice($patientId)) {
+                if (NewPatientAdminFee::stateFor($patientId)['state'] === NewPatientAdminFee::PENDING) {
+                    throw new DomainException('Biaya administrasi pasien ini TERTUNDA (periode tutup buku saat registrasi). Terbitkan dari menu Biaya Admin Tertunda, bukan lewat kasir.');
+                }
+
+                throw new DomainException('Pasien ini tidak memiliki tagihan administrasi registrasi (pasien lama tidak ditagih retroaktif). Biaya administrasi tidak dapat ditambahkan.');
+            }
+
             return [
                 'category' => 'admin_fee',
-                'reference_prices' => [(float) config('clinic.new_patient_admin_fee.amount')],
+                'reference_prices' => [NewPatientAdminFee::amount()],
                 'rate_unit' => null,
                 'reference_type' => self::PATIENT_ADMIN_FEE,
                 'reference_id' => $patientId,

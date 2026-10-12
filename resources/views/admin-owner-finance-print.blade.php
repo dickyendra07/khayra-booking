@@ -222,6 +222,17 @@
             <div class="summary-value">Rp {{ number_format($summary['invoice_revenue'] ?? 0, 0, ',', '.') }}</div>
         </div>
 
+        @php($byCategory = $summary['revenue_by_category'] ?? ['rows' => [], 'uncategorised' => 0])
+        <div class="summary-card">
+            <div class="summary-label">Omzet per Kategori</div>
+            @foreach($byCategory['rows'] as $categoryRow)
+                <div style="font-size:11px;display:flex;justify-content:space-between;gap:8px;"><span>{{ $categoryRow['label'] }}</span><strong>Rp {{ number_format($categoryRow['amount'], 0, ',', '.') }}</strong></div>
+            @endforeach
+            @if(abs($byCategory['uncategorised']) >= 1)
+                <div style="font-size:11px;display:flex;justify-content:space-between;gap:8px;"><span>Invoice lama / tanpa kategori</span><strong>Rp {{ number_format($byCategory['uncategorised'], 0, ',', '.') }}</strong></div>
+            @endif
+        </div>
+
         <div class="summary-card">
             <div class="summary-label">Manual Income</div>
             <div class="summary-value green">Rp {{ number_format($summary['manual_income'], 0, ',', '.') }}</div>

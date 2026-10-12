@@ -444,11 +444,13 @@
 <body>
 <div class="page">
     <div class="top-actions">
-        <a href="/admin/patients/{{ $consent->patient->id }}" class="action-link">← Kembali ke Detail Patient</a>
+        @if(isset($preview))<a href="/admin/consent-archive" class="action-link">← Kembali ke Arsip Consent</a>@else<a href="/admin/patients/{{ $consent->patient->id }}" class="action-link">← Kembali ke Detail Patient</a>@endif
+
         <button onclick="window.print()" class="print-btn">Print / Save PDF</button>
     </div>
 
     <div class="sheet">
+@if(isset($preview))<div style="background:#fef3c7;border:2px dashed #b45309;color:#78350f;padding:12px 16px;border-radius:10px;margin-bottom:14px;font-size:13px;line-height:1.7;"><strong>PREVIEW TEMPLATE v{{ $consent->template_version }} — BELUM AKTIF.</strong> Data di bawah hanya contoh dan tidak tersimpan. Dokumen ini hanya untuk ditinjau dan disetujui klinik; bukan dokumen pasien.</div><div style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:50;font-size:120px;font-weight:900;color:rgba(180,83,9,.12);transform:rotate(-28deg);">PREVIEW</div>@endif
         <div class="doc-header">
             <div class="brand">
                 <img src="/images/khayra-logo.png" alt="Khayra Logo" class="brand-logo">
@@ -472,7 +474,7 @@
                 </div>
                 <div class="doc-meta-row">
                     <div class="doc-meta-label">Consent ID</div>
-                    <div class="doc-meta-value">#{{ $consent->id }}</div>
+                    <div class="doc-meta-value">#{{ $consent->id ?? 'CONTOH' }}</div>
                 </div>
             </div>
         </div>

@@ -5,7 +5,9 @@ namespace App\Console\Commands;
 use App\Models\Billing;
 use App\Models\BillingPayment;
 use App\Models\FinanceMonthlyClosing;
+use App\Models\PendingRegistrationFee;
 use App\Services\BillingMoney;
+use App\Services\NewPatientAdminFee;
 use App\Services\PaymentLedger;
 use App\Support\InvoiceNumberIndex;
 use Illuminate\Console\Command;
@@ -104,6 +106,30 @@ class BillingAuditIntegrity extends Command
 
         $held = $ledgerInvoices->filter(fn ($b) => $b->payment_status === 'void' && PaymentLedger::paidTotal($b) > 0.5);
         $this->line('   Informasi: '.$held->count().' invoice void dengan kredit tertahan, total Rp '.number_format((float) $held->sum(fn ($b) => PaymentLedger::paidTotal($b)), 0, ',', '.').' (belum direfund / dipindahkan).');
+        $this->newLine();
+
+        // Kewajiban biaya administrasi registrasi: satu per pasien, tidak ganda, tidak ada status yang tidak konsisten.
+        $pendingFees = PendingRegistrationFee::all();
+        $feeInvoices = Billing::where('checkout_token', 'like', NewPatientAdminFee::TOKEN_PREFIX.'%')->pluck('checkout_token')->all();
+        $anomalies = [];
+
+        foreach ($pendingFees as $fee) {
+            $token = NewPatientAdminFee::tokenFor($fee->patient_id);
+
+            if ($fee->status === PendingRegistrationFee::PENDING && in_array($token, $feeInvoices, true)) {
+                $anomalies[] = "kewajiban #{$fee->id} (pasien {$fee->patient_id}) masih pending padahal invoice administrasi sudah ada";
+            }
+
+            if ($fee->status === PendingRegistrationFee::ISSUED && (! $fee->billing_id || ! Billing::whereKey($fee->billing_id)->exists())) {
+                $anomalies[] = "kewajiban #{$fee->id} (pasien {$fee->patient_id}) berstatus issued tanpa invoice";
+            }
+        }
+
+        $findings += $this->section('13. Kewajiban biaya administrasi registrasi tidak konsisten', $anomalies);
+
+        $pendingNow = $pendingFees->where('status', PendingRegistrationFee::PENDING);
+        $this->line('   Informasi: '.$pendingNow->count().' kewajiban administrasi tertunda (periode tutup buku saat registrasi), total Rp '
+            .number_format((float) $pendingNow->sum('amount'), 0, ',', '.').' — terbitkan dari menu Biaya Admin Tertunda.');
         $this->newLine();
 
         // Dampak zona waktu: aplikasi memakai UTC, klinik WIB (UTC+7). Invoice yang dibuat antara

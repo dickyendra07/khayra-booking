@@ -415,6 +415,20 @@
                     <div class="stat-sub">Refund bulan ini (sudah mengurangi Billing Income). Kredit tertahan pada invoice void: Rp {{ number_format($summary['held_credit'] ?? 0, 0, ',', '.') }}.</div>
                 </div>
 
+                @php($byCategory = $summary['revenue_by_category'] ?? ['rows' => [], 'uncategorised' => 0])
+                <div class="stat-card" id="revenue-by-category">
+                    <div class="stat-label">Omzet per Kategori</div>
+                    @forelse($byCategory['rows'] as $categoryRow)
+                        <div class="stat-sub" style="display:flex;justify-content:space-between;gap:12px;"><span>{{ $categoryRow['label'] }}</span><strong>Rp {{ number_format($categoryRow['amount'], 0, ',', '.') }}</strong></div>
+                    @empty
+                        <div class="stat-sub">Belum ada invoice berkategori bulan ini.</div>
+                    @endforelse
+                    @if(abs($byCategory['uncategorised']) >= 1)
+                        <div class="stat-sub" style="display:flex;justify-content:space-between;gap:12px;"><span>Invoice lama / tanpa kategori</span><strong>Rp {{ number_format($byCategory['uncategorised'], 0, ',', '.') }}</strong></div>
+                    @endif
+                    <div class="stat-sub">Setelah diskon; biaya ruangan dan biaya admin terpisah dari treatment. Total = Omzet.</div>
+                </div>
+
                 <div class="stat-card">
                     <div class="stat-label">Manual Income</div>
                     <div class="stat-value money-positive">Rp {{ number_format($summary['manual_income'], 0, ',', '.') }}</div>

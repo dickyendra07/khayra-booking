@@ -24,7 +24,7 @@ Rilis 1 dilakukan lebih dulu. Rilis 2 tidak boleh naik sebelum Rilis 1 stabil mi
 | Anti klik-ganda checkout, nomor invoice berurutan, penguncian invoice, audit | Aktif |
 | Diskon hanya Program; Specialist tidak didiskon | Aktif |
 | Master ruangan | Aktif; **semua ruangan non-billable**, tidak ada tarif; tidak ada penagihan otomatis |
-| Biaya admin pasien baru Rp35.000 | **MATI** (`clinic.new_patient_admin_fee.enabled = false`) |
+| Biaya admin pasien baru Rp35.000 | **MATI secara default**; aktif hanya bila `NEW_PATIENT_ADMIN_FEE_ENABLED=true` diisi eksplisit di environment (aturan final: sekali saat registrasi pertama; tagihan unpaid otomatis; periode tutup → kewajiban tertunda di menu Biaya Admin Tertunda; pasien lama tidak ditagih) |
 | Informed consent tanpa TTD fisioterapis | **MATI** (`clinic.consent.active_template_version = 1`) |
 | PIC / shift (Req 1) | Belum ada implementasi (menunggu definisi klien) |
 
@@ -45,12 +45,15 @@ Urutan dijalankan otomatis oleh `php artisan migrate`. Semua additive, idempoten
 | 9 | `2026_10_13_100200` rooms | tabel baru + 10 ruangan bawaan (non-billable) | n/a |
 | 10 | `2026_10_13_100300` billing_items.reference_*, rate_unit | 3 kolom nullable + index | NULL |
 | 11 | `2026_10_13_100400` informed_consents.template_version, recorded_by | `template_version` default 1, `recorded_by` nullable | semua consent lama = versi 1 |
+| 12 | `2026_10_14_100000` billing_payments.idempotency_key | 1 kolom nullable + unique index (2 DDL) | NULL; baris lama tidak diubah |
+| 13 | `2026_10_14_110000` patients.registration_token | 1 kolom nullable + unique index (2 DDL) | NULL untuk semua pasien lama; tidak ada tagihan retroaktif |
+| 14 | `2026_10_14_120000` pending_registration_fees | tabel baru (unique patient_id) | n/a; tidak ada baris untuk data lama |
 
 Dua migration historis (`2026_03_23_224421_*`) diberi guard agar database kosong MySQL berhasil dibangun. Database yang sudah menjalankannya
 tidak terpengaruh dan skemanya identik (diverifikasi).
 
 Langkah:
-1. `php artisan migrate --pretend` di staging dan production, tinjau DDL (sekitar 30 pernyataan; tanpa `DROP`/`UPDATE`/`DELETE` terhadap data).
+1. `php artisan migrate --pretend` di staging dan production, tinjau DDL (sekitar 38 pernyataan; tanpa `DROP`/`UPDATE`/`DELETE` terhadap data).
 2. Jalankan migrate di luar jam sibuk. Tabel besar tidak ada (ALTER hanya menambah kolom pada billings/billing_items/informed_consents).
 3. Setelah migrate: `php artisan billing:audit-integrity` dan baca bagian "Unique index invoice_number". Jika belum terpasang karena duplikat,
    putuskan penyelesaian duplikat lalu `php artisan billing:ensure-invoice-unique-index`.
@@ -81,7 +84,7 @@ Kembalikan kode ke rilis sebelumnya; `php artisan config:clear` (dan `config:cac
 
 ### Rilis 2
 1. Kembalikan kode ke Rilis 1 / rilis sebelumnya. Tabel/kolom baru diabaikan kode lama. Data tidak hilang.
-2. **Jangan** `migrate:rollback` kecuali kerusakan struktur. `migrate:rollback --step=11` akan menghapus `billing_payments`, `billing_audit_logs`,
+2. **Jangan** `migrate:rollback` kecuali kerusakan struktur. `migrate:rollback --step=14` akan menghapus `billing_payments`, `billing_audit_logs`,
    `invoice_sequences`, `rooms`, dan kolom baru. **Backup tabel-tabel itu lebih dulu** karena berisi histori yang tidak ada di tempat lain.
 3. Akibat memakai kode lama setelah Rilis 2 berjalan:
    - Invoice baru (`ledger`) tetap punya `paid_amount`, `remaining_amount`, dan status yang sinkron (net), jadi angka per invoice tetap tampil.
@@ -156,7 +159,7 @@ Tidak boleh: login ke production, mengubah env/konfigurasi, menjalankan migrate,
 | Uang kembalian bukan pendapatan; invoice baru memakai buku pembayaran | sudah diimplementasikan (disetujui) | selesai |
 | Kebijakan refund (siapa/alasan) | refund kini ada di UI | semua admin, alasan wajib (sudah demikian) |
 | Zona waktu operasional WIB | sudah diimplementasikan | konfirmasi |
-| Aturan biaya admin (eligibility) | fitur mati sampai aturan jelas | tetap mati |
+| Aturan biaya admin | sudah final (sekali per pasien saat registrasi pertama, tanpa retroaktif) | diterapkan; lihat `docs/07-aturan-final-biaya-administrasi.md` |
 | Tarif/satuan ruangan | semua non-billable sampai disetujui | tetap non-billable |
 | Persetujuan template consent baru | versi 2 mati | tetap versi 1 |
 | Specialist eligible diskon? | saat ini tidak | tetap tidak sampai ada keputusan |

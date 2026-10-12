@@ -31,6 +31,7 @@ class KhayraPreflight extends Command
         $this->checkSession();
         $this->checkDatabase();
         $this->checkTimezone();
+        $this->checkAdminFee();
 
         if ($this->option('json')) {
             $this->line(json_encode($this->results, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
@@ -194,6 +195,15 @@ class KhayraPreflight extends Command
         } else {
             $this->add('WARN', 'Row locking', 'driver '.DB::connection()->getDriverName().' tidak mendukung lockForUpdate seperti MySQL; uji konkurensi hanya valid di MySQL/MariaDB');
         }
+    }
+
+    private function checkAdminFee(): void
+    {
+        // Biaya administrasi pasien baru hanya menyala bila diaktifkan eksplisit lewat environment (default mati).
+        $enabled = (bool) config('clinic.new_patient_admin_fee.enabled');
+        $this->add('PASS', 'Biaya administrasi pasien baru', $enabled
+            ? 'AKTIF (NEW_PATIENT_ADMIN_FEE_ENABLED=true): registrasi pasien baru menerbitkan tagihan Rp'.number_format((float) config('clinic.new_patient_admin_fee.amount'), 0, ',', '.')
+            : 'NONAKTIF (default; set NEW_PATIENT_ADMIN_FEE_ENABLED=true hanya setelah keputusan sadar untuk lingkungan ini)');
     }
 
     private function checkTimezone(): void

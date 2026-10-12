@@ -1,6 +1,13 @@
 @php
     $active = $activeMenu ?? '';
 
+    // Jumlah kewajiban biaya administrasi yang tertunda (periode tutup buku saat registrasi); tampil sebagai lencana.
+    try {
+        $pendingFeeCount = \App\Services\PendingRegistrationFees::pendingCount();
+    } catch (\Throwable $e) {
+        $pendingFeeCount = 0;
+    }
+
     $groups = [
         [
             'key' => 'overview',
@@ -33,6 +40,7 @@
                 ['key' => 'promos', 'label' => 'Promo Setting', 'url' => '/admin/promos'],
                 ['key' => 'services', 'label' => 'Master Layanan', 'url' => '/admin/services'],
                 ['key' => 'rooms', 'label' => 'Master Ruangan', 'url' => '/admin/rooms'],
+                ['key' => 'registration-fees', 'label' => 'Biaya Admin Tertunda'.($pendingFeeCount > 0 ? ' ('.$pendingFeeCount.')' : ''), 'url' => '/admin/registration-fees'],
                 ['key' => 'package-treatments', 'label' => 'Dokumen Pembelian Paket', 'url' => '/admin/package-treatments'],
             ],
         ],

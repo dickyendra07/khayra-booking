@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Billing;
+use App\Models\BillingItem;
 use App\Models\BillingPayment;
 use App\Models\FinanceTransaction;
 use Carbon\Carbon;
@@ -74,6 +75,7 @@ class FinanceReport
                 'invoice_revenue' => self::invoiceRevenue($start->toDateString(), $end->toDateString()),
                 'refunds' => (float) $billingRows->where('kind', 'refund')->sum('amount'),
                 'held_credit' => self::heldCredit(),
+                'revenue_by_category' => self::revenueByCategory($start->toDateString(), $end->toDateString()),
             ],
         ];
     }
@@ -138,6 +140,44 @@ class FinanceReport
     public static function invoiceRevenue(string $from, string $to): float
     {
         return (float) Billing::whereBetween('invoice_date', [$from, $to])->where('payment_status', '!=', 'void')->sum('amount');
+    }
+
+    /**
+     * Rincian OMZET per kategori baris tagihan (program, add-on, biaya ruangan, biaya admin, dst.) untuk
+     * invoice non-void berdasarkan tanggal invoice. Nilai = line_total - diskon yang dialokasikan ke baris itu,
+     * sehingga totalnya sama dengan omzet. Invoice lama (baris tanpa kategori / tanpa rincian item) dikumpulkan
+     * pada "uncategorised" sebagai selisih terhadap omzet; data lama tidak dihitung ulang.
+     *
+     * @return array{rows: array<int, array{key: string, label: string, amount: float}>, uncategorised: float, total: float}
+     */
+    public static function revenueByCategory(string $from, string $to): array
+    {
+        $totals = BillingItem::query()
+            ->join('billings', 'billings.id', '=', 'billing_items.billing_id')
+            ->whereBetween('billings.invoice_date', [$from, $to])
+            ->where('billings.payment_status', '!=', 'void')
+            ->whereNotNull('billing_items.item_category')
+            ->groupBy('billing_items.item_category')
+            ->selectRaw('billing_items.item_category as category, SUM(billing_items.line_total - COALESCE(billing_items.discount_amount, 0)) as net')
+            ->pluck('net', 'category');
+
+        $rows = [];
+        $categorised = 0.0;
+
+        // Urutan mengikuti config agar tampil konsisten; kategori tak dikenal tetap ditampilkan.
+        foreach (array_unique(array_merge(array_keys(BillingCalculator::categories()), $totals->keys()->all())) as $key) {
+            if (! isset($totals[$key])) {
+                continue;
+            }
+
+            $amount = round((float) $totals[$key], 2);
+            $categorised += $amount;
+            $rows[] = ['key' => $key, 'label' => BillingCalculator::categories()[$key] ?? $key, 'amount' => $amount];
+        }
+
+        $total = self::invoiceRevenue($from, $to);
+
+        return ['rows' => $rows, 'uncategorised' => round($total - $categorised, 2), 'total' => $total];
     }
 
     /** Uang tertahan pada invoice void yang belum direfund/dipindahkan (kewajiban, bukan pendapatan). */

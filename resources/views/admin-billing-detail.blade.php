@@ -272,6 +272,8 @@
         .void-box h3 { margin:0 0 8px; font-size:18px; }
         .void-box p { margin:0 0 12px; font-size:13px; line-height:1.7; }
         .void-form { display:grid; grid-template-columns:1fr auto; gap:10px; align-items:end; }
+        .void-form > * { min-width: 0; }
+        @media (max-width: 700px) { .void-form { grid-template-columns: 1fr; } }
         .void-form textarea { width:100%; border:1px solid #fecaca; border-radius:14px; padding:12px; min-height:72px; font-family:Arial,sans-serif; }
         .btn-void { background:#be123c; color:white; border:none; }
 
@@ -435,6 +437,9 @@
                 <div class="alert alert-success">{{ session('success') }}</div>
             @endif
 
+            @if($errors->any())
+                <div class="alert alert-error">@foreach($errors->all() as $validationError)<div>{{ $validationError }}</div>@endforeach</div>
+            @endif
             @if(session('error'))
                 <div class="alert alert-error">{{ session('error') }}</div>
             @endif
@@ -540,8 +545,9 @@
                         <div style="background:#fffbeb;border:1px solid #fde68a;color:#92400e;border-radius:14px;padding:12px 14px;margin:0 0 12px;font-size:13px;">
                             <strong>Kredit tertahan: Rp {{ number_format($heldMoney, 0, ',', '.') }}</strong> (uang sudah diterima, belum direfund atau dipindahkan).
                             Akan dipindahkan otomatis ke invoice pengganti, atau direfund di bawah.
-                            <form method="POST" action="/admin/billings/{{ $billing->id }}/refunds" style="margin-top:10px;display:grid;gap:8px;">
+                            <form method="POST" action="/admin/billings/{{ $billing->id }}/refunds" style="margin-top:10px;display:grid;gap:8px;" onsubmit="if (this.dataset.submitted) { return false; } this.dataset.submitted = '1'; this.querySelector('button[type=submit]').disabled = true;" data-once-form>
                                 @csrf
+                                <input type="hidden" name="idempotency_key" value="{{ \Illuminate\Support\Str::uuid() }}">
                                 <input type="number" name="amount" step="1" min="1" max="{{ $heldMoney }}" value="{{ $heldMoney }}" required>
                                 <select name="method" required>
                                     <option value="cash">Cash</option><option value="qr">QR</option><option value="debit">Debit</option>
@@ -750,8 +756,9 @@
                     @endif
 
                     @if(!$lock['void'] && $outstanding > 0)
-                        <form method="POST" action="/admin/billings/{{ $billing->id }}/payments" style="display:grid;gap:10px;max-width:480px;margin-top:10px;">
+                        <form method="POST" action="/admin/billings/{{ $billing->id }}/payments" style="display:grid;gap:10px;max-width:480px;margin-top:10px;" onsubmit="if (this.dataset.submitted) { return false; } this.dataset.submitted = '1'; this.querySelector('button[type=submit]').disabled = true;" data-once-form>
                             @csrf
+                            <input type="hidden" name="idempotency_key" value="{{ \Illuminate\Support\Str::uuid() }}">
                             <label style="font-weight:800;font-size:13px;">Catat Pembayaran (uang yang diserahkan pasien)</label>
                             <input type="number" name="tendered_amount" min="1" step="1" required placeholder="Jumlah diserahkan, mis. {{ (int) $outstanding }}">
                             <select name="method" required>
@@ -861,5 +868,16 @@
 })();
 </script>
 
+<script>
+    // Tombol Simpan dikunci sesudah submit (anti klik-ganda). Bila halaman dipulihkan dari tombol Back,
+    // buka kunci; token yang sama tetap dijaga server sehingga tidak tercatat dua kali.
+    window.addEventListener('pageshow', function () {
+        document.querySelectorAll('form[data-once-form]').forEach(function (form) {
+            delete form.dataset.submitted;
+            var button = form.querySelector('button[type=submit]');
+            if (button) { button.disabled = false; }
+        });
+    });
+</script>
 </body>
 </html>

@@ -26,6 +26,7 @@ use App\Models\InventoryStockMovement;
 use App\Models\PatientProgressEntry;
 use App\Models\HomeExerciseTemplate;
 use App\Models\ClinicService;
+use App\Models\PendingRegistrationFee;
 use App\Models\Room;
 use App\Services\BillingAudit;
 use App\Services\BillingCalculator;
@@ -33,6 +34,9 @@ use App\Services\BillingIntegrity;
 use App\Services\BillingMoney;
 use App\Services\FinanceReport;
 use App\Services\PaymentLedger;
+use App\Services\NewPatientAdminFee;
+use App\Services\PatientRegistration;
+use App\Services\PendingRegistrationFees;
 use App\Services\ReferencedChargeGuard;
 use App\Support\ClinicTime;
 use App\Services\InvoiceNumberGenerator;
@@ -836,27 +840,38 @@ Route::post('/admin/bookings/{id}/create-patient', function ($id) {
 
     $booking = Booking::findOrFail($id);
 
-    if (!$booking->patient_id) {
-        $patient = new Patient();
-        $patient->full_name = $booking->full_name;
-        $patient->gender = null;
-        $patient->birth_date = null;
-        $patient->whatsapp = $booking->whatsapp;
-        $patient->address = null;
-        $patient->nik = null;
-        $patient->religion = null;
-        $patient->occupation = null;
-        $patient->education = null;
-        $patient->marital_status = null;
-        $patient->medical_record_number = null;
-        $patient->save();
+    if ($booking->patient_id) {
+        return redirect('/admin/bookings/' . $booking->id)
+            ->with('success', 'Booking berhasil dihubungkan ke data patient.');
+    }
 
-        $booking->patient_id = $patient->id;
-        $booking->save();
+    $patient = new Patient();
+    $patient->full_name = $booking->full_name;
+    $patient->gender = null;
+    $patient->birth_date = null;
+    $patient->whatsapp = $booking->whatsapp;
+    $patient->address = null;
+    $patient->nik = null;
+    $patient->religion = null;
+    $patient->occupation = null;
+    $patient->education = null;
+    $patient->marital_status = null;
+    $patient->medical_record_number = null;
+
+    // Token deterministik per booking: klik ganda / dua kasir bersamaan tidak membuat pasien atau tagihan administrasi kedua.
+    $registration = PatientRegistration::register($patient, 'booking:' . $booking->id, function (Patient $newPatient) use ($booking) {
+        $locked = Booking::lockForUpdate()->findOrFail($booking->id);
+        $locked->patient_id = $newPatient->id;
+        $locked->save();
+    });
+
+    // Pemenang balapan sudah menautkan booking; pastikan booking tertaut ke pasien hasil registrasi tersebut.
+    if (!$registration['created'] && !Booking::whereKey($booking->id)->whereNotNull('patient_id')->exists()) {
+        Booking::whereKey($booking->id)->update(['patient_id' => $registration['patient']->id]);
     }
 
     return redirect('/admin/bookings/' . $booking->id)
-        ->with('success', 'Booking berhasil dihubungkan ke data patient.');
+        ->with('success', 'Booking berhasil dihubungkan ke data patient.' . PatientRegistration::feeMessage($registration));
 });
 
 Route::get('/admin/patients', function (Request $request) {
@@ -920,6 +935,10 @@ Route::post('/admin/patients', function (Request $request) {
         'occupation' => 'nullable|string|max:100',
         'education' => \App\Support\PatientOptions::rule(\App\Support\PatientOptions::EDUCATIONS),
         'marital_status' => 'nullable|in:Cerai hidup,Cerai mati,Kawin,Belum kawin',
+        // Token satu-kali-pakai per formulir: registrasi ganda tidak membuat pasien atau tagihan administrasi kedua.
+        'registration_token' => 'required|string|max:64',
+    ], [
+        'registration_token.required' => 'Formulir registrasi kedaluwarsa. Muat ulang halaman lalu isi kembali.',
     ]);
 
     $patient = new Patient();
@@ -942,9 +961,13 @@ Route::post('/admin/patients', function (Request $request) {
         $patient->medical_record_number = $patient->generateMedicalRecordNumber();
     }
 
-    $patient->save();
+    $registration = PatientRegistration::register($patient, $request->registration_token);
 
-    return redirect('/admin/patients')->with('success', 'Data pasien berhasil ditambahkan!');
+    if (!$registration['created']) {
+        return redirect('/admin/patients')->with('success', 'Registrasi ini sudah tersimpan sebelumnya. Tidak dibuat pasien atau tagihan ganda.');
+    }
+
+    return redirect('/admin/patients')->with('success', 'Data pasien berhasil ditambahkan!' . PatientRegistration::feeMessage($registration));
 });
 
 Route::get('/admin/patients/{id}', function ($id) {
@@ -1232,6 +1255,40 @@ Route::post('/admin/patients/{id}/informed-consent', function (Request $request,
 
     return redirect('/admin/patients/' . $patient->id)->with('success', 'Informed consent berhasil disimpan!');
 });
+
+// Preview template informed consent untuk persetujuan klinik. Hanya membaca: memakai data contoh, tidak
+// menyimpan apa pun, dan tidak mengaktifkan template (clinic.consent.active_template_version tetap).
+Route::get('/admin/informed-consents/template-preview/{version}', function ($version) {
+    if (!session('admin_logged_in')) {
+        return redirect('/admin/login');
+    }
+
+    $version = (int) $version;
+
+    $patient = new Patient([
+        'full_name' => 'Contoh Pasien', 'gender' => 'female', 'whatsapp' => '081200000000', 'address' => 'Alamat contoh, Bandung',
+    ]);
+    $patient->medical_record_number = 'MR-CONTOH';
+    $patient->birth_date = '1990-01-01';
+
+    $consent = new InformedConsent([
+        'consent_date' => ClinicTime::today(),
+        'status' => 'signed',
+        'physiotherapy_name' => 'Nama Fisioterapis Contoh',
+        'treatment_location' => 'Khayra Physio Bandung',
+        'emergency_contact_name' => 'Kontak Darurat Contoh',
+        'emergency_contact_phone' => '081200000001',
+        'emergency_contact_relation' => 'Keluarga',
+        'agreement_text' => 'Saya menyatakan telah menerima penjelasan mengenai tindakan fisioterapi yang akan dilakukan, tujuan terapi, manfaat, serta kemungkinan respons selama proses penanganan. Dengan ini saya memberikan persetujuan untuk dilakukan tindakan fisioterapi sesuai kebutuhan klinis patient.',
+        'template_version' => $version,
+        'recorded_by' => (session('admin_email') ?: 'admin') . ' (contoh)',
+    ]);
+    $consent->created_at = now();
+    $consent->setRelation('patient', $patient);
+    $consent->setRelation('visit', null);
+
+    return view('admin-informed-consent-print', ['consent' => $consent, 'preview' => true]);
+})->whereIn('version', ['1', '2']);
 
 Route::get('/admin/informed-consents/{id}/print', function ($id) {
     if (!session('admin_logged_in')) {
@@ -2190,6 +2247,42 @@ Route::get('/admin/inventory/{id}/movements', function ($id) {
     return view('admin-inventory-movements', compact('item', 'movements', 'summary'));
 })->whereNumber('id');
 
+// Kewajiban biaya administrasi pasien baru yang tertunda karena periode tutup buku saat registrasi.
+// Penerbitan selalu bertanggal hari ini (tidak mundur ke periode tertutup), idempoten, dan tidak membuat pembayaran.
+Route::get('/admin/registration-fees', function () {
+    if (!session('admin_logged_in')) {
+        return redirect('/admin/login');
+    }
+
+    $pending = PendingRegistrationFee::with('patient')->where('status', PendingRegistrationFee::PENDING)->orderBy('id')->get();
+    $issued = PendingRegistrationFee::with(['patient', 'billing'])->where('status', PendingRegistrationFee::ISSUED)->latest('issued_at')->limit(50)->get();
+    $todayClosed = BillingIntegrity::isPeriodClosed(ClinicTime::today());
+
+    return view('admin-registration-fees', compact('pending', 'issued', 'todayClosed'));
+});
+
+Route::post('/admin/registration-fees/{id}/issue', function ($id) {
+    if (!session('admin_logged_in')) {
+        return redirect('/admin/login');
+    }
+
+    $pending = PendingRegistrationFee::findOrFail($id);
+
+    try {
+        $result = PendingRegistrationFees::issue($pending->id);
+    } catch (\DomainException $exception) {
+        return redirect('/admin/registration-fees')->with('error', $exception->getMessage());
+    }
+
+    if (!$result['created']) {
+        return redirect('/admin/billings/' . $result['billing']->id)
+            ->with('success', 'Kewajiban ini sudah diterbitkan sebelumnya pada invoice ' . $result['billing']->invoice_number . '. Tidak diterbitkan ganda.');
+    }
+
+    return redirect('/admin/billings/' . $result['billing']->id)
+        ->with('success', 'Tagihan administrasi ' . $result['billing']->invoice_number . ' diterbitkan (tanggal hari ini, belum dibayar).');
+});
+
 // Tautan sidebar lama yang sebelumnya 404 (harus di atas rute {id}).
 Route::get('/admin/inventory/movements', function () {
     return redirect('/admin/inventory/stock-movements');
@@ -2482,6 +2575,7 @@ Route::post('/admin/visits/{id}/update', function (Request $request, $id) {
 
     $visit = Visit::findOrFail($id);
     $therapist = Therapist::findOrFail($request->therapist_id);
+    $roomChanged = $visit->room_name !== $request->room_name;
 
     $visit->patient_id = $request->patient_id;
     $visit->therapist_id = $therapist->id;
@@ -2493,7 +2587,16 @@ Route::post('/admin/visits/{id}/update', function (Request $request, $id) {
     $visit->status = $request->status;
     $visit->save();
 
-    return redirect('/admin/visits')->with('success', 'Visit berhasil diperbarui!');
+    // Mengubah ruangan tidak pernah menagih ulang diam-diam. Bila biaya ruangan visit ini sudah masuk invoice,
+    // beri peringatan agar admin menilai koreksi lewat Void + Terbitkan Ulang (invoice lama tidak berubah).
+    $redirect = redirect('/admin/visits')->with('success', 'Visit berhasil diperbarui!');
+
+    if ($roomChanged && ($billedRoomInvoice = ReferencedChargeGuard::existingCharge(ReferencedChargeGuard::VISIT_ROOM, $visit->id))) {
+        $redirect->with('warning', 'Ruangan visit diubah, tetapi biaya ruangan sebelumnya sudah ditagihkan pada invoice '
+            . ($billedRoomInvoice->invoice_number ?: '#' . $billedRoomInvoice->id) . ' dan tidak berubah otomatis. Bila perlu koreksi, gunakan Void lalu Terbitkan Ulang.');
+    }
+
+    return $redirect;
 });
 
 
@@ -3593,9 +3696,9 @@ Route::get('/admin/cashier', function (Request $request) {
         ]]);
     $billedVisitIds = ReferencedChargeGuard::billedVisitIds();
     $adminFee = [
-        'enabled' => (bool) config('clinic.new_patient_admin_fee.enabled'),
-        'amount' => (float) config('clinic.new_patient_admin_fee.amount'),
-        'chargedPatientIds' => ReferencedChargeGuard::adminFeeChargedPatientIds(),
+        'enabled' => NewPatientAdminFee::enabled(),
+        'amount' => NewPatientAdminFee::amount(),
+        'patients' => NewPatientAdminFee::states($patients->pluck('id')),
     ];
 
 return view('admin-cashier-create', compact(
@@ -6326,7 +6429,16 @@ Route::post('/admin/billings', function (Request $request) {
         'payment_method' => 'nullable|in:cash,qr,debit,credit,bank_bca,bank_bni,bank_mandiri,insurance',
         'payment_detail_notes' => 'nullable|string',
         'notes' => 'nullable|string',
+        'checkout_token' => 'nullable|string|max:64',
     ]);
+
+    // Anti kirim-ganda (klik ganda / tombol back): token yang sama tidak membuat invoice atau pembayaran kedua.
+    $manualToken = $request->checkout_token ?: null;
+
+    if ($manualToken && ($existingManual = Billing::where('checkout_token', $manualToken)->first())) {
+        return redirect('/admin/billings/' . $existingManual->id)
+            ->with('success', 'Billing ini sudah tersimpan sebelumnya. Tidak dibuat invoice ganda.');
+    }
 
     if (BillingIntegrity::isPeriodClosed($request->invoice_date)) {
         return back()->withInput()->withErrors(['invoice_date' => BillingIntegrity::closedPeriodMessage($request->invoice_date)]);
@@ -6343,7 +6455,7 @@ Route::post('/admin/billings', function (Request $request) {
     (new InvoiceNumberGenerator)->prepare();
 
     try {
-        $billing = DB::transaction(function () use ($request, $amount, $partialPaid) {
+        $billing = DB::transaction(function () use ($request, $amount, $partialPaid, $manualToken) {
             $billing = new Billing([
                 'patient_id' => $request->patient_id,
                 'visit_id' => $request->visit_id ?: null,
@@ -6354,6 +6466,7 @@ Route::post('/admin/billings', function (Request $request) {
                 'payment_detail_notes' => $request->payment_detail_notes,
                 'notes' => $request->notes,
                 'payment_model' => 'ledger',
+                'checkout_token' => $manualToken,
             ]);
 
             BillingIntegrity::applyStatus($billing, 'unpaid');
@@ -6375,6 +6488,16 @@ Route::post('/admin/billings', function (Request $request) {
 
             return $billing;
         }, 3);
+    } catch (\Illuminate\Database\UniqueConstraintViolationException $exception) {
+        // Dua pengiriman bersamaan dengan token yang sama: pemenangnya sudah menyimpan invoice.
+        $existingManual = $manualToken ? Billing::where('checkout_token', $manualToken)->first() : null;
+
+        if (!$existingManual) {
+            throw $exception;
+        }
+
+        return redirect('/admin/billings/' . $existingManual->id)
+            ->with('success', 'Billing ini sudah tersimpan sebelumnya. Tidak dibuat invoice ganda.');
     } catch (\DomainException $exception) {
         return back()->withInput()->withErrors(['paid_amount' => $exception->getMessage()]);
     }
@@ -6734,14 +6857,23 @@ Route::post('/admin/billings/{id}/payments', function (Request $request, $id) {
         'tendered_amount' => 'required|numeric|min:0.01',
         'method' => 'required|in:cash,qr,debit,credit,bank_bca,bank_bni,bank_mandiri,insurance',
         'reference' => 'nullable|string|max:255',
+        // Token satu-kali-pakai per formulir: pengiriman ulang request yang sama tidak mencatat pembayaran dua kali.
+        'idempotency_key' => 'required|string|max:64',
+    ], [
+        'idempotency_key.required' => 'Formulir pembayaran kedaluwarsa. Muat ulang halaman invoice lalu ulangi.',
     ]);
 
     $billing = Billing::findOrFail($id);
 
     try {
-        $payment = (new PaymentLedger)->recordPayment($billing, (float) $data['tendered_amount'], $data['method'], $data['reference'] ?? null);
+        $payment = (new PaymentLedger)->recordPayment($billing, (float) $data['tendered_amount'], $data['method'], $data['reference'] ?? null, $data['idempotency_key']);
     } catch (\DomainException $exception) {
         return redirect('/admin/billings/' . $billing->id)->with('error', $exception->getMessage());
+    }
+
+    if (!$payment->wasRecentlyCreated) {
+        return redirect('/admin/billings/' . $billing->id)
+            ->with('success', 'Pembayaran Rp' . number_format((float) $payment->amount, 0, ',', '.') . ' ini sudah tercatat sebelumnya. Pengiriman ulang diabaikan, tidak dicatat dua kali.');
     }
 
     $message = 'Pembayaran Rp' . number_format((float) $payment->amount, 0, ',', '.') . ' tercatat.';
@@ -6763,14 +6895,22 @@ Route::post('/admin/billings/{id}/refunds', function (Request $request, $id) {
         'amount' => 'required|numeric|min:0.01',
         'method' => 'required|in:cash,qr,debit,credit,bank_bca,bank_bni,bank_mandiri,insurance',
         'reason' => 'required|string|min:5|max:1000',
+        'idempotency_key' => 'required|string|max:64',
+    ], [
+        'idempotency_key.required' => 'Formulir refund kedaluwarsa. Muat ulang halaman invoice lalu ulangi.',
     ]);
 
     $billing = Billing::findOrFail($id);
 
     try {
-        $refund = (new PaymentLedger)->refund($billing, (float) $data['amount'], $data['method'], $data['reason']);
+        $refund = (new PaymentLedger)->refund($billing, (float) $data['amount'], $data['method'], $data['reason'], $data['idempotency_key']);
     } catch (\DomainException $exception) {
         return redirect('/admin/billings/' . $billing->id)->with('error', $exception->getMessage());
+    }
+
+    if (!$refund->wasRecentlyCreated) {
+        return redirect('/admin/billings/' . $billing->id)
+            ->with('success', 'Refund Rp' . number_format((float) $refund->amount, 0, ',', '.') . ' ini sudah tercatat sebelumnya. Pengiriman ulang diabaikan, tidak dicatat dua kali.');
     }
 
     return redirect('/admin/billings/' . $billing->id)->with('success', 'Refund Rp' . number_format((float) $refund->amount, 0, ',', '.') . ' tercatat.');

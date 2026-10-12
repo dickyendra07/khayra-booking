@@ -2,6 +2,7 @@
 
 use App\Models\Patient;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
 
 uses(RefreshDatabase::class);
 
@@ -9,7 +10,7 @@ beforeEach(fn () => $this->withSession(['admin_logged_in' => true]));
 
 function patientPayload(array $overrides = []): array
 {
-    return array_merge(['full_name' => 'Budi', 'whatsapp' => '0811111111'], $overrides);
+    return array_merge(['full_name' => 'Budi', 'whatsapp' => '0811111111', 'registration_token' => (string) Str::uuid()], $overrides);
 }
 
 it('renders religion and education as dropdowns on the create form', function () {

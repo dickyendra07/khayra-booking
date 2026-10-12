@@ -181,8 +181,10 @@
                     </div>
                 @endif
 
-                <form method="POST" action="/admin/patients">
+                <form method="POST" action="/admin/patients" onsubmit="if (this.dataset.submitted) { return false; } this.dataset.submitted = '1'; var b = this.querySelector('button[type=submit]'); if (b) { b.disabled = true; }" data-once-form>
                     @csrf
+                    {{-- Token anti registrasi ganda: klik ganda / tombol Back tidak membuat pasien atau tagihan administrasi kedua. --}}
+                    <input type="hidden" name="registration_token" value="{{ \Illuminate\Support\Str::uuid() }}">
 
                     <div class="form-grid">
                         <div class="field full">
@@ -373,5 +375,15 @@
 })();
 </script>
 
+<script>
+    // Buka kunci tombol bila halaman dipulihkan dari tombol Back; token yang sama tetap dijaga server.
+    window.addEventListener('pageshow', function () {
+        document.querySelectorAll('form[data-once-form]').forEach(function (form) {
+            delete form.dataset.submitted;
+            var button = form.querySelector('button[type=submit]');
+            if (button) { button.disabled = false; }
+        });
+    });
+</script>
 </body>
 </html>

@@ -61,16 +61,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Fitur yang menunggu keputusan klinik (semua NONAKTIF)
+    | Aturan klinik (biaya admin sudah final; consent v2 masih menunggu persetujuan)
     |--------------------------------------------------------------------------
     */
 
-    // REQ 6: biaya administrasi pasien baru. Tidak ditagih otomatis; aturan kelayakan belum disetujui.
+    // REQ 6 (aturan FINAL): biaya administrasi pasien baru, SATU KALI saat pasien pertama kali didaftarkan.
+    // Tagihan dibuat otomatis oleh App\Services\PatientRegistration (atau dicatat sebagai kewajiban tertunda bila periode
+    // tutup buku); pasien lama tidak ditagih retroaktif.
+    // KESELAMATAN: fitur hanya menyala bila NEW_PATIENT_ADMIN_FEE_ENABLED=true diisi EKSPLISIT di environment. Default MATI,
+    // sehingga deploy ke production tidak mulai menagih tanpa keputusan sadar. Nominal tetap Rp35.000 (aturan klinik).
     'new_patient_admin_fee' => [
-        'enabled' => false,
+        'enabled' => (bool) env('NEW_PATIENT_ADMIN_FEE_ENABLED', false),
         'amount' => 35000,
-        // Kunci pencegah duplikat teknis. Aturan "sekali per pasien / per pendaftaran" masih keputusan klinik.
-        'scope' => 'once_per_patient',
     ],
 
     // REQ 7: versi template informed consent untuk dokumen BARU. 1 = template sekarang (dengan

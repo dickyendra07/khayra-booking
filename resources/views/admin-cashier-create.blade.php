@@ -247,6 +247,7 @@
                         </div>
                     </div>
 
+                    <div id="adminFeeIndicator" style="display:none;margin-bottom:10px;padding:10px 14px;border-radius:12px;font-size:13px;line-height:1.6;border:1px solid #e2e8f0;background:#f8fafc;color:#334155;"></div>
                     <div id="chargeSuggestions" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;"></div>
 
                     <div id="lineItems"></div>
@@ -463,7 +464,7 @@
     const CREDIT_AVAILABLE = @json((float) ($creditAvailable ?? 0));
     const ROOM_RATES = @json($roomRates ?? new stdClass);
     const BILLED_VISITS = @json($billedVisitIds ?? []);
-    const ADMIN_FEE = @json($adminFee ?? ['enabled' => false, 'amount' => 0, 'chargedPatientIds' => []]);
+    const ADMIN_FEE = @json($adminFee);
 
     function hasReferenceLine(type, id) {
         return Array.from(document.querySelectorAll('.line-item')).some(row =>
@@ -513,19 +514,27 @@
         }
 
         const patientSelect = document.getElementById('patientSelect');
+        const indicator = document.getElementById('adminFeeIndicator');
+        const patientState = patientSelect && patientSelect.value && ADMIN_FEE.patients ? ADMIN_FEE.patients[patientSelect.value] : null;
 
-        if (ADMIN_FEE.enabled && patientSelect && patientSelect.value
-            && !ADMIN_FEE.chargedPatientIds.includes(Number(patientSelect.value)) && !hasReferenceLine('patient_admin_fee', patientSelect.value)) {
-            const button = document.createElement('button');
-            button.type = 'button';
-            button.className = 'btn btn-soft';
-            button.textContent = '+ Biaya administrasi pasien baru (Rp ' + Number(ADMIN_FEE.amount).toLocaleString('id-ID') + ')';
-            button.onclick = () => addReferenceLine({
-                type: 'patient_admin_fee', id: patientSelect.value, category: 'admin_fee', price: ADMIN_FEE.amount, quantity: 1,
-                description: 'Biaya Administrasi Awal Kedatangan', hint: 'Biaya admin: komponen tersendiri, tidak didiskon.',
-            });
-            box.appendChild(button);
+        // Indikator biaya administrasi (informasi saja): tagihan dibuat otomatis saat registrasi pasien, bukan di kasir.
+        if (indicator) {
+            indicator.style.display = patientState ? 'block' : 'none';
+
+            if (patientState) {
+                const tone = {
+                    charged: ['#ecfdf5', '#bbf7d0', '#166534'], voided: ['#fffbeb', '#fde68a', '#92400e'],
+                    not_applicable: ['#f8fafc', '#e2e8f0', '#475569'],
+                }[patientState.state] || ['#f8fafc', '#e2e8f0', '#475569'];
+                indicator.style.background = tone[0];
+                indicator.style.borderColor = tone[1];
+                indicator.style.color = tone[2];
+                indicator.textContent = patientState.label;
+            }
         }
+
+        // Koreksi: bila invoice administrasi di-void, baris biayanya dapat diterbitkan ulang lewat Terbitkan Ulang
+        // (halaman detail invoice), bukan lewat saran di kasir.
     }
     const MANUAL_DEFAULT_CATEGORY = @json(config('clinic.billing.manual_service_default_category'));
 

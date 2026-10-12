@@ -276,6 +276,13 @@
                 <a href="/admin/visits/create" class="ghost-link">+ Create Visit</a>
             </div>
 
+            @if(session('success'))
+                <div style="background:#ecfdf5;border:1px solid #bbf7d0;color:#166534;padding:14px 16px;border-radius:14px;margin-bottom:16px;font-size:13px;line-height:1.7;">{{ session('success') }}</div>
+            @endif
+            @if(session('warning'))
+                <div style="background:#fffbeb;border:1px solid #fde68a;color:#92400e;padding:14px 16px;border-radius:14px;margin-bottom:16px;font-size:13px;line-height:1.7;">{{ session('warning') }}</div>
+            @endif
+
             <section class="hero">
                 <h1 class="hero-title">Track physiotherapy sessions with a cleaner and more clinical view.</h1>
                 <p class="hero-text">

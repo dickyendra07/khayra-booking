@@ -75,7 +75,7 @@ it('alur koreksi: void invoice lunas lalu terbitkan ulang menghasilkan invoice b
     // Sisa kredit Rp40.000 (580.000 - 540.000) tertahan di invoice lama sampai direfund; belum ada uang yang kembali.
     expect(PaymentLedger::heldOnVoid($original))->toBe(40000.0);
 
-    $this->post("/admin/billings/{$original->id}/refunds", ['amount' => 40000, 'method' => 'cash', 'reason' => 'Selisih koreksi harga'])->assertSessionHas('success');
+    $this->post("/admin/billings/{$original->id}/refunds", idem() + ['amount' => 40000, 'method' => 'cash', 'reason' => 'Selisih koreksi harga'])->assertSessionHas('success');
 
     // Arus kas bulan ini: uang diterima 580.000 dikurangi refund 40.000 = 540.000 = nilai invoice pengganti
     // (pemindahan kredit tidak dihitung sebagai kas baru). Omzet hanya invoice pengganti.

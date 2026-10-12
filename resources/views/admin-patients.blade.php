@@ -525,6 +525,10 @@
                 </div>
             </div>
 
+            @if(session('success'))
+                <div style="background:#ecfdf5;border:1px solid #bbf7d0;color:#166534;padding:14px 16px;border-radius:14px;margin-bottom:16px;font-size:13px;line-height:1.7;">{{ session('success') }}</div>
+            @endif
+
             <section class="hero">
                 <div class="hero-grid">
                     <div>

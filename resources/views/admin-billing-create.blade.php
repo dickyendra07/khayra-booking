@@ -233,6 +233,8 @@
 
                 <form method="POST" action="/admin/billings">
                     @csrf
+                    {{-- Token anti kirim-ganda: klik ganda / tombol Back tidak membuat invoice atau pembayaran kedua. --}}
+                    <input type="hidden" name="checkout_token" value="{{ \Illuminate\Support\Str::uuid() }}">
 
                     <div class="form-grid">
                         <div class="field">

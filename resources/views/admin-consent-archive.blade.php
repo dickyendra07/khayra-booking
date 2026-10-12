@@ -55,7 +55,10 @@
                     <h1>Arsip Informed Consent</h1>
                     <p class="subtitle">Consent tersimpan per pasien dan bisa dicetak ulang kapan pun.</p>
                 </div>
-                <a href="/admin/documents" class="btn btn-soft">← Dokumen Klinik</a>
+                <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                    <a href="/admin/informed-consents/template-preview/2" target="_blank" class="btn btn-soft">Preview Template v2 (belum aktif)</a>
+                    <a href="/admin/documents" class="btn btn-soft">← Dokumen Klinik</a>
+                </div>
             </div>
 
             <section class="card">

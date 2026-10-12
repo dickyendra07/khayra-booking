@@ -146,6 +146,16 @@
                     menyarankan baris biaya di kasir untuk ruangan berbayar yang tarif dan satuannya lengkap. Harga yang tersimpan di invoice adalah snapshot saat transaksi.
                 </p>
 
+                @php($chargeableCount = $rooms->filter(fn ($room) => $room->is_chargeable)->count())
+                <div class="error-box" style="background:{{ $chargeableCount ? '#fffbeb' : '#f1f5f9' }};border-color:{{ $chargeableCount ? '#fde68a' : '#e2e8f0' }};color:#334155;">
+                    @if($chargeableCount === 0)
+                        <strong>Belum ada ruangan berbayar.</strong> Tarif resmi dan satuan tarif menunggu persetujuan klinik; sampai itu semua ruangan tidak ditagih.
+                    @else
+                        <strong>{{ $chargeableCount }} ruangan berbayar aktif.</strong> Kasir hanya <em>menyarankan</em> baris biaya (tidak otomatis), satu kali per visit.
+                        Mengubah tarif di sini tidak mengubah invoice yang sudah terbit (tarif tersimpan sebagai snapshot di invoice).
+                    @endif
+                </div>
+
                 @if(session('success'))
                     <div class="error-box" style="background:#ecfdf5;border-color:#bbf7d0;color:#166534;">{{ session('success') }}</div>
                 @endif

@@ -62,3 +62,9 @@ function sessionError(string $key): ?string
 
     return $errors['default']['messages'][$key][0] ?? null;
 }
+
+/** Token satu-kali-pakai yang dikirim formulir pembayaran/refund (idempotensi). */
+function idem(?string $key = null): array
+{
+    return ['idempotency_key' => $key ?? (string) \Illuminate\Support\Str::uuid()];
+}
