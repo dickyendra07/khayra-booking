@@ -27,18 +27,7 @@
             color: #7b8794;
             margin-bottom: 4px;
         }
-        .ghost-link {
-            display: inline-flex;
-            align-items: center;
-            text-decoration: none;
-            padding: 11px 14px;
-            border-radius: 12px;
-            background: #ffffff;
-            border: 1px solid #e6ebea;
-            color: #2c5b5a;
-            font-size: 13px;
-            font-weight: 700;
-        }
+
         .hero, .section-card {
             background: #ffffff;
             border: 1px solid #ecefef;
@@ -130,33 +119,9 @@
             gap: 8px;
             min-width: 156px;
         }
-        .action-link {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            text-decoration: none;
-            padding: 10px 12px;
-            min-height: 38px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 900;
-            border: 1px solid transparent;
-            white-space: nowrap;
-        }
-        .btn-edit,
-        .btn-record,
-        .btn-billing,
-        .btn-referral {
-            background: #eef7f5;
-            color: #2f7c7a;
-            border-color: #d8ebe7;
-        }
-        .btn-record {
-            background: #2f7c7a;
-            color: #ffffff;
-            border-color: #2f7c7a;
-        }
+        .action-link { text-align: center; }
+
+
 
         @media (max-width: 900px) {
             .layout { display: block; }
@@ -181,64 +146,21 @@
             gap: 8px;
         }
 
-        .action-link {
-            min-height: 34px;
-            padding: 0 10px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: 900;
-            line-height: 1.2;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            text-decoration: none;
-            border: 1px solid transparent;
-            white-space: nowrap;
-            transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease;
-        }
+        .action-link { text-align: center; }
 
-        .action-link:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 10px 20px rgba(15, 23, 42, .08);
-        }
 
-        .btn-edit {
-            background: #f8fafc;
-            color: #334155;
-            border-color: #dbe5e3;
-        }
 
-        .btn-record {
-            background: linear-gradient(135deg, #2f8c86 0%, #25746f 100%);
-            color: #ffffff;
-            border-color: #25746f;
-        }
 
-        .btn-report {
-            background: #eef2ff;
-            color: #3730a3;
-            border-color: #c7d2fe;
-        }
 
-        .btn-print {
-            background: #f8fafc;
-            color: #334155;
-            border-color: #cbd5e1;
-        }
 
-        .btn-wa {
-            background: #dcfce7;
-            color: #166534;
-            border-color: #86efac;
-        }
 
-        .btn-billing,
-        .btn-referral {
-            background: #eef7f5;
-            color: #24736f;
-            border-color: #d7ebe7;
-        }
+
+
+
+
+
+
+
 
         @media (max-width: 980px) {
             .action-stack {
@@ -260,6 +182,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="/images/khayra-logo.png">
+    @include('partials.ui-assets')
 </head>
 <body>
 <div class="layout">
@@ -273,7 +196,7 @@
                     <div class="brand-title">Physiotherapy Visits</div>
                 </div>
 
-                <a href="/admin/visits/create" class="ghost-link">+ Create Visit</a>
+                <a href="/admin/visits/create" class="kx-btn kx-btn--primary ghost-link">+ Create Visit</a>
             </div>
 
             @if(session('success'))
@@ -301,7 +224,7 @@
                                 <th>Visit</th>
                                 <th>Patient</th>
                                 <th>Date</th>
-                                <th>Physiotherapy Staff</th>
+                                <th>PIC Fisioterapis</th>
                                 <th>Booking</th>
                                 <th>Status</th>
                                 <th>Medical Record</th>
@@ -325,7 +248,7 @@
                                     </td>
                                     <td>
                                         <div class="primary-text">{{ optional($visit->therapistRelation)->full_name ?: $visit->therapist ?: '-' }}</div>
-                                        <div class="secondary-text">Physiotherapist</div>
+                                        <div class="secondary-text">PIC (fisioterapis)</div>
                                     </td>
                                     <td>
                                         @if($visit->booking)
@@ -348,13 +271,13 @@
                                     <td>
                                         <div class="action-stack">
                                             <div class="action-primary-row">
-                                                <a href="/admin/visits/{{ $visit->id }}/medical-record" class="action-link btn-record">Medical Record</a>
+                                                <a href="/admin/visits/{{ $visit->id }}/medical-record" class="kx-btn kx-btn--primary kx-btn--sm action-link btn-record">Medical Record</a>
                                             </div>
 
                                             <div class="action-secondary-grid">
-                                                <a href="/admin/visits/{{ $visit->id }}/edit" class="action-link btn-edit">Edit</a>
-                                                <a href="/admin/visits/{{ $visit->id }}/report" class="action-link btn-report" target="_blank">Report</a>
-                                                <a href="/admin/visits/{{ $visit->id }}/report/print" class="action-link btn-print" target="_blank">Print PDF</a>
+                                                <a href="/admin/visits/{{ $visit->id }}/edit" class="kx-btn kx-btn--outline kx-btn--sm action-link btn-edit">Edit</a>
+                                                <a href="/admin/visits/{{ $visit->id }}/report" class="kx-btn kx-btn--secondary kx-btn--sm action-link btn-report" target="_blank">Report</a>
+                                                <a href="/admin/visits/{{ $visit->id }}/report/print" class="kx-btn kx-btn--outline kx-btn--sm action-link btn-print" target="_blank">Print PDF</a>
 
                                                 @php
                                                     $waNumber = preg_replace('/[^0-9]/', '', optional($visit->patient)->whatsapp ?? '');
@@ -365,11 +288,11 @@
                                                 @endphp
 
                                                 @if($waNumber)
-                                                    <a href="https://wa.me/{{ $waNumber }}?text={{ urlencode($waMessage) }}" class="action-link btn-wa" target="_blank">WA Report</a>
+                                                    <a href="https://wa.me/{{ $waNumber }}?text={{ urlencode($waMessage) }}" class="kx-btn kx-btn--secondary kx-btn--sm action-link btn-wa" target="_blank">WA Report</a>
                                                 @endif
 
-                                                <a href="/admin/billings/create?visit_id={{ $visit->id }}" class="action-link btn-billing">Invoice</a>
-                                                <a href="/admin/referral-letters/create?visit_id={{ $visit->id }}" class="action-link btn-referral">Rujukan</a>
+                                                <a href="/admin/billings/create?visit_id={{ $visit->id }}" class="kx-btn kx-btn--secondary kx-btn--sm action-link btn-billing">Invoice</a>
+                                                <a href="/admin/referral-letters/create?visit_id={{ $visit->id }}" class="kx-btn kx-btn--secondary kx-btn--sm action-link btn-referral">Rujukan</a>
                                             </div>
                                         </div>
                                     </td>
@@ -408,20 +331,7 @@
         button.id = 'khayraInstallAppButton';
         button.type = 'button';
         button.innerText = 'Install App';
-        button.style.position = 'fixed';
-        button.style.right = '18px';
-        button.style.bottom = '18px';
-        button.style.zIndex = '99999';
-        button.style.border = '0';
-        button.style.borderRadius = '999px';
-        button.style.padding = '12px 16px';
-        button.style.background = '#2f7c7a';
-        button.style.color = '#ffffff';
-        button.style.fontWeight = '900';
-        button.style.fontFamily = 'Arial, sans-serif';
-        button.style.fontSize = '13px';
-        button.style.boxShadow = '0 14px 30px rgba(47,124,122,.24)';
-        button.style.cursor = 'pointer';
+        button.className = 'kx-btn kx-btn--primary kx-install-btn';
 
         button.addEventListener('click', function () {
             if (!deferredInstallPrompt) {

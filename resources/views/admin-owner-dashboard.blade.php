@@ -107,25 +107,11 @@
 
         input[type="month"]::-webkit-calendar-picker-indicator { filter: invert(1); }
 
-        .btn {
-            min-height: 44px;
-            border: 0;
-            border-radius: 14px;
-            padding: 0 16px;
-            font-size: 13px;
-            font-weight: 900;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-family: Arial, sans-serif;
-            white-space: nowrap;
-        }
 
-        .btn-white { background: #ffffff; color: #2f7c7a; }
-        .btn-soft { background: #ffffff; color: #2f7c7a; border: 1px solid #d8ebe7; }
-        .btn-dark { background: #111827; color: #ffffff; }
+
+
+
+
 
         .stats-grid {
             display: grid;
@@ -287,6 +273,7 @@
             .mini-row { grid-template-columns: 1fr; }
         }
     </style>
+    @include('partials.ui-assets')
 </head>
 <body>
 <div class="layout">
@@ -304,10 +291,10 @@
                     </p>
 
                     <div class="quick-links" style="margin-top:18px;">
-                        <a href="/admin/owner-finance?month={{ $month }}" class="btn btn-soft">Owner Finance / Cashflow</a>
-                        <a href="/admin/reports/monthly-clinic?month={{ $month }}" class="btn btn-soft">Monthly Clinic Report</a>
-                        <a href="/admin/reports/revenue" class="btn btn-soft">Revenue Report</a>
-                        <a href="/admin/staff-leaves" class="btn btn-soft">Staff Leave Approval</a>
+                        <a href="/admin/owner-finance?month={{ $month }}" class="kx-btn kx-btn--outline btn btn-soft">Owner Finance / Cashflow</a>
+                        <a href="/admin/reports/monthly-clinic?month={{ $month }}" class="kx-btn kx-btn--outline btn btn-soft">Monthly Clinic Report</a>
+                        <a href="/admin/reports/revenue" class="kx-btn kx-btn--outline btn btn-soft">Revenue Report</a>
+                        <a href="/admin/staff-leaves" class="kx-btn kx-btn--outline btn btn-soft">Staff Leave Approval</a>
                     </div>
                 </div>
 
@@ -319,7 +306,7 @@
 
                     <form method="GET" action="/admin/owner-dashboard" class="period-form">
                         <input type="month" name="month" value="{{ $month }}">
-                        <button type="submit" class="btn btn-white">Update Period</button>
+                        <button type="submit" class="kx-btn kx-btn--outline btn btn-white">Update Period</button>
                     </form>
                 </div>
             </section>
@@ -381,7 +368,7 @@
                             <h2 class="section-title">Recent Revenue / Billing</h2>
                             <p class="section-subtitle">Invoice terbaru pada periode ini untuk monitoring penjualan dan pembayaran.</p>
                         </div>
-                        <a href="/admin/billings" class="btn btn-soft">Open Billing</a>
+                        <a href="/admin/billings" class="kx-btn kx-btn--outline btn btn-soft">Open Billing</a>
                     </div>
 
                     <div class="mini-list">
@@ -413,7 +400,7 @@
                             <h2 class="section-title">Staff Leave Approval</h2>
                             <p class="section-subtitle">Request cuti/izin fisioterapis terbaru yang perlu dipantau manajemen.</p>
                         </div>
-                        <a href="/admin/staff-leaves" class="btn btn-soft">Review All</a>
+                        <a href="/admin/staff-leaves" class="kx-btn kx-btn--outline btn btn-soft">Review All</a>
                     </div>
 
                     <div class="mini-list">
@@ -446,7 +433,7 @@
                             <h2 class="section-title">Appointment Movement</h2>
                             <p class="section-subtitle">Appointment terbaru dalam periode ini, termasuk status operasionalnya.</p>
                         </div>
-                        <a href="/admin/bookings" class="btn btn-soft">Open Appointment</a>
+                        <a href="/admin/bookings" class="kx-btn kx-btn--outline btn btn-soft">Open Appointment</a>
                     </div>
 
                     <div class="mini-list">
@@ -475,7 +462,7 @@
                             <h2 class="section-title">Visit & Clinical Flow</h2>
                             <p class="section-subtitle">Visit terbaru untuk memantau progress layanan dan clinical record flow.</p>
                         </div>
-                        <a href="/admin/visits" class="btn btn-soft">Open Visits</a>
+                        <a href="/admin/visits" class="kx-btn kx-btn--outline btn btn-soft">Open Visits</a>
                     </div>
 
                     <div class="mini-list">

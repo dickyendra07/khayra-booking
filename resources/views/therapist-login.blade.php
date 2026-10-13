@@ -125,23 +125,9 @@
             box-shadow: 0 0 0 4px rgba(23, 111, 105, 0.08);
         }
 
-        .submit-btn {
-            width: 100%;
-            height: 52px;
-            border: none;
-            border-radius: 14px;
-            background: #176f69;
-            color: white;
-            font-size: 15px;
-            font-weight: 800;
-            cursor: pointer;
-            transition: .2s ease;
-            margin-top: 8px;
-        }
+        .submit-btn { width: 100%; margin-top: 8px; }
 
-        .submit-btn:hover {
-            background: #145d58;
-        }
+
 
         .footer-row {
             display: flex;
@@ -235,6 +221,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="/images/khayra-logo.png">
+    @include('partials.ui-assets')
 </head>
 <body>
     <div class="page">
@@ -279,7 +266,7 @@
                             <input type="password" name="password" placeholder="Enter your password">
                         </div>
 
-                        <button type="submit" class="submit-btn">Sign In</button>
+                        <button type="submit" class="kx-btn kx-btn--primary submit-btn">Sign In</button>
                     </form>
                 </div>
 
@@ -317,20 +304,7 @@
         button.id = 'khayraInstallAppButton';
         button.type = 'button';
         button.innerText = 'Install App';
-        button.style.position = 'fixed';
-        button.style.right = '18px';
-        button.style.bottom = '18px';
-        button.style.zIndex = '99999';
-        button.style.border = '0';
-        button.style.borderRadius = '999px';
-        button.style.padding = '12px 16px';
-        button.style.background = '#2f7c7a';
-        button.style.color = '#ffffff';
-        button.style.fontWeight = '900';
-        button.style.fontFamily = 'Arial, sans-serif';
-        button.style.fontSize = '13px';
-        button.style.boxShadow = '0 14px 30px rgba(47,124,122,.24)';
-        button.style.cursor = 'pointer';
+        button.className = 'kx-btn kx-btn--primary kx-install-btn';
 
         button.addEventListener('click', function () {
             if (!deferredInstallPrompt) {

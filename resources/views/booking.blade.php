@@ -54,18 +54,7 @@
             flex-wrap: wrap;
         }
 
-        .ghost-link {
-            display: inline-flex;
-            align-items: center;
-            text-decoration: none;
-            padding: 11px 14px;
-            border-radius: 12px;
-            background: #ffffff;
-            border: 1px solid #e6ebea;
-            color: #2c5b5a;
-            font-size: 13px;
-            font-weight: 700;
-        }
+
 
         .hero {
             background: #ffffff;
@@ -221,18 +210,7 @@
             flex-wrap: wrap;
         }
 
-        .mini-link {
-            display: inline-flex;
-            align-items: center;
-            text-decoration: none;
-            padding: 11px 14px;
-            border-radius: 12px;
-            background: #f9fbfb;
-            border: 1px solid #e7eceb;
-            color: #2c5b5a;
-            font-size: 13px;
-            font-weight: 700;
-        }
+
 
         .alert {
             padding: 14px 16px;
@@ -503,10 +481,7 @@
                 align-items: stretch;
             }
 
-            .submit-btn {
-                width: 100%;
-                min-width: 0;
-            }
+            .submit-btn { width: 100%; min-width: 0; }
         }
     
         .booking-submit-row {
@@ -516,35 +491,13 @@
             margin-top: 18px;
             flex-wrap: wrap;
         }
-        .booking-submit-btn {
-            min-height: 46px;
-            border: 0;
-            cursor: pointer;
-            padding: 0 20px;
-            border-radius: 16px;
-            font-size: 14px;
-            font-weight: 900;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-family: Arial, sans-serif;
-            white-space: nowrap;
-            background: linear-gradient(135deg, #3d8a89 0%, #2f7c7a 100%);
-            color: #ffffff;
-            box-shadow: 0 12px 24px rgba(47,124,122,.16);
-        }
-        .booking-submit-btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 16px 28px rgba(47,124,122,.20);
-        }
+
+
         @media (max-width: 640px) {
             .booking-submit-row {
                 justify-content: stretch;
             }
-            .booking-submit-btn {
-                width: 100%;
-            }
+            .booking-submit-btn { width: 100%; }
         }
 
     </style>
@@ -557,6 +510,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="/images/khayra-logo.png">
+    @include('partials.ui-assets')
 </head>
 <body>
 <div class="page">
@@ -568,8 +522,8 @@
             </div>
 
             <div class="topbar-actions">
-                <a href="/" class="ghost-link">Home</a>
-                <a href="/admin/bookings" class="ghost-link">Admin View</a>
+                <a href="/" class="kx-btn kx-btn--outline ghost-link">Home</a>
+                <a href="/admin/bookings" class="kx-btn kx-btn--outline ghost-link">Admin View</a>
             </div>
         </div>
 
@@ -619,8 +573,8 @@
                 </div>
 
                 <div class="mini-actions">
-                    <a href="/" class="mini-link">Home</a>
-                    <a href="/admin/bookings" class="mini-link">Admin View</a>
+                    <a href="/" class="kx-btn kx-btn--secondary kx-btn--sm mini-link">Home</a>
+                    <a href="/admin/bookings" class="kx-btn kx-btn--secondary kx-btn--sm mini-link">Admin View</a>
                 </div>
             </div>
 
@@ -740,7 +694,7 @@
                         Dengan mengirim form ini, data booking Anda akan masuk ke sistem admin Khayra Physio untuk proses tindak lanjut.
                     </div>
                     <div class="booking-submit-row">
-                    <button type="submit" class="booking-submit-btn">Kirim Booking</button>
+                    <button type="submit" class="kx-btn kx-btn--primary booking-submit-btn">Kirim Booking</button>
                 </div>
                 </div>
             </form>
@@ -780,20 +734,7 @@
         button.id = 'khayraInstallAppButton';
         button.type = 'button';
         button.innerText = 'Install App';
-        button.style.position = 'fixed';
-        button.style.right = '18px';
-        button.style.bottom = '18px';
-        button.style.zIndex = '99999';
-        button.style.border = '0';
-        button.style.borderRadius = '999px';
-        button.style.padding = '12px 16px';
-        button.style.background = '#2f7c7a';
-        button.style.color = '#ffffff';
-        button.style.fontWeight = '900';
-        button.style.fontFamily = 'Arial, sans-serif';
-        button.style.fontSize = '13px';
-        button.style.boxShadow = '0 14px 30px rgba(47,124,122,.24)';
-        button.style.cursor = 'pointer';
+        button.className = 'kx-btn kx-btn--primary kx-install-btn';
 
         button.addEventListener('click', function () {
             if (!deferredInstallPrompt) {

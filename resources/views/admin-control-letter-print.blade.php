@@ -8,8 +8,8 @@
         body{margin:0;font-family:Arial,sans-serif;background:#f4f6f5;color:#1f2937;padding:24px}
         .page{max-width:880px;margin:0 auto}
         .top{display:flex;justify-content:flex-end;gap:10px;margin-bottom:14px}
-        .btn{border:0;border-radius:12px;padding:11px 15px;font-weight:900;cursor:pointer;text-decoration:none;font-size:13px}
-        .btn-print{background:#2f7c7a;color:#fff}
+
+
         .sheet{background:#fff;border:1px solid #e7eceb;border-radius:20px;padding:34px;box-shadow:0 16px 32px rgba(15,23,42,.06)}
         .header{display:flex;align-items:center;gap:16px;border-bottom:2px solid #2f7c7a;padding-bottom:18px;margin-bottom:24px}
         .logo{width:64px;height:64px;object-fit:contain;border-radius:14px}
@@ -37,11 +37,12 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="/images/khayra-logo.png">
+    @include('partials.ui-assets')
 </head>
 <body>
 <div class="page">
     <div class="top">
-        <button onclick="window.print()" class="btn btn-print">Print / Save PDF</button>
+        <button onclick="window.print()" class="kx-btn kx-btn--outline btn btn-print">Print / Save PDF</button>
     </div>
 
     <div class="sheet">

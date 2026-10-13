@@ -22,11 +22,12 @@
         table { width: 100%; border-collapse: collapse; font-size: 13px; }
         th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid #eef2f1; vertical-align: top; }
         th { color: #6b7280; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
-        .btn { border: none; background: linear-gradient(135deg, #3d8a89 0%, #2f7c7a 100%); color: #fff; padding: 10px 16px; border-radius: 12px; font-size: 13px; font-weight: 800; cursor: pointer; }
+
         .btn[disabled] { background: #cbd5e1; cursor: not-allowed; }
         .link { color: #2c5b5a; font-weight: 700; text-decoration: none; }
         @media (max-width: 860px) { .layout { display: block; } .main { padding: 16px; } .title { font-size: 26px; } }
     </style>
+    @include('partials.ui-assets')
 </head>
 <body>
 <div class="layout">
@@ -75,7 +76,7 @@
                                     <td>
                                         <form method="POST" action="/admin/registration-fees/{{ $fee->id }}/issue" onsubmit="if (this.dataset.submitted) { return false; } this.dataset.submitted = '1'; this.querySelector('button').disabled = true;" data-once-form>
                                             @csrf
-                                            <button type="submit" class="btn" {{ $todayClosed ? 'disabled' : '' }}>Terbitkan Invoice</button>
+                                            <button type="submit" class="kx-btn kx-btn--primary btn" {{ $todayClosed ? 'disabled' : '' }}>Terbitkan Invoice</button>
                                         </form>
                                     </td>
                                 </tr>

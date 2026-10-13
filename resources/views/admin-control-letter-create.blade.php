@@ -11,9 +11,9 @@
         .main{flex:1;padding:28px;min-width:0}
         .container{max-width:1180px;margin:0 auto}
         .top-actions{display:flex;justify-content:flex-end;margin-bottom:18px}
-        .btn{min-height:42px;border:0;padding:0 16px;border-radius:14px;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;font-weight:900;cursor:pointer;font-size:13px}
-        .btn-soft{background:#fff;color:#2f7c7a;border:1px solid #dfe8e6}
-        .btn-primary{background:linear-gradient(135deg,#3d8a89,#2f7c7a);color:#fff}
+
+
+
         .card{background:#fff;border:1px solid #ecefef;border-radius:26px;padding:24px;box-shadow:0 10px 26px rgba(15,23,42,.04);margin-bottom:18px}
         .badge{display:inline-flex;padding:8px 13px;border-radius:999px;background:#eef7f5;color:#2f7c7a;font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px}
         h1{margin:0;font-size:40px;color:#22343a}
@@ -36,6 +36,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="/images/khayra-logo.png">
+    @include('partials.ui-assets')
 </head>
 <body>
 @php
@@ -50,7 +51,7 @@
     <main class="main">
         <div class="container">
             <div class="top-actions">
-                <a href="/admin/documents" class="btn btn-soft">← Dokumen Klinik</a>
+                <a href="/admin/documents" class="kx-btn kx-btn--outline btn btn-soft">← Dokumen Klinik</a>
             </div>
 
             <section class="card">
@@ -143,7 +144,7 @@
                     </div>
 
                     <div class="actions">
-                        <button class="btn btn-primary">Generate Print / PDF</button>
+                        <button class="kx-btn kx-btn--primary btn btn-primary">Generate Print / PDF</button>
                     </div>
                 </form>
             </section>
@@ -172,20 +173,7 @@
         button.id = 'khayraInstallAppButton';
         button.type = 'button';
         button.innerText = 'Install App';
-        button.style.position = 'fixed';
-        button.style.right = '18px';
-        button.style.bottom = '18px';
-        button.style.zIndex = '99999';
-        button.style.border = '0';
-        button.style.borderRadius = '999px';
-        button.style.padding = '12px 16px';
-        button.style.background = '#2f7c7a';
-        button.style.color = '#ffffff';
-        button.style.fontWeight = '900';
-        button.style.fontFamily = 'Arial, sans-serif';
-        button.style.fontSize = '13px';
-        button.style.boxShadow = '0 14px 30px rgba(47,124,122,.24)';
-        button.style.cursor = 'pointer';
+        button.className = 'kx-btn kx-btn--primary kx-install-btn';
 
         button.addEventListener('click', function () {
             if (!deferredInstallPrompt) {

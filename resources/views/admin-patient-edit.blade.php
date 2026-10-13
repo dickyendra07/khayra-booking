@@ -49,18 +49,7 @@
             justify-content: flex-end;
             margin-bottom: 18px;
         }
-        .ghost-link {
-            display: inline-flex;
-            align-items: center;
-            text-decoration: none;
-            padding: 11px 14px;
-            border-radius: 12px;
-            background: #ffffff;
-            border: 1px solid #e6ebea;
-            color: #2c5b5a;
-            font-size: 13px;
-            font-weight: 700;
-        }
+
         .form-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -113,17 +102,7 @@
             justify-content: flex-end;
             margin-top: 22px;
         }
-        .submit-btn {
-            border: none;
-            background: linear-gradient(135deg, #3d8a89 0%, #2f7c7a 100%);
-            color: #ffffff;
-            padding: 14px 22px;
-            border-radius: 14px;
-            font-size: 14px;
-            font-weight: 800;
-            cursor: pointer;
-            box-shadow: 0 10px 20px rgba(47,124,122,.16);
-        }
+
         .error-box {
             background: #fff1f2;
             border: 1px solid #ffe0e6;
@@ -163,6 +142,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="/images/khayra-logo.png">
+    @include('partials.ui-assets')
 </head>
 <body>
 <div class="layout">
@@ -171,7 +151,7 @@
     <main class="main">
         <div class="container">
             <div class="top-actions">
-                <a href="/admin/patients/{{ $patient->id }}" class="ghost-link">← Kembali ke Detail Patient</a>
+                <a href="/admin/patients/{{ $patient->id }}" class="kx-btn kx-btn--outline ghost-link">← Kembali ke Detail Patient</a>
             </div>
 
             <section class="section-card">
@@ -322,7 +302,7 @@
 
 
                     <div class="actions">
-                        <button type="submit" class="submit-btn">Simpan Perubahan</button>
+                        <button type="submit" class="kx-btn kx-btn--primary submit-btn">Simpan Perubahan</button>
                     </div>
                 </form>
             </section>
@@ -351,20 +331,7 @@
         button.id = 'khayraInstallAppButton';
         button.type = 'button';
         button.innerText = 'Install App';
-        button.style.position = 'fixed';
-        button.style.right = '18px';
-        button.style.bottom = '18px';
-        button.style.zIndex = '99999';
-        button.style.border = '0';
-        button.style.borderRadius = '999px';
-        button.style.padding = '12px 16px';
-        button.style.background = '#2f7c7a';
-        button.style.color = '#ffffff';
-        button.style.fontWeight = '900';
-        button.style.fontFamily = 'Arial, sans-serif';
-        button.style.fontSize = '13px';
-        button.style.boxShadow = '0 14px 30px rgba(47,124,122,.24)';
-        button.style.cursor = 'pointer';
+        button.className = 'kx-btn kx-btn--primary kx-install-btn';
 
         button.addEventListener('click', function () {
             if (!deferredInstallPrompt) {

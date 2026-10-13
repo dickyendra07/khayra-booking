@@ -14,9 +14,9 @@
         .badge{display:inline-flex;padding:8px 13px;border-radius:999px;background:#eef7f5;color:#2f7c7a;font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px}
         h1{margin:0;font-size:42px;color:#22343a;line-height:1.05}
         .subtitle{color:#64748b;line-height:1.8;font-size:14px;margin:12px 0 0}
-        .btn{min-height:42px;padding:0 16px;border-radius:14px;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:13px;border:0;cursor:pointer}
-        .btn-soft{background:#fff;color:#2f7c7a;border:1px solid #dfe8e6}
-        .btn-primary{background:linear-gradient(135deg,#3d8a89,#2f7c7a);color:#fff}
+
+
+
         .card{background:#fff;border:1px solid #ecefef;border-radius:26px;padding:24px;box-shadow:0 10px 26px rgba(15,23,42,.04);margin-bottom:18px}
         .filter{display:grid;grid-template-columns:1fr .35fr auto;gap:12px;align-items:end}
         label{display:block;font-size:12px;font-weight:900;color:#334155;margin-bottom:8px}
@@ -42,6 +42,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="/images/khayra-logo.png">
+    @include('partials.ui-assets')
 </head>
 <body>
 <div class="layout">
@@ -56,8 +57,8 @@
                     <p class="subtitle">Consent tersimpan per pasien dan bisa dicetak ulang kapan pun.</p>
                 </div>
                 <div style="display:flex;gap:10px;flex-wrap:wrap;">
-                    <a href="/admin/informed-consents/template-preview/2" target="_blank" class="btn btn-soft">Preview Template v2 (belum aktif)</a>
-                    <a href="/admin/documents" class="btn btn-soft">← Dokumen Klinik</a>
+                    <a href="/admin/informed-consents/template-preview/2" target="_blank" class="kx-btn kx-btn--outline btn btn-soft">Preview Template v2 (belum aktif)</a>
+                    <a href="/admin/documents" class="kx-btn kx-btn--outline btn btn-soft">← Dokumen Klinik</a>
                 </div>
             </div>
 
@@ -75,7 +76,7 @@
                             <option value="pending" {{ $status === 'pending' ? 'selected' : '' }}>Pending</option>
                         </select>
                     </div>
-                    <button class="btn btn-primary">Filter</button>
+                    <button class="kx-btn kx-btn--primary btn btn-primary">Filter</button>
                 </form>
             </section>
 
@@ -91,7 +92,7 @@
                                     <th>Visit</th>
                                     <th>Physiotherapy</th>
                                     <th>Status</th>
-                                    <th>Action</th>
+                                    <th class="kx-col-actions">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -116,10 +117,10 @@
                                         </td>
                                         <td>{{ $consent->physiotherapy_name ?: '-' }}</td>
                                         <td><span class="pill {{ ($consent->status ?: 'signed') === 'signed' ? 'pill-green' : 'pill-orange' }}">{{ $consent->status ?: 'signed' }}</span></td>
-                                        <td>
-                                            <a href="/admin/informed-consents/{{ $consent->id }}/print" target="_blank" class="btn btn-soft">Print</a>
+                                        <td class="kx-col-actions">
+                                            <a href="/admin/informed-consents/{{ $consent->id }}/print" target="_blank" class="kx-btn kx-btn--outline btn btn-soft">Print</a>
                                             @if($consent->patient)
-                                                <a href="/admin/patients/{{ $consent->patient->id }}/informed-consent" class="btn btn-soft">New Consent</a>
+                                                <a href="/admin/patients/{{ $consent->patient->id }}/informed-consent" class="kx-btn kx-btn--outline btn btn-soft">New Consent</a>
                                             @endif
                                         </td>
                                     </tr>
@@ -156,20 +157,7 @@
         button.id = 'khayraInstallAppButton';
         button.type = 'button';
         button.innerText = 'Install App';
-        button.style.position = 'fixed';
-        button.style.right = '18px';
-        button.style.bottom = '18px';
-        button.style.zIndex = '99999';
-        button.style.border = '0';
-        button.style.borderRadius = '999px';
-        button.style.padding = '12px 16px';
-        button.style.background = '#2f7c7a';
-        button.style.color = '#ffffff';
-        button.style.fontWeight = '900';
-        button.style.fontFamily = 'Arial, sans-serif';
-        button.style.fontSize = '13px';
-        button.style.boxShadow = '0 14px 30px rgba(47,124,122,.24)';
-        button.style.cursor = 'pointer';
+        button.className = 'kx-btn kx-btn--primary kx-install-btn';
 
         button.addEventListener('click', function () {
             if (!deferredInstallPrompt) {

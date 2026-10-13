@@ -287,22 +287,7 @@
             border-top: 1px solid rgba(255,255,255,0.10);
         }
 
-        .sidebar-logout button {
-            width: 100%;
-            border: 1px solid rgba(255,255,255,0.13);
-            cursor: pointer;
-            padding: 13px 14px;
-            border-radius: 16px;
-            font-size: 14px;
-            font-weight: 950;
-            color: #ffffff;
-            background: rgba(255,255,255,0.12);
-            font-family: Arial, sans-serif;
-        }
-
-        .sidebar-logout button:hover {
-            background: rgba(255,255,255,0.18);
-        }
+        .sidebar-logout .kx-btn { width: 100%; }
 
         @media (max-width: 980px) {
             .admin-sidebar {
@@ -367,7 +352,7 @@
     <div class="sidebar-logout">
         <form method="POST" action="/admin/logout">
             @csrf
-            <button type="submit">Logout Admin</button>
+            <button type="submit" class="kx-btn kx-btn--on-dark kx-btn--lg">Logout Admin</button>
         </form>
     </div>
 </aside>

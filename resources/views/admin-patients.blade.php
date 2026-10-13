@@ -80,18 +80,7 @@
             flex-wrap: wrap;
         }
 
-        .ghost-link {
-            display: inline-flex;
-            align-items: center;
-            text-decoration: none;
-            padding: 11px 14px;
-            border-radius: 12px;
-            background: #ffffff;
-            border: 1px solid #e6ebea;
-            color: #2c5b5a;
-            font-size: 13px;
-            font-weight: 700;
-        }
+
 
         .hero {
             background: #ffffff;
@@ -324,17 +313,7 @@
             box-shadow: 0 0 0 4px rgba(23,111,105,.08);
         }
 
-        .filter-btn {
-            height: 50px;
-            padding: 0 22px;
-            border: none;
-            border-radius: 14px;
-            background: linear-gradient(135deg, #0f172a 0%, #1f2d3d 100%);
-            color: #ffffff;
-            font-size: 14px;
-            font-weight: 800;
-            cursor: pointer;
-        }
+
 
         .table-wrap {
             overflow-x: auto;
@@ -401,35 +380,13 @@
             gap: 8px;
         }
 
-        .action-link {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            text-decoration: none;
-            padding: 9px 12px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 800;
-            border: 1px solid transparent;
-            transition: all .18s ease;
-        }
 
-        .btn-detail {
-            background: #eef7f5;
-            color: #2f7c7a;
-            border-color: #d8ebe7;
-        }
 
-        .btn-edit {
-            background: #eef2ff;
-            color: #3457d5;
-            border-color: #dde5ff;
-        }
 
-        .action-link:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
-        }
+
+
+
+
 
         .empty-state {
             padding: 28px;
@@ -496,6 +453,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="/images/khayra-logo.png">
+    @include('partials.ui-assets')
 </head>
 <body>
 @php
@@ -520,8 +478,8 @@
                 </div>
 
                 <div class="top-actions">
-                    <a href="/admin/dashboard" class="ghost-link">Dashboard</a>
-                    <a href="/admin/patients/create" class="ghost-link">+ Create Patient</a>
+                    <a href="/admin/dashboard" class="kx-btn kx-btn--outline ghost-link">Dashboard</a>
+                    <a href="/admin/patients/create" class="kx-btn kx-btn--primary ghost-link">+ Create Patient</a>
                 </div>
             </div>
 
@@ -627,7 +585,7 @@
                     </div>
 
                     <div class="field">
-                        <button type="submit" class="filter-btn">Terapkan Filter</button>
+                        <button type="submit" class="kx-btn kx-btn--primary kx-btn--lg filter-btn">Terapkan Filter</button>
                     </div>
                 </form>
             </section>
@@ -649,7 +607,7 @@
                                     <th>WhatsApp</th>
                                     <th>Visits</th>
                                     <th>Billings</th>
-                                    <th>Actions</th>
+                                    <th class="kx-col-actions">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -681,10 +639,10 @@
                                             <div class="primary-text">{{ $patient->billings->count() }}</div>
                                             <div class="secondary-text">billing linked</div>
                                         </td>
-                                        <td>
+                                        <td class="kx-col-actions">
                                             <div class="action-stack">
-                                                <a href="/admin/patients/{{ $patient->id }}" class="action-link btn-detail">Detail</a>
-                                                <a href="/admin/patients/{{ $patient->id }}/edit" class="action-link btn-edit">Edit</a>
+                                                <a href="/admin/patients/{{ $patient->id }}" class="kx-btn kx-btn--secondary kx-btn--sm action-link btn-detail">Detail</a>
+                                                <a href="/admin/patients/{{ $patient->id }}/edit" class="kx-btn kx-btn--outline kx-btn--sm action-link btn-edit">Edit</a>
                                             </div>
                                         </td>
                                     </tr>
@@ -723,20 +681,7 @@
         button.id = 'khayraInstallAppButton';
         button.type = 'button';
         button.innerText = 'Install App';
-        button.style.position = 'fixed';
-        button.style.right = '18px';
-        button.style.bottom = '18px';
-        button.style.zIndex = '99999';
-        button.style.border = '0';
-        button.style.borderRadius = '999px';
-        button.style.padding = '12px 16px';
-        button.style.background = '#2f7c7a';
-        button.style.color = '#ffffff';
-        button.style.fontWeight = '900';
-        button.style.fontFamily = 'Arial, sans-serif';
-        button.style.fontSize = '13px';
-        button.style.boxShadow = '0 14px 30px rgba(47,124,122,.24)';
-        button.style.cursor = 'pointer';
+        button.className = 'kx-btn kx-btn--primary kx-install-btn';
 
         button.addEventListener('click', function () {
             if (!deferredInstallPrompt) {

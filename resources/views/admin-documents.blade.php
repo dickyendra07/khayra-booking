@@ -211,33 +211,11 @@
             flex-wrap: wrap;
         }
 
-        .btn {
-            min-height: 42px;
-            border: 0;
-            cursor: pointer;
-            padding: 0 16px;
-            border-radius: 14px;
-            font-size: 13px;
-            font-weight: 900;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-family: Arial, sans-serif;
-            white-space: nowrap;
-        }
 
-        .btn-primary {
-            background: linear-gradient(135deg, #3d8a89 0%, #2f7c7a 100%);
-            color: #ffffff;
-            box-shadow: 0 12px 24px rgba(47,124,122,.16);
-        }
 
-        .btn-soft {
-            color: #2f7c7a;
-            background: #eef7f5;
-            border: 1px solid #d8ebe7;
-        }
+
+
+
 
         @media (max-width: 980px) {
             .hero-grid, .doc-grid { grid-template-columns: 1fr; }
@@ -259,6 +237,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="/images/khayra-logo.png">
+    @include('partials.ui-assets')
 </head>
 <body>
 <div class="layout">
@@ -315,8 +294,8 @@
                         </div>
                     </div>
                     <div class="doc-actions">
-                        <a href="/admin/referral-letters" class="btn btn-primary">Buka Surat Rujukan</a>
-                        <a href="/admin/referral-letters/create" class="btn btn-soft">+ Buat Baru</a>
+                        <a href="/admin/referral-letters" class="kx-btn kx-btn--secondary btn btn-primary">Buka Surat Rujukan</a>
+                        <a href="/admin/referral-letters/create" class="kx-btn kx-btn--primary btn btn-soft">+ Buat Baru</a>
                     </div>
                 </div>
 
@@ -332,7 +311,7 @@
                         </div>
                     </div>
                     <div class="doc-actions">
-                        <a href="/admin/control-letter/create" class="btn btn-primary">Buat Surat Kontrol</a>
+                        <a href="/admin/control-letter/create" class="kx-btn kx-btn--primary btn btn-primary">Buat Surat Kontrol</a>
                     </div>
                 </div>
 
@@ -348,7 +327,7 @@
                         </div>
                     </div>
                     <div class="doc-actions">
-                        <a href="/admin/discharge-summary/create" class="btn btn-primary">Buat Discharge Summary</a>
+                        <a href="/admin/discharge-summary/create" class="kx-btn kx-btn--primary btn btn-primary">Buat Discharge Summary</a>
                     </div>
                 </div>
 
@@ -364,7 +343,7 @@
                         </div>
                     </div>
                     <div class="doc-actions">
-                        <a href="/admin/consent-archive" class="btn btn-primary">Buka Consent Archive</a>
+                        <a href="/admin/consent-archive" class="kx-btn kx-btn--primary btn btn-primary">Buka Consent Archive</a>
                     </div>
                 </div>
 
@@ -380,8 +359,8 @@
                         </div>
                     </div>
                     <div class="doc-actions">
-                        <a href="/admin/package-treatments" class="btn btn-primary">Buka Dokumen Paket</a>
-                        <a href="/admin/package-treatments/create" class="btn btn-soft">+ Buat Baru</a>
+                        <a href="/admin/package-treatments" class="kx-btn kx-btn--secondary btn btn-primary">Buka Dokumen Paket</a>
+                        <a href="/admin/package-treatments/create" class="kx-btn kx-btn--primary btn btn-soft">+ Buat Baru</a>
                     </div>
                 </div>
 
@@ -397,7 +376,7 @@
                         </div>
                     </div>
                     <div class="doc-actions">
-                        <a href="/admin/rest-letter/create" class="btn btn-primary">Buat Surat Izin</a>
+                        <a href="/admin/rest-letter/create" class="kx-btn kx-btn--primary btn btn-primary">Buat Surat Izin</a>
                     </div>
                 </div>
             </section>
@@ -426,20 +405,7 @@
         button.id = 'khayraInstallAppButton';
         button.type = 'button';
         button.innerText = 'Install App';
-        button.style.position = 'fixed';
-        button.style.right = '18px';
-        button.style.bottom = '18px';
-        button.style.zIndex = '99999';
-        button.style.border = '0';
-        button.style.borderRadius = '999px';
-        button.style.padding = '12px 16px';
-        button.style.background = '#2f7c7a';
-        button.style.color = '#ffffff';
-        button.style.fontWeight = '900';
-        button.style.fontFamily = 'Arial, sans-serif';
-        button.style.fontSize = '13px';
-        button.style.boxShadow = '0 14px 30px rgba(47,124,122,.24)';
-        button.style.cursor = 'pointer';
+        button.className = 'kx-btn kx-btn--primary kx-install-btn';
 
         button.addEventListener('click', function () {
             if (!deferredInstallPrompt) {

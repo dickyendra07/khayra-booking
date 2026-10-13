@@ -124,22 +124,10 @@
             border-color: #2f7c7a;
             box-shadow: 0 0 0 4px rgba(47,124,122,.10);
         }
-        .btn {
-            border: 0;
-            border-radius: 14px;
-            padding: 13px 16px;
-            font-weight: 900;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-flex;
-            justify-content: center;
-            align-items: center;
-            gap: 8px;
-            white-space: nowrap;
-        }
-        .btn-primary { background: #2f7c7a; color: #ffffff; }
-        .btn-soft { background: #eef7f5; color: #2f7c7a; border: 1px solid #d8ebe7; }
-        .btn-danger { background: #fff1f2; color: #be123c; border: 1px solid #ffe4e6; }
+
+
+
+
         .filter-grid {
             display: grid;
             grid-template-columns: 1fr .35fr auto;
@@ -267,6 +255,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="/images/khayra-logo.png">
+    @include('partials.ui-assets')
 </head>
 <body>
 <div class="layout">
@@ -282,7 +271,7 @@
                 </p>
             </div>
 
-            <a href="/admin/cashier" class="btn btn-soft">Ke Kasir Checkout</a>
+            <a href="/admin/cashier" class="kx-btn kx-btn--outline btn btn-soft">Ke Kasir Checkout</a>
         </div>
 
         @if(session('success'))
@@ -374,7 +363,7 @@
                 </div>
 
                 <div style="display: flex; justify-content: flex-end; margin-top: 14px;">
-                    <button type="submit" class="btn btn-primary">Simpan Layanan</button>
+                    <button type="submit" class="kx-btn kx-btn--primary btn btn-primary">Simpan Layanan</button>
                 </div>
             </form>
         </section>
@@ -394,7 +383,7 @@
                         <p class="subtitle" style="margin-top: 8px;">Ubah harga, paket, kategori, status, dan keterangan layanan dari panel ini.</p>
                     </div>
 
-                    <a href="/admin/services" class="btn btn-soft">Tutup Edit</a>
+                    <a href="/admin/services" class="kx-btn kx-btn--outline btn btn-soft">Tutup Edit</a>
                 </div>
 
                 <form method="POST" action="/admin/services/{{ $editingService->id }}/update" class="edit-form">
@@ -444,8 +433,8 @@
                     </div>
 
                     <div class="span-4" style="display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap;">
-                        <a href="/admin/services" class="btn btn-soft">Batal</a>
-                        <button class="btn btn-primary" type="submit">Update Layanan</button>
+                        <a href="/admin/services" class="kx-btn kx-btn--outline btn btn-soft">Batal</a>
+                        <button class="kx-btn kx-btn--primary btn btn-primary" type="submit">Update Layanan</button>
                     </div>
                 </form>
             </section>
@@ -469,7 +458,7 @@
                         @endforeach
                     </select>
                 </div>
-                <button class="btn btn-primary" type="submit">Filter</button>
+                <button class="kx-btn kx-btn--primary btn btn-primary" type="submit">Filter</button>
             </form>
 
             <div class="table-scroll">
@@ -508,11 +497,11 @@
                                 </td>
                                 <td class="table-action-cell">
                                     <div class="service-actions">
-                                        <a href="/admin/services?edit={{ $service->id }}#edit-service" class="btn btn-soft">Edit</a>
+                                        <a href="/admin/services?edit={{ $service->id }}#edit-service" class="kx-btn kx-btn--outline btn btn-soft">Edit</a>
 
                                         <form method="POST" action="/admin/services/{{ $service->id }}/delete" onsubmit="return confirm('Hapus layanan ini?')">
                                             @csrf
-                                            <button class="btn btn-danger" type="submit">Delete</button>
+                                            <button class="kx-btn kx-btn--danger btn btn-danger" type="submit">Delete</button>
                                         </form>
                                     </div>
                                 </td>
@@ -552,20 +541,7 @@
         button.id = 'khayraInstallAppButton';
         button.type = 'button';
         button.innerText = 'Install App';
-        button.style.position = 'fixed';
-        button.style.right = '18px';
-        button.style.bottom = '18px';
-        button.style.zIndex = '99999';
-        button.style.border = '0';
-        button.style.borderRadius = '999px';
-        button.style.padding = '12px 16px';
-        button.style.background = '#2f7c7a';
-        button.style.color = '#ffffff';
-        button.style.fontWeight = '900';
-        button.style.fontFamily = 'Arial, sans-serif';
-        button.style.fontSize = '13px';
-        button.style.boxShadow = '0 14px 30px rgba(47,124,122,.24)';
-        button.style.cursor = 'pointer';
+        button.className = 'kx-btn kx-btn--primary kx-install-btn';
 
         button.addEventListener('click', function () {
             if (!deferredInstallPrompt) {

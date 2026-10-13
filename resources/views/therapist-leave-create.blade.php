@@ -18,12 +18,13 @@
         input, select, textarea { width:100%; padding:14px; border:1px solid #dde5e3; border-radius:14px; font-size:14px; font-family:Arial,sans-serif; }
         textarea { min-height:120px; line-height:1.7; }
         .actions { display:flex; justify-content:flex-end; gap:10px; margin-top:18px; flex-wrap:wrap; }
-        .btn { min-height:44px; padding:0 16px; border-radius:14px; border:0; text-decoration:none; display:inline-flex; align-items:center; justify-content:center; font-weight:900; font-size:13px; font-family:Arial,sans-serif; cursor:pointer; }
+
         .primary { background:#0f766e; color:#fff; }
         .soft { background:#fff; color:#0f766e; border:1px solid #d7ebe6; }
         .error { background:#fff1f2; color:#be123c; border:1px solid #ffe0e6; padding:14px; border-radius:14px; margin-bottom:16px; line-height:1.7; }
         @media(max-width:720px){ .grid{grid-template-columns:1fr}.field.full{grid-column:auto}h1{font-size:30px}.card{padding:22px;border-radius:24px} }
     </style>
+    @include('partials.ui-assets')
 </head>
 <body>
 <div class="page">
@@ -69,8 +70,8 @@
         </div>
 
         <div class="actions">
-            <a href="/therapist/dashboard" class="btn soft">Batal</a>
-            <button type="submit" class="btn primary">Submit Request</button>
+            <a href="/therapist/dashboard" class="kx-btn kx-btn--outline btn soft">Batal</a>
+            <button type="submit" class="kx-btn kx-btn--primary btn primary">Submit Request</button>
         </div>
     </form>
 </div>

@@ -38,18 +38,7 @@
             margin-bottom: 18px;
         }
 
-        .ghost-link {
-            display: inline-flex;
-            align-items: center;
-            text-decoration: none;
-            padding: 11px 14px;
-            border-radius: 12px;
-            background: #ffffff;
-            border: 1px solid #e6ebea;
-            color: #2c5b5a;
-            font-size: 13px;
-            font-weight: 800;
-        }
+
 
         .section-card,
         .info-card {
@@ -183,29 +172,9 @@
             margin-top: 22px;
         }
 
-        .submit-btn {
-            border: none;
-            background: linear-gradient(135deg, #3d8a89 0%, #2f7c7a 100%);
-            color: #ffffff;
-            padding: 14px 22px;
-            border-radius: 14px;
-            font-size: 14px;
-            font-weight: 800;
-            cursor: pointer;
-        }
 
-        .secondary-btn {
-            display: inline-flex;
-            align-items: center;
-            text-decoration: none;
-            padding: 14px 18px;
-            border-radius: 14px;
-            background: #f7faf9;
-            border: 1px solid #e6ebea;
-            color: #2c5b5a;
-            font-size: 14px;
-            font-weight: 800;
-        }
+
+
 
         @media (max-width: 980px) {
             .layout { display: block; }
@@ -224,6 +193,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="/images/khayra-logo.png">
+    @include('partials.ui-assets')
 </head>
 <body>
 @php
@@ -246,9 +216,9 @@
     <main class="main">
         <div class="container">
             <div class="top-actions">
-                <a href="/admin/visits" class="ghost-link">← Kembali ke Visit List</a>
+                <a href="/admin/visits" class="kx-btn kx-btn--outline ghost-link">← Kembali ke Visit List</a>
                 @if($selectedBooking ?? null)
-                    <a href="/admin/bookings/{{ $selectedBooking->id }}" class="ghost-link">Lihat Booking #{{ $selectedBooking->id }}</a>
+                    <a href="/admin/bookings/{{ $selectedBooking->id }}" class="kx-btn kx-btn--outline ghost-link">Lihat Booking #{{ $selectedBooking->id }}</a>
                 @endif
             </div>
 
@@ -390,12 +360,12 @@
 
                     <div class="actions">
                         @if($selectedBooking ?? null)
-                            <a href="/admin/bookings/{{ $selectedBooking->id }}" class="secondary-btn">Batal</a>
+                            <a href="/admin/bookings/{{ $selectedBooking->id }}" class="kx-btn kx-btn--outline secondary-btn">Batal</a>
                         @else
-                            <a href="/admin/visits" class="secondary-btn">Batal</a>
+                            <a href="/admin/visits" class="kx-btn kx-btn--outline secondary-btn">Batal</a>
                         @endif
 
-                        <button type="submit" class="submit-btn" {{ (($selectedBooking ?? null) && !$selectedBooking->patient) ? 'disabled style=opacity:.55;cursor:not-allowed;' : '' }}>
+                        <button type="submit" class="kx-btn kx-btn--primary submit-btn" {{ (($selectedBooking ?? null) && !$selectedBooking->patient) ? 'disabled style=opacity:.55;cursor:not-allowed;' : '' }}>
                             Simpan Visit
                         </button>
                     </div>
@@ -426,20 +396,7 @@
         button.id = 'khayraInstallAppButton';
         button.type = 'button';
         button.innerText = 'Install App';
-        button.style.position = 'fixed';
-        button.style.right = '18px';
-        button.style.bottom = '18px';
-        button.style.zIndex = '99999';
-        button.style.border = '0';
-        button.style.borderRadius = '999px';
-        button.style.padding = '12px 16px';
-        button.style.background = '#2f7c7a';
-        button.style.color = '#ffffff';
-        button.style.fontWeight = '900';
-        button.style.fontFamily = 'Arial, sans-serif';
-        button.style.fontSize = '13px';
-        button.style.boxShadow = '0 14px 30px rgba(47,124,122,.24)';
-        button.style.cursor = 'pointer';
+        button.className = 'kx-btn kx-btn--primary kx-install-btn';
 
         button.addEventListener('click', function () {
             if (!deferredInstallPrompt) {

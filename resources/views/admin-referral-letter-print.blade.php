@@ -8,9 +8,9 @@
         body { margin: 0; font-family: Arial, sans-serif; background: #f4f6f5; color: #1f2937; padding: 24px; }
         .page { max-width: 880px; margin: 0 auto; }
         .top-actions { display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 14px; }
-        .print-btn, .back-link { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; padding: 11px 15px; border-radius: 12px; font-size: 13px; font-weight: 800; border: 1px solid transparent; cursor: pointer; font-family: Arial, sans-serif; }
-        .back-link { background: #ffffff; color: #2f7c7a; border-color: #dfe8e6; }
-        .print-btn { background: #2f7c7a; color: #ffffff; border: none; }
+
+
+
         .letter { background: #ffffff; border: 1px solid #e7eceb; border-radius: 20px; padding: 34px; box-shadow: 0 16px 32px rgba(15, 23, 42, 0.06); }
         .header { display: flex; align-items: center; gap: 16px; border-bottom: 2px solid #2f7c7a; padding-bottom: 18px; margin-bottom: 24px; }
         .logo { width: 64px; height: 64px; object-fit: contain; border-radius: 14px; }
@@ -42,12 +42,13 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="/images/khayra-logo.png">
+    @include('partials.ui-assets')
 </head>
 <body>
 <div class="page">
     <div class="top-actions">
-        <a href="/admin/referral-letters/{{ $letter->id }}" class="back-link">Kembali</a>
-        <button onclick="window.print()" class="print-btn">Print / Save PDF</button>
+        <a href="/admin/referral-letters/{{ $letter->id }}" class="kx-btn kx-btn--outline back-link">Kembali</a>
+        <button onclick="window.print()" class="kx-btn kx-btn--outline print-btn">Print / Save PDF</button>
     </div>
 
     <div class="letter">

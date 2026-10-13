@@ -156,28 +156,9 @@
             gap: 10px;
         }
 
-        .btn {
-            min-height: 40px;
-            border: 0;
-            border-radius: 12px;
-            padding: 0 14px;
-            font-size: 12px;
-            font-weight: 900;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-family: Arial, sans-serif;
-            background: #0f766e;
-            color: #ffffff;
-        }
 
-        .btn-soft {
-            background: #ffffff;
-            color: #0f766e;
-            border: 1px solid #d8ebe7;
-        }
+
+
 
         @media print {
             body { padding: 0; }
@@ -186,12 +167,13 @@
             @page { size: A4 landscape; margin: 12mm; }
         }
     </style>
+    @include('partials.ui-assets')
 </head>
 <body>
 <div class="report">
     <div class="no-print">
-        <button onclick="window.print()" class="btn">Print / Save PDF</button>
-        <a href="/admin/owner-finance?month={{ $month }}" class="btn btn-soft">Back to Finance</a>
+        <button onclick="window.print()" class="kx-btn kx-btn--outline btn">Print / Save PDF</button>
+        <a href="/admin/owner-finance?month={{ $month }}" class="kx-btn kx-btn--outline btn btn-soft">Back to Finance</a>
     </div>
 
     <div class="header">

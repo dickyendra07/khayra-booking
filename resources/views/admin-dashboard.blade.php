@@ -145,26 +145,12 @@
             margin-top: 18px;
         }
 
-        .btn {
-            min-height: 42px;
-            border: 0;
-            cursor: pointer;
-            padding: 0 15px;
-            border-radius: 14px;
-            font-size: 13px;
-            font-weight: 900;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-family: Arial, sans-serif;
-            white-space: nowrap;
-        }
 
-        .btn-primary { background: linear-gradient(135deg, #3d8a89 0%, #2f7c7a 100%); color: #ffffff; box-shadow: 0 12px 24px rgba(47,124,122,.16); }
-        .btn-soft { color: #2f7c7a; background: #ffffff; border: 1px solid #e6ebea; }
-        .btn-blue { background: #eef2ff; color: #3457d5; border: 1px solid #dde5ff; }
-        .btn-orange { background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; }
+
+
+
+
+
 
         .stats-grid {
             display: grid;
@@ -290,21 +276,7 @@
             color: #6b7280;
         }
 
-        .workflow-link {
-            margin-top: 16px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            text-decoration: none;
-            padding: 10px 13px;
-            border-radius: 13px;
-            background: #ffffff;
-            border: 1px solid #e5ecea;
-            color: #2f7c7a;
-            font-size: 13px;
-            font-weight: 900;
-            width: fit-content;
-        }
+        .workflow-link { margin-top: 16px; width: fit-content; }
 
         .list {
             display: grid;
@@ -339,19 +311,7 @@
             color: #6b7280;
         }
 
-        .mini-link {
-            margin-top: 10px;
-            display: inline-flex;
-            align-items: center;
-            text-decoration: none;
-            color: #2f7c7a;
-            background: #eef7f5;
-            border: 1px solid #d8ebe7;
-            padding: 8px 11px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 900;
-        }
+        .mini-link { margin-top: 10px; }
 
         .status-pill {
             display: inline-flex;
@@ -466,20 +426,7 @@
             line-height: 1.35;
         }
 
-        .vital-action {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            margin-top: 14px;
-            min-height: 38px;
-            padding: 0 14px;
-            border-radius: 999px;
-            background: #2f7c7a;
-            color: white;
-            text-decoration: none;
-            font-size: 12px;
-            font-weight: 900;
-        }
+        .vital-action { margin-top: 14px; }
 
     </style>
     <!-- Khayra PWA -->
@@ -491,6 +438,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="/images/khayra-logo.png">
+    @include('partials.ui-assets')
 </head>
 <body>
 <div class="layout">
@@ -517,11 +465,11 @@
                         </div>
 
                         <div class="action-row">
-                            <a href="/admin/cashier" class="btn btn-primary">+ Kasir Checkout</a>
-                            <a href="/admin/bookings" class="btn btn-soft">Booking</a>
-                            <a href="/admin/visits" class="btn btn-soft">Visits</a>
-                            <a href="/admin/inventory" class="btn btn-soft">Inventory</a>
-                            <a href="/admin/billings" class="btn btn-blue">Kasir Ledger</a>
+                            <a href="/admin/cashier" class="kx-btn kx-btn--primary btn btn-primary">+ Kasir Checkout</a>
+                            <a href="/admin/bookings" class="kx-btn kx-btn--outline btn btn-soft">Booking</a>
+                            <a href="/admin/visits" class="kx-btn kx-btn--outline btn btn-soft">Visits</a>
+                            <a href="/admin/inventory" class="kx-btn kx-btn--outline btn btn-soft">Inventory</a>
+                            <a href="/admin/billings" class="kx-btn kx-btn--secondary btn btn-blue">Kasir Ledger</a>
                         </div>
                     </div>
 
@@ -607,7 +555,7 @@
                             <h3 class="workflow-title">Booking → Patient</h3>
                             <p class="workflow-text">Appointment masuk, admin konfirmasi, lalu data dihubungkan ke master patient.</p>
                         </div>
-                        <a href="/admin/bookings" class="workflow-link">Open Booking</a>
+                        <a href="/admin/bookings" class="kx-btn kx-btn--secondary kx-btn--sm workflow-link">Open Booking</a>
                     </div>
 
                     <div class="workflow-card">
@@ -616,7 +564,7 @@
                             <h3 class="workflow-title">Visit → Rekam Medis</h3>
                             <p class="workflow-text">Setiap sesi fisioterapi punya visit, therapist, status, dan medical record.</p>
                         </div>
-                        <a href="/admin/visits" class="workflow-link">Open Visits</a>
+                        <a href="/admin/visits" class="kx-btn kx-btn--secondary kx-btn--sm workflow-link">Open Visits</a>
                     </div>
 
                     <div class="workflow-card">
@@ -625,7 +573,7 @@
                             <h3 class="workflow-title">Kasir → Invoice → Void</h3>
                             <p class="workflow-text">Checkout layanan dan produk, promo, payment amount, invoice PDF, serta void stock return.</p>
                         </div>
-                        <a href="/admin/billings" class="workflow-link">Open Ledger</a>
+                        <a href="/admin/billings" class="kx-btn kx-btn--secondary kx-btn--sm workflow-link">Open Ledger</a>
                     </div>
                 </div>
             </section>
@@ -637,7 +585,7 @@
                         <h2 class="section-title">Vital Sign Snapshot</h2>
                         <p class="section-subtitle">Latest vital sign dan pain scale dari rekam medis therapist untuk monitoring admin.</p>
                     </div>
-                    <a href="/admin/visits" class="btn btn-soft">Open Visits</a>
+                    <a href="/admin/visits" class="kx-btn kx-btn--outline btn btn-soft">Open Visits</a>
                 </div>
 
                 @if(($latestVitalSigns ?? collect())->count())
@@ -695,7 +643,7 @@
                                 </div>
 
                                 @if($visit)
-                                    <a href="/admin/visits/{{ $visit->id }}/medical-record" class="vital-action">Open Medical Record</a>
+                                    <a href="/admin/visits/{{ $visit->id }}/medical-record" class="kx-btn kx-btn--primary kx-btn--sm vital-action">Open Medical Record</a>
                                 @endif
                             </div>
                         @endforeach
@@ -724,7 +672,7 @@
                                     </div>
                                     <span class="status-pill pending">pending</span>
                                 </div>
-                                <a href="/admin/bookings/{{ $booking->id }}" class="mini-link">Open Booking</a>
+                                <a href="/admin/bookings/{{ $booking->id }}" class="kx-btn kx-btn--secondary kx-btn--sm mini-link">Open Booking</a>
                             </div>
                         @empty
                             <div class="empty-state">Tidak ada booking pending.</div>
@@ -739,7 +687,7 @@
                                     </div>
                                     <span class="status-pill {{ $billing->payment_status }}">{{ $billing->payment_status }}</span>
                                 </div>
-                                <a href="/admin/billings/{{ $billing->id }}" class="mini-link">Open Billing</a>
+                                <a href="/admin/billings/{{ $billing->id }}" class="kx-btn kx-btn--secondary kx-btn--sm mini-link">Open Billing</a>
                             </div>
                         @empty
                             <div class="empty-state">Tidak ada invoice unpaid / partial.</div>
@@ -753,7 +701,7 @@
                             <h2 class="section-title">Inventory Alerts</h2>
                             <p class="section-subtitle">Barang low / empty stock yang perlu dicek.</p>
                         </div>
-                        <a href="/admin/inventory" class="btn btn-soft">Inventory</a>
+                        <a href="/admin/inventory" class="kx-btn kx-btn--outline btn btn-soft">Inventory</a>
                     </div>
 
                     <div class="list">
@@ -766,7 +714,7 @@
                                     </div>
                                     <span class="status-pill {{ $item->stock_status }}">{{ $item->stock_status_label }}</span>
                                 </div>
-                                <a href="/admin/inventory/{{ $item->id }}" class="mini-link">Open Item</a>
+                                <a href="/admin/inventory/{{ $item->id }}" class="kx-btn kx-btn--secondary kx-btn--sm mini-link">Open Item</a>
                             </div>
                         @empty
                             <div class="empty-state">Tidak ada inventory alert.</div>
@@ -782,7 +730,7 @@
                             <h2 class="section-title">Recent Visits</h2>
                             <p class="section-subtitle">Aktivitas visit dan rekam medis terbaru.</p>
                         </div>
-                        <a href="/admin/visits" class="btn btn-soft">All Visits</a>
+                        <a href="/admin/visits" class="kx-btn kx-btn--outline btn btn-soft">All Visits</a>
                     </div>
 
                     <div class="list">
@@ -798,7 +746,7 @@
                                     </div>
                                     <span class="status-pill {{ $visit->status }}">{{ str_replace('_', ' ', $visit->status ?: '-') }}</span>
                                 </div>
-                                <a href="/admin/visits/{{ $visit->id }}/medical-record" class="mini-link">Open Medical Record</a>
+                                <a href="/admin/visits/{{ $visit->id }}/medical-record" class="kx-btn kx-btn--secondary kx-btn--sm mini-link">Open Medical Record</a>
                             </div>
                         @empty
                             <div class="empty-state">Belum ada recent visits.</div>
@@ -812,7 +760,7 @@
                             <h2 class="section-title">Recent Billing</h2>
                             <p class="section-subtitle">Invoice terbaru dari kasir ledger.</p>
                         </div>
-                        <a href="/admin/billings" class="btn btn-soft">Kasir Ledger</a>
+                        <a href="/admin/billings" class="kx-btn kx-btn--outline btn btn-soft">Kasir Ledger</a>
                     </div>
 
                     <div class="list">
@@ -829,7 +777,7 @@
                                     </div>
                                     <span class="status-pill {{ $billing->payment_status }}">{{ $billing->payment_status }}</span>
                                 </div>
-                                <a href="/admin/billings/{{ $billing->id }}" class="mini-link">Open Invoice</a>
+                                <a href="/admin/billings/{{ $billing->id }}" class="kx-btn kx-btn--secondary kx-btn--sm mini-link">Open Invoice</a>
                             </div>
                         @empty
                             <div class="empty-state">Belum ada recent billing.</div>
@@ -1394,20 +1342,7 @@
         button.id = 'khayraInstallAppButton';
         button.type = 'button';
         button.innerText = 'Install App';
-        button.style.position = 'fixed';
-        button.style.right = '18px';
-        button.style.bottom = '18px';
-        button.style.zIndex = '99999';
-        button.style.border = '0';
-        button.style.borderRadius = '999px';
-        button.style.padding = '12px 16px';
-        button.style.background = '#2f7c7a';
-        button.style.color = '#ffffff';
-        button.style.fontWeight = '900';
-        button.style.fontFamily = 'Arial, sans-serif';
-        button.style.fontSize = '13px';
-        button.style.boxShadow = '0 14px 30px rgba(47,124,122,.24)';
-        button.style.cursor = 'pointer';
+        button.className = 'kx-btn kx-btn--primary kx-install-btn';
 
         button.addEventListener('click', function () {
             if (!deferredInstallPrompt) {

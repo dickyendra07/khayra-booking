@@ -50,17 +50,7 @@
             max-width: 860px;
         }
 
-        .back-link {
-            display: inline-block;
-            text-decoration: none;
-            padding: 12px 16px;
-            border-radius: 14px;
-            background: white;
-            color: #0f766e;
-            border: 1px solid #d7ebe6;
-            font-weight: 700;
-            white-space: nowrap;
-        }
+
 
         .hero {
             display: grid;
@@ -1092,6 +1082,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="/images/khayra-logo.png">
+    @include('partials.ui-assets')
 </head>
 <body>
 @php
@@ -1161,7 +1152,7 @@
                     Admin bersifat monitoring, sedangkan pengisian rekam medis tetap menjadi domain therapist.
                 </p>
             </div>
-            <a href="/admin/visits" class="back-link">← Kembali ke Visits</a>
+            <a href="/admin/visits" class="kx-btn kx-btn--outline back-link">← Kembali ke Visits</a>
         </div>
 
         <section class="hero">
@@ -1216,7 +1207,7 @@
                         <h2 class="admin-patient-summary-title">Patient Summary</h2>
                         <p class="admin-patient-summary-subtitle">Informasi dasar patient dan visit aktif sebelum admin membaca clinical notes.</p>
                     </div>
-                    <a href="/admin/visits" class="btn btn-soft">All Visits</a>
+                    <a href="/admin/visits" class="kx-btn kx-btn--outline btn btn-soft">All Visits</a>
                 </div>
 
                 <div class="admin-patient-summary-grid">
@@ -1670,20 +1661,7 @@
         button.id = 'khayraInstallAppButton';
         button.type = 'button';
         button.innerText = 'Install App';
-        button.style.position = 'fixed';
-        button.style.right = '18px';
-        button.style.bottom = '18px';
-        button.style.zIndex = '99999';
-        button.style.border = '0';
-        button.style.borderRadius = '999px';
-        button.style.padding = '12px 16px';
-        button.style.background = '#2f7c7a';
-        button.style.color = '#ffffff';
-        button.style.fontWeight = '900';
-        button.style.fontFamily = 'Arial, sans-serif';
-        button.style.fontSize = '13px';
-        button.style.boxShadow = '0 14px 30px rgba(47,124,122,.24)';
-        button.style.cursor = 'pointer';
+        button.className = 'kx-btn kx-btn--primary kx-install-btn';
 
         button.addEventListener('click', function () {
             if (!deferredInstallPrompt) {

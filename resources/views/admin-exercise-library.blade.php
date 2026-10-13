@@ -19,10 +19,10 @@
         label{display:block;font-size:12px;font-weight:900;color:#334155;margin-bottom:8px;}
         input,select,textarea{width:100%;min-height:46px;border:1px solid #d7dedd;border-radius:14px;padding:0 14px;font-size:13px;}
         textarea{padding:14px;min-height:120px;resize:vertical;line-height:1.7;}
-        .btn{min-height:42px;border:0;padding:0 16px;border-radius:14px;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;font-weight:900;cursor:pointer;font-size:13px;}
-        .btn-primary{background:linear-gradient(135deg,#3d8a89,#2f7c7a);color:white;}
-        .btn-soft{background:white;color:#2f7c7a;border:1px solid #e6ebea;}
-        .btn-danger{background:#fff1f2;color:#be123c;border:1px solid #ffe0e6;}
+
+
+
+
         .alert{padding:14px 16px;border-radius:16px;margin-bottom:18px;background:#ecfdf5;color:#166534;border:1px solid #bbf7d0;font-weight:800;}
         .filter{display:grid;grid-template-columns:1fr .5fr auto;gap:12px;align-items:end;}
         .table-wrap{overflow-x:auto;border:1px solid #edf1f0;border-radius:20px;}
@@ -43,6 +43,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="/images/khayra-logo.png">
+    @include('partials.ui-assets')
 </head>
 <body>
 <div class="layout">
@@ -56,7 +57,7 @@
                     <h1>Home Exercise Library</h1>
                     <p class="subtitle">Template latihan rumah untuk therapist agar edukasi pasien lebih rapi dan konsisten.</p>
                 </div>
-                <a href="/admin/reports/monthly-clinic" class="btn btn-soft">Reporting</a>
+                <a href="/admin/reports/monthly-clinic" class="kx-btn kx-btn--outline btn btn-soft">Reporting</a>
             </div>
 
             @if(session('success'))
@@ -77,7 +78,7 @@
                         <div><label>Status</label><select name="status"><option value="active">Active</option><option value="inactive">Inactive</option></select></div>
                         <div class="field full"><label>Instructions</label><textarea name="instructions" required placeholder="Instruksi latihan..."></textarea></div>
                     </div>
-                    <div style="margin-top:14px;"><button class="btn btn-primary">Simpan Template</button></div>
+                    <div style="margin-top:14px;"><button class="kx-btn kx-btn--primary btn btn-primary">Simpan Template</button></div>
                 </form>
             </section>
 
@@ -85,7 +86,7 @@
                 <form method="GET" action="/admin/exercise-library" class="filter">
                     <div><label>Search</label><input name="search" value="{{ $search }}" placeholder="Cari exercise, category, target area..."></div>
                     <div><label>Category</label><select name="category"><option value="">Semua</option>@foreach($categories as $cat)<option value="{{ $cat }}" {{ $category === $cat ? 'selected' : '' }}>{{ $cat }}</option>@endforeach</select></div>
-                    <button class="btn btn-primary">Filter</button>
+                    <button class="kx-btn kx-btn--primary btn btn-primary">Filter</button>
                 </form>
             </section>
 
@@ -105,7 +106,7 @@
                                 <td>
                                     <form method="POST" action="/admin/exercise-library/{{ $template->id }}/delete" onsubmit="return confirm('Hapus template ini?')">
                                         @csrf
-                                        <button class="btn btn-danger">Delete</button>
+                                        <button class="kx-btn kx-btn--danger btn btn-danger">Delete</button>
                                     </form>
                                 </td>
                             </tr>
@@ -141,20 +142,7 @@
         button.id = 'khayraInstallAppButton';
         button.type = 'button';
         button.innerText = 'Install App';
-        button.style.position = 'fixed';
-        button.style.right = '18px';
-        button.style.bottom = '18px';
-        button.style.zIndex = '99999';
-        button.style.border = '0';
-        button.style.borderRadius = '999px';
-        button.style.padding = '12px 16px';
-        button.style.background = '#2f7c7a';
-        button.style.color = '#ffffff';
-        button.style.fontWeight = '900';
-        button.style.fontFamily = 'Arial, sans-serif';
-        button.style.fontSize = '13px';
-        button.style.boxShadow = '0 14px 30px rgba(47,124,122,.24)';
-        button.style.cursor = 'pointer';
+        button.className = 'kx-btn kx-btn--primary kx-install-btn';
 
         button.addEventListener('click', function () {
             if (!deferredInstallPrompt) {

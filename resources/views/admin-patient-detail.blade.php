@@ -75,45 +75,15 @@
             justify-content: flex-end;
         }
 
-        .btn {
-            min-height: 42px;
-            border: 0;
-            cursor: pointer;
-            padding: 0 15px;
-            border-radius: 14px;
-            font-size: 13px;
-            font-weight: 900;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-family: Arial, sans-serif;
-            white-space: nowrap;
-        }
 
-        .btn-primary {
-            background: linear-gradient(135deg, #3d8a89 0%, #2f7c7a 100%);
-            color: #ffffff;
-            box-shadow: 0 12px 24px rgba(47,124,122,.16);
-        }
 
-        .btn-soft {
-            color: #2f7c7a;
-            background: #ffffff;
-            border: 1px solid #e6ebea;
-        }
 
-        .btn-blue {
-            background: #eef2ff;
-            color: #3457d5;
-            border: 1px solid #dde5ff;
-        }
 
-        .btn-green {
-            background: #ecfdf5;
-            color: #166534;
-            border: 1px solid #bbf7d0;
-        }
+
+
+
+
+
 
         .alert {
             padding: 14px 16px;
@@ -442,19 +412,7 @@
         .status-completed, .status-paid, .status-signed { background: #dcfce7; color: #166534; }
         .status-cancelled, .status-void { background: #e5e7eb; color: #374151; }
 
-        .mini-link {
-            margin-top: 12px;
-            display: inline-flex;
-            align-items: center;
-            text-decoration: none;
-            color: #2f7c7a;
-            background: #eef7f5;
-            border: 1px solid #d8ebe7;
-            padding: 9px 12px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 900;
-        }
+        .mini-link { margin-top: 12px; }
 
         .table-wrap {
             overflow-x: auto;
@@ -648,19 +606,7 @@
             box-shadow: 0 0 0 4px rgba(47,124,122,.08);
         }
 
-        .progress-submit {
-            width: 100%;
-            min-height: 48px;
-            border: 0;
-            cursor: pointer;
-            border-radius: 15px;
-            background: linear-gradient(135deg, #3d8a89 0%, #2f7c7a 100%);
-            color: #ffffff;
-            font-size: 13px;
-            font-weight: 900;
-            font-family: Arial, sans-serif;
-            box-shadow: 0 12px 24px rgba(47,124,122,.16);
-        }
+        .progress-submit { width: 100%; }
 
         .progress-help {
             margin-top: 12px;
@@ -794,27 +740,8 @@
             flex-wrap: wrap;
             margin-top: 14px;
         }
-        .progress-mini-btn {
-            min-height: 34px;
-            padding: 0 12px;
-            border-radius: 12px;
-            border: 1px solid #e6ebea;
-            background: #ffffff;
-            color: #2f7c7a;
-            font-size: 12px;
-            font-weight: 900;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            font-family: Arial, sans-serif;
-        }
-        .progress-mini-danger {
-            background: #fff1f2;
-            color: #be123c;
-            border-color: #ffe0e6;
-        }
+
+
 
     
         .package-status-grid {
@@ -924,6 +851,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="/images/khayra-logo.png">
+    @include('partials.ui-assets')
 </head>
 <body>
 <div class="layout">
@@ -941,11 +869,11 @@
                 </div>
 
                 <div class="actions">
-                    <a href="/admin/patients" class="btn btn-soft">← Patients</a>
-                    <a href="/admin/patients/{{ $patient->id }}/edit" class="btn btn-blue">Edit Patient</a>
-                    <a href="/admin/patients/{{ $patient->id }}/informed-consent" class="btn btn-soft">Informed Consent</a>
-                    <a href="/admin/visits/create?patient_id={{ $patient->id }}" class="btn btn-green">+ Create Visit</a>
-                    <a href="/admin/cashier?patient_id={{ $patient->id }}" class="btn btn-primary">Kasir Checkout</a>
+                    <a href="/admin/patients" class="kx-btn kx-btn--outline btn btn-soft">← Patients</a>
+                    <a href="/admin/patients/{{ $patient->id }}/edit" class="kx-btn kx-btn--secondary btn btn-blue">Edit Patient</a>
+                    <a href="/admin/patients/{{ $patient->id }}/informed-consent" class="kx-btn kx-btn--outline btn btn-soft">Informed Consent</a>
+                    <a href="/admin/visits/create?patient_id={{ $patient->id }}" class="kx-btn kx-btn--primary btn btn-green">+ Create Visit</a>
+                    <a href="/admin/cashier?patient_id={{ $patient->id }}" class="kx-btn kx-btn--secondary btn btn-primary">Kasir Checkout</a>
                 </div>
             </div>
 
@@ -1049,7 +977,7 @@
                         <h2 class="section-title">Package Status</h2>
                         <p class="section-subtitle">Ringkasan penggunaan paket pasien berdasarkan dokumen pembelian paket dan visit dalam periode aktif.</p>
                     </div>
-                    <a href="/admin/package-treatments/create?patient_id={{ $patient->id }}" class="btn btn-soft">+ Buat Dokumen Paket</a>
+                    <a href="/admin/package-treatments/create?patient_id={{ $patient->id }}" class="kx-btn kx-btn--primary btn btn-soft">+ Buat Dokumen Paket</a>
                 </div>
 
                 @if(($packageSummaries ?? collect())->count())
@@ -1094,7 +1022,7 @@
                                 </div>
 
                                 <div style="margin-top: 12px;">
-                                    <a href="/admin/package-treatments/{{ $packageDocument->id }}/print" class="mini-link" target="_blank">Print Dokumen Paket</a>
+                                    <a href="/admin/package-treatments/{{ $packageDocument->id }}/print" class="kx-btn kx-btn--secondary kx-btn--sm mini-link" target="_blank">Print Dokumen Paket</a>
                                 </div>
                             </div>
                         @endforeach
@@ -1137,7 +1065,7 @@
                                         <div class="timeline-desc">{{ $item['description'] ?: '-' }}</div>
 
                                         @if($item['url'])
-                                            <a href="{{ $item['url'] }}" class="mini-link">Open Detail</a>
+                                            <a href="{{ $item['url'] }}" class="kx-btn kx-btn--secondary kx-btn--sm mini-link">Open Detail</a>
                                         @endif
                                     </div>
                                 </div>
@@ -1273,7 +1201,7 @@
                                                 <span class="status-pill status-{{ $billing->payment_status }}">{{ $billing->payment_status }}</span>
                                             </td>
                                             <td>
-                                                <a href="/admin/billings/{{ $billing->id }}" class="mini-link">Detail</a>
+                                                <a href="/admin/billings/{{ $billing->id }}" class="kx-btn kx-btn--secondary kx-btn--sm mini-link">Detail</a>
                                             </td>
                                         </tr>
                                     @empty
@@ -1336,7 +1264,7 @@
                                     </td>
                                     <td>{{ $visit->notes ?: '-' }}</td>
                                     <td>
-                                        <a href="/admin/visits/{{ $visit->id }}/medical-record" class="mini-link">Rekam Medis</a>
+                                        <a href="/admin/visits/{{ $visit->id }}/medical-record" class="kx-btn kx-btn--secondary kx-btn--sm mini-link">Rekam Medis</a>
                                     </td>
                                 </tr>
                             @empty
@@ -1385,7 +1313,7 @@
                                     </td>
                                     <td>{{ $booking->complaint ?: '-' }}</td>
                                     <td>
-                                        <a href="/admin/bookings/{{ $booking->id }}" class="mini-link">Detail</a>
+                                        <a href="/admin/bookings/{{ $booking->id }}" class="kx-btn kx-btn--secondary kx-btn--sm mini-link">Detail</a>
                                     </td>
                                 </tr>
                             @empty
@@ -1406,7 +1334,7 @@
 <h2 class="section-title">Informed Consent History</h2>
                         <p class="section-subtitle">Dokumen consent yang tersimpan untuk pasien.</p>
                     </div>
-                    <a href="/admin/patients/{{ $patient->id }}/informed-consent" class="btn btn-soft">+ Create Consent</a>
+                    <a href="/admin/patients/{{ $patient->id }}/informed-consent" class="kx-btn kx-btn--primary btn btn-soft">+ Create Consent</a>
                 </div>
 
                 <div class="table-wrap">
@@ -1442,7 +1370,7 @@
                                         <span class="status-pill status-{{ $consent->status ?: 'signed' }}">{{ $consent->status ?: 'signed' }}</span>
                                     </td>
                                     <td>
-                                        <a href="/admin/informed-consents/{{ $consent->id }}/print" target="_blank" class="mini-link">Print</a>
+                                        <a href="/admin/informed-consents/{{ $consent->id }}/print" target="_blank" class="kx-btn kx-btn--secondary kx-btn--sm mini-link">Print</a>
                                     </td>
                                 </tr>
                             @empty
@@ -1515,7 +1443,7 @@
                                 </div>
 
                                 <div class="progress-field full">
-                                    <button type="submit" class="progress-submit">Simpan Progress</button>
+                                    <button type="submit" class="kx-btn kx-btn--primary progress-submit">Simpan Progress</button>
                                 </div>
                             </div>
                         </form>
@@ -1575,10 +1503,10 @@
                                                 <div class="progress-note-value">{{ $entry->progress_notes ?: '-' }}</div>
 
                                                         <div class="progress-action-row">
-                                                            <a href="/admin/patients/{{ $patient->id }}/progress/{{ $entry->id }}/edit" class="progress-mini-btn">Edit</a>
+                                                            <a href="/admin/patients/{{ $patient->id }}/progress/{{ $entry->id }}/edit" class="kx-btn kx-btn--outline kx-btn--sm progress-mini-btn">Edit</a>
                                                             <form method="POST" action="/admin/patients/{{ $patient->id }}/progress/{{ $entry->id }}/delete" style="margin:0;" onsubmit="return confirm('Hapus progress ini?')">
                                                                 @csrf
-                                                                <button type="submit" class="progress-mini-btn progress-mini-danger">Delete</button>
+                                                                <button type="submit" class="kx-btn kx-btn--danger kx-btn--sm progress-mini-btn progress-mini-danger">Delete</button>
                                                             </form>
                                                         </div>
 
@@ -1620,20 +1548,7 @@
         button.id = 'khayraInstallAppButton';
         button.type = 'button';
         button.innerText = 'Install App';
-        button.style.position = 'fixed';
-        button.style.right = '18px';
-        button.style.bottom = '18px';
-        button.style.zIndex = '99999';
-        button.style.border = '0';
-        button.style.borderRadius = '999px';
-        button.style.padding = '12px 16px';
-        button.style.background = '#2f7c7a';
-        button.style.color = '#ffffff';
-        button.style.fontWeight = '900';
-        button.style.fontFamily = 'Arial, sans-serif';
-        button.style.fontSize = '13px';
-        button.style.boxShadow = '0 14px 30px rgba(47,124,122,.24)';
-        button.style.cursor = 'pointer';
+        button.className = 'kx-btn kx-btn--primary kx-install-btn';
 
         button.addEventListener('click', function () {
             if (!deferredInstallPrompt) {

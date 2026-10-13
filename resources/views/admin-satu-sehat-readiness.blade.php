@@ -14,9 +14,9 @@
         .badge{display:inline-flex;padding:8px 13px;border-radius:999px;background:#eef7f5;color:#2f7c7a;font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px}
         .title{margin:0;font-size:42px;line-height:1.05;color:#22343a;font-weight:900;letter-spacing:-.8px}
         .subtitle{margin:12px 0 0;color:#64748b;font-size:14px;line-height:1.9;max-width:850px}
-        .btn{min-height:42px;border:0;padding:0 16px;border-radius:14px;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;cursor:pointer}
-        .btn-primary{background:linear-gradient(135deg,#3d8a89,#2f7c7a);color:#fff;box-shadow:0 12px 24px rgba(47,124,122,.16)}
-        .btn-soft{background:#fff;color:#2f7c7a;border:1px solid #dfe8e6}
+
+
+
         .hero{background:#fff;border:1px solid #ecefef;border-radius:28px;padding:28px;box-shadow:0 14px 34px rgba(15,23,42,.05);margin-bottom:18px}
         .hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:18px}
         .hero-main{background:linear-gradient(135deg,#fff 0%,#f7fbfa 58%,#eef7f5 100%);border:1px solid #dfeae8;border-radius:24px;padding:24px}
@@ -51,7 +51,7 @@
         .missing{color:#b45309;font-weight:800;line-height:1.6}
         .ready-box{border:1px solid #dbeafe;background:#eff6ff;color:#1e40af;border-radius:18px;padding:16px;line-height:1.8;font-size:13px;font-weight:750}
         @media(max-width:1100px){.hero-grid,.stats-grid,.grid-2{grid-template-columns:1fr 1fr}}
-        @media(max-width:760px){.layout{display:block}.main{padding:16px}.hero-grid,.stats-grid,.grid-2{grid-template-columns:1fr}.title{font-size:32px}.btn{width:100%}}
+        @media(max-width:760px){.layout{display:block}.main{padding:16px}.hero-grid,.stats-grid,.grid-2{grid-template-columns:1fr}.title{font-size:32px}.btn { width:100%; }}
     </style>
     <!-- Khayra PWA -->
     <link rel="manifest" href="/manifest.webmanifest">
@@ -62,6 +62,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="/images/khayra-logo.png">
+    @include('partials.ui-assets')
 </head>
 <body>
 <div class="layout">
@@ -79,7 +80,7 @@
                     </p>
                 </div>
                 <div>
-                    <a href="/admin/dashboard" class="btn btn-soft">Dashboard</a>
+                    <a href="/admin/dashboard" class="kx-btn kx-btn--outline btn btn-soft">Dashboard</a>
                 </div>
             </div>
 
@@ -323,20 +324,7 @@
         button.id = 'khayraInstallAppButton';
         button.type = 'button';
         button.innerText = 'Install App';
-        button.style.position = 'fixed';
-        button.style.right = '18px';
-        button.style.bottom = '18px';
-        button.style.zIndex = '99999';
-        button.style.border = '0';
-        button.style.borderRadius = '999px';
-        button.style.padding = '12px 16px';
-        button.style.background = '#2f7c7a';
-        button.style.color = '#ffffff';
-        button.style.fontWeight = '900';
-        button.style.fontFamily = 'Arial, sans-serif';
-        button.style.fontSize = '13px';
-        button.style.boxShadow = '0 14px 30px rgba(47,124,122,.24)';
-        button.style.cursor = 'pointer';
+        button.className = 'kx-btn kx-btn--primary kx-install-btn';
 
         button.addEventListener('click', function () {
             if (!deferredInstallPrompt) {

@@ -53,32 +53,11 @@
             margin-bottom: 14px;
         }
 
-        .action-link,
-        .print-btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            text-decoration: none;
-            padding: 11px 15px;
-            border-radius: 12px;
-            font-size: 13px;
-            font-weight: 900;
-            border: 1px solid transparent;
-            cursor: pointer;
-            font-family: Arial, sans-serif;
-        }
 
-        .action-link {
-            background: #ffffff;
-            color: var(--teal);
-            border-color: #dfe8e6;
-        }
 
-        .print-btn {
-            background: linear-gradient(135deg, #3d8a89 0%, var(--teal) 100%);
-            color: #ffffff;
-            border: none;
-        }
+
+
+
 
         .invoice-sheet {
             background: #ffffff;
@@ -577,11 +556,12 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="/images/khayra-logo.png">
+    @include('partials.ui-assets')
 </head>
 <body>
 <div class="page">
     <div class="top-actions">
-        <a href="/admin/billings/{{ $billing->id }}" class="action-link">← Kembali</a>
+        <a href="/admin/billings/{{ $billing->id }}" class="kx-btn kx-btn--outline kx-btn--sm action-link">← Kembali</a>
         
         @php
             $hasPackageItem = ($billing->items ?? collect())->contains(function ($item) {
@@ -590,9 +570,9 @@
         @endphp
 
         @if($hasPackageItem)
-            <a href="/admin/package-treatments/create?billing_id={{ $billing->id }}" class="btn btn-soft">Buat Dokumen Paket</a>
+            <a href="/admin/package-treatments/create?billing_id={{ $billing->id }}" class="kx-btn kx-btn--outline btn btn-soft">Buat Dokumen Paket</a>
         @endif
-<button onclick="window.print()" class="print-btn">Print / Save PDF</button>
+<button onclick="window.print()" class="kx-btn kx-btn--outline print-btn">Print / Save PDF</button>
     </div>
 
     <div class="invoice-sheet">
