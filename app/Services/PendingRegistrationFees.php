@@ -33,15 +33,19 @@ class PendingRegistrationFees
     {
         // Baris counter nomor invoice dibuat di luar transaction (lihat InvoiceNumberGenerator).
         (new InvoiceNumberGenerator)->prepare();
+        FinancePeriodLock::prepare([ClinicTime::today()]);
 
         return DB::transaction(function () use ($pendingId) {
+            // Urutan kunci: periode (bersama) -> baris kewajiban -> invoice. Status tutup buku dibaca ulang setelah kunci.
+            FinancePeriodLock::shared([ClinicTime::today()]);
+
             $pending = PendingRegistrationFee::lockForUpdate()->findOrFail($pendingId);
 
             if ($pending->status === PendingRegistrationFee::ISSUED) {
                 return ['billing' => Billing::findOrFail($pending->billing_id), 'created' => false];
             }
 
-            if (BillingIntegrity::isPeriodClosed(ClinicTime::today())) {
+            if (FinancePeriodLock::isClosed(ClinicTime::today())) {
                 throw new DomainException(
                     'Periode '.BillingIntegrity::monthOf(ClinicTime::today()).' masih tutup buku. Invoice tidak diterbitkan dengan tanggal mundur. '
                     .'Terbitkan setelah periode baru dimulai, atau buka kembali periode lewat prosedur Buka Kembali Buku di Owner Finance.'

@@ -35,10 +35,14 @@ use App\Services\BillingMoney;
 use App\Services\FinanceReport;
 use App\Services\PaymentLedger;
 use App\Services\NewPatientAdminFee;
+use App\Services\MonthlyClosing;
 use App\Services\PatientRegistration;
 use App\Services\PendingRegistrationFees;
 use App\Services\ReferencedChargeGuard;
 use App\Support\ClinicTime;
+use App\Support\PeriodClosedException;
+use App\Support\ReplacementConflictException;
+use App\Services\FinancePeriodLock;
 use App\Services\InvoiceNumberGenerator;
 use App\Models\BillingAuditLog;
 use App\Models\FinanceMonthlyClosing;
@@ -3911,8 +3915,9 @@ Route::post('/admin/cashier/checkout', function (Request $request) {
     // Uang yang DISERAHKAN pasien. Penerimaan bersih, kembalian, dan status dihitung oleh buku pembayaran.
     $tendered = (float) ($request->paid_amount ?: 0);
 
-    // Baris counter nomor invoice dibuat di luar transaction agar tidak deadlock pada invoice pertama bulan ini.
+    // Baris counter nomor invoice dan baris kunci periode dibuat di luar transaction agar tidak deadlock pada invoice pertama bulan ini.
     (new InvoiceNumberGenerator)->prepare();
+    FinancePeriodLock::prepare([$request->invoice_date, ClinicTime::today()]);
 
     try {
         $billing = DB::transaction(function () use (
@@ -3929,6 +3934,30 @@ Route::post('/admin/cashier/checkout', function (Request $request) {
             $replacedBilling,
             $priceOverrides
         ) {
+            // URUTAN KUNCI (seragam di semua penulis finansial): (1) kunci periode bersama, terurut menaik;
+            // (2) invoice sumber koreksi; (3) sumber biaya berreferensi; (4) counter nomor invoice; (5) invoice/stok/pembayaran.
+            // Omzet = bulan invoice_date; kas = bulan hari ini (pembayaran awal / pemindahan kredit).
+            FinancePeriodLock::shared([$request->invoice_date, ClinicTime::today()]);
+            FinancePeriodLock::assertOpen($request->invoice_date);
+
+            if ($replacedBilling) {
+                // Pemeriksaan di luar transaction hanya untuk UX; keputusan sebenarnya diambil di sini, setelah invoice sumber
+                // dikunci. Checkout paralel untuk invoice void yang sama berserialisasi di kunci ini dan yang kedua ditolak.
+                $replacedBilling = Billing::lockForUpdate()->findOrFail($replacedBilling->id);
+
+                if ($replacedBilling->payment_status !== 'void') {
+                    throw new ReplacementConflictException('Hanya invoice yang sudah di-void yang dapat diganti.');
+                }
+
+                if ((int) $replacedBilling->patient_id !== (int) $request->patient_id) {
+                    throw new ReplacementConflictException('Invoice pengganti harus untuk pasien yang sama dengan invoice yang digantikan.');
+                }
+
+                if (Billing::where('replaces_billing_id', $replacedBilling->id)->where('payment_status', '!=', 'void')->exists()) {
+                    throw new ReplacementConflictException('Invoice ini sudah pernah digantikan oleh invoice lain.');
+                }
+            }
+
             // Biaya berreferensi (ruangan per visit / admin pasien baru) tidak boleh ditagihkan ganda.
             ReferencedChargeGuard::assertNotAlreadyCharged($rows);
 
@@ -4029,6 +4058,10 @@ Route::post('/admin/cashier/checkout', function (Request $request) {
 
         return redirect('/admin/billings/' . $existingCheckout->id)
             ->with('success', 'Checkout ini sudah tersimpan sebelumnya. Tidak dibuat invoice ganda.');
+    } catch (PeriodClosedException $exception) {
+        return back()->withInput()->withErrors(['invoice_date' => $exception->getMessage()]);
+    } catch (ReplacementConflictException $exception) {
+        return back()->withInput()->withErrors(['replaces_billing_id' => $exception->getMessage()]);
     } catch (\DomainException $exception) {
         return back()->withInput()->withErrors(['checkout' => $exception->getMessage()]);
     } catch (\RuntimeException $exception) {
@@ -4238,90 +4271,14 @@ Route::post('/admin/owner-finance/close', function (Request $request) {
 
     $month = $validated['month'];
 
-    // Closing tidak boleh ditimpa. Untuk menutup ulang, bulan harus dibuka kembali lebih dulu
-    // lewat prosedur Buka Kembali Buku (alasan wajib, konfirmasi password, tercatat di audit).
-    if (FinanceMonthlyClosing::isClosed($month)) {
-        return redirect('/admin/owner-finance?month=' . $month)
-            ->with('error', 'Bulan ' . $month . ' sudah tutup buku dan tidak bisa ditimpa. Gunakan Buka Kembali Buku bila koreksi diperlukan.');
+    // Closing tidak boleh ditimpa. Untuk menutup ulang, bulan harus dibuka kembali lebih dulu lewat prosedur Buka Kembali Buku
+    // (alasan wajib, konfirmasi password, tercatat di audit). Perhitungan laporan dan penulisan snapshot terjadi dalam SATU
+    // transaction yang memegang kunci eksklusif periode (lihat MonthlyClosing / FinancePeriodLock).
+    try {
+        MonthlyClosing::close($month, $validated['notes'] ?? null, session('admin_email') ?: 'Owner/Admin');
+    } catch (\DomainException $exception) {
+        return redirect('/admin/owner-finance?month=' . $month)->with('error', $exception->getMessage());
     }
-
-    $startDate = \Carbon\Carbon::parse($month . '-01')->startOfMonth();
-    $endDate = $startDate->copy()->endOfMonth();
-
-    // Satu sumber perhitungan yang sama dengan halaman Owner Finance.
-    $report = FinanceReport::forMonth($month, false);
-    $transactions = $report['rows']->map(function ($row) {
-        unset($row['editable'], $row['url']);
-        $row['date'] = $row['date'] instanceof \DateTimeInterface ? $row['date']->format('Y-m-d') : (string) $row['date'];
-
-        return $row;
-    })->values();
-
-    $billingIncome = $report['summary']['billing_income'];
-    $manualIncome = $report['summary']['manual_income'];
-    $manualExpense = $report['summary']['expense'];
-    $totalIncome = $report['summary']['total_income'];
-    $netCashflow = $report['summary']['net_cashflow'];
-    $invoiceRevenue = $report['summary']['invoice_revenue'];
-
-    // Closing sebelumnya (yang sudah dibuka kembali) dicatat di audit sebelum diganti.
-    $previousClosing = FinanceMonthlyClosing::where('month', $month)->first();
-
-    $closingSummary = [
-        'invoice_revenue' => $invoiceRevenue,
-        'billing_income' => $billingIncome,
-        'manual_income' => $manualIncome,
-        'total_income' => $totalIncome,
-        'total_expense' => $manualExpense,
-        'net_cashflow' => $netCashflow,
-        'transaction_count' => $transactions->count(),
-    ];
-
-    DB::transaction(function () use ($month, $previousClosing, $closingSummary, $validated, $startDate, $endDate, $billingIncome, $manualIncome, $totalIncome, $manualExpense, $netCashflow, $transactions, $invoiceRevenue) {
-        BillingAudit::record(
-            'period_closed',
-            null,
-            $previousClosing ? ['previous_closing' => $previousClosing->only(['billing_income', 'manual_income', 'total_income', 'total_expense', 'net_cashflow', 'transaction_count', 'closed_at', 'reopened_at', 'reopened_by', 'reopen_reason', 'snapshot'])] : null,
-            $closingSummary,
-            $validated['notes'] ?? null,
-            $month
-        );
-
-        \App\Models\FinanceMonthlyClosing::updateOrCreate(
-            ['month' => $month],
-            [
-                'reopened_at' => null,
-                'reopened_by' => null,
-                'reopen_reason' => null,
-                'period_start' => $startDate->toDateString(),
-                'period_end' => $endDate->toDateString(),
-                'billing_income' => $billingIncome,
-                'manual_income' => $manualIncome,
-                'total_income' => $totalIncome,
-                'total_expense' => $manualExpense,
-                'net_cashflow' => $netCashflow,
-                'transaction_count' => $transactions->count(),
-                'closed_by' => session('admin_email') ?: 'Owner/Admin',
-                'closed_at' => now(),
-                'notes' => $validated['notes'] ?? null,
-                'snapshot' => [
-                    // basis: arus kas (invoice baru per tanggal pembayaran, invoice lama per tanggal invoice).
-                    // invoice_revenue: omzet per tanggal invoice (informasi, tidak masuk arus kas).
-                    'basis' => 'cash_v2',
-                    'summary' => [
-                        'invoice_revenue' => $invoiceRevenue,
-                        'billing_income' => $billingIncome,
-                        'manual_income' => $manualIncome,
-                        'total_income' => $totalIncome,
-                        'total_expense' => $manualExpense,
-                        'net_cashflow' => $netCashflow,
-                        'transaction_count' => $transactions->count(),
-                    ],
-                    'transactions' => $transactions->values()->all(),
-                ],
-            ]
-        );
-    });
 
     return redirect('/admin/owner-finance?month=' . $month)->with('success', 'Tutup buku bulan ' . $month . ' berhasil disimpan.');
 });
@@ -4359,30 +4316,14 @@ Route::post('/admin/owner-finance/reopen', function (Request $request) {
         return $back->with('error', 'Konfirmasi password salah. Buku bulan ini tidak dibuka.');
     }
 
-    $closing = FinanceMonthlyClosing::active()->where('month', $month)->first();
-
-    if (!$closing) {
-        return $back->with('error', 'Bulan ' . $month . ' tidak dalam status tutup buku.');
+    // Status "masih tertutup" dibaca ulang di dalam transaction setelah kunci eksklusif periode diambil.
+    try {
+        MonthlyClosing::reopen($month, $validated['reason'], session('admin_email') ?: 'admin');
+    } catch (\DomainException $exception) {
+        return $back->with('error', $exception->getMessage());
     }
 
     $throttle->clear();
-
-    DB::transaction(function () use ($closing, $month, $validated) {
-        $closing->update([
-            'reopened_at' => now(),
-            'reopened_by' => session('admin_email') ?: 'admin',
-            'reopen_reason' => $validated['reason'],
-        ]);
-
-        BillingAudit::record(
-            'period_reopened',
-            null,
-            $closing->only(['billing_income', 'manual_income', 'total_income', 'total_expense', 'net_cashflow', 'transaction_count', 'closed_at']),
-            ['reopened' => true],
-            $validated['reason'],
-            $month
-        );
-    });
 
     return $back->with('success', 'Buku bulan ' . $month . ' dibuka kembali. Setelah koreksi selesai, tutup buku ulang agar snapshot baru tercatat.');
 });
@@ -4405,13 +4346,24 @@ Route::post('/admin/owner-finance/transactions', function (Request $request) {
 
     $month = \Carbon\Carbon::parse($validated['transaction_date'])->format('Y-m');
 
-    if (FinanceMonthlyClosing::isClosed($month)) {
-        return redirect('/admin/owner-finance?month=' . $month)->with('error', 'Bulan ini sudah tutup buku. Transaksi manual tidak bisa ditambahkan.');
+    $validated['source'] = ($validated['source'] ?? null) ?: ($validated['type'] === 'income' ? 'other_income' : 'operational');
+
+    // Kunci periode (bersama) di dalam transaction; status tutup buku dibaca ulang setelah kunci diambil.
+    FinancePeriodLock::prepare([$validated['transaction_date']]);
+
+    try {
+        DB::transaction(function () use ($validated) {
+            FinancePeriodLock::shared([$validated['transaction_date']]);
+
+            if (FinancePeriodLock::isClosed($validated['transaction_date'])) {
+                throw new PeriodClosedException('Bulan ini sudah tutup buku. Transaksi manual tidak bisa ditambahkan.');
+            }
+
+            \App\Models\FinanceTransaction::create($validated);
+        }, 3);
+    } catch (PeriodClosedException $exception) {
+        return redirect('/admin/owner-finance?month=' . $month)->with('error', $exception->getMessage());
     }
-
-    $validated['source'] = $validated['source'] ?: ($validated['type'] === 'income' ? 'other_income' : 'operational');
-
-    \App\Models\FinanceTransaction::create($validated);
 
     return redirect('/admin/owner-finance?month=' . $month)->with('success', 'Transaksi finance berhasil dicatat.');
 });
@@ -4424,11 +4376,21 @@ Route::post('/admin/owner-finance/transactions/{id}/delete', function ($id) {
     $transaction = \App\Models\FinanceTransaction::findOrFail($id);
     $month = $transaction->transaction_date ? $transaction->transaction_date->format('Y-m') : ClinicTime::monthKey();
 
-    if (FinanceMonthlyClosing::isClosed($month)) {
-        return redirect('/admin/owner-finance?month=' . $month)->with('error', 'Bulan ini sudah tutup buku. Transaksi manual tidak bisa dihapus.');
-    }
+    FinancePeriodLock::prepare([$month . '-01']);
 
-    $transaction->delete();
+    try {
+        DB::transaction(function () use ($transaction, $month) {
+            FinancePeriodLock::shared([$month . '-01']);
+
+            if (FinancePeriodLock::isClosed($month)) {
+                throw new PeriodClosedException('Bulan ini sudah tutup buku. Transaksi manual tidak bisa dihapus.');
+            }
+
+            $transaction->delete();
+        }, 3);
+    } catch (PeriodClosedException $exception) {
+        return redirect('/admin/owner-finance?month=' . $month)->with('error', $exception->getMessage());
+    }
 
     return redirect('/admin/owner-finance?month=' . $month)->with('success', 'Transaksi finance manual berhasil dihapus.');
 });
@@ -6453,9 +6415,14 @@ Route::post('/admin/billings', function (Request $request) {
     }
 
     (new InvoiceNumberGenerator)->prepare();
+    FinancePeriodLock::prepare([$request->invoice_date, ClinicTime::today()]);
 
     try {
         $billing = DB::transaction(function () use ($request, $amount, $partialPaid, $manualToken) {
+            // Kunci periode lebih dulu (omzet = bulan invoice_date, kas = hari ini), lalu baca ulang status tutup buku.
+            FinancePeriodLock::shared([$request->invoice_date, ClinicTime::today()]);
+            FinancePeriodLock::assertOpen($request->invoice_date);
+
             $billing = new Billing([
                 'patient_id' => $request->patient_id,
                 'visit_id' => $request->visit_id ?: null,
@@ -6498,6 +6465,8 @@ Route::post('/admin/billings', function (Request $request) {
 
         return redirect('/admin/billings/' . $existingManual->id)
             ->with('success', 'Billing ini sudah tersimpan sebelumnya. Tidak dibuat invoice ganda.');
+    } catch (PeriodClosedException $exception) {
+        return back()->withInput()->withErrors(['invoice_date' => $exception->getMessage()]);
     } catch (\DomainException $exception) {
         return back()->withInput()->withErrors(['paid_amount' => $exception->getMessage()]);
     }
@@ -6626,13 +6595,29 @@ Route::post('/admin/billings/{id}/update', function (Request $request, $id) {
         return back()->withInput()->withErrors(['change_reason' => 'Perubahan data finansial (' . implode(', ', $financialFields) . ') wajib disertai alasan (minimal 5 karakter).']);
     }
 
-    DB::transaction(function () use ($billing, $changedBefore, $changedAfter, $request) {
-        $billing->save();
+    // Perubahan finansial memengaruhi bulan invoice lama dan baru: kunci kedua periode (terurut) dan baca ulang status tutup buku.
+    $periodDates = [$before['invoice_date'] ?? null, $billing->invoice_date instanceof \DateTimeInterface ? $billing->invoice_date->format('Y-m-d') : $billing->invoice_date];
+    FinancePeriodLock::prepare($periodDates);
 
-        if ($changedAfter !== []) {
-            BillingAudit::record('updated', $billing, $changedBefore, $changedAfter, $request->change_reason);
-        }
-    });
+    try {
+        DB::transaction(function () use ($billing, $changedBefore, $changedAfter, $request, $financialFields, $periodDates) {
+            FinancePeriodLock::shared($periodDates);
+
+            if ($financialFields !== []) {
+                foreach ($periodDates as $periodDate) {
+                    FinancePeriodLock::assertOpen($periodDate);
+                }
+            }
+
+            $billing->save();
+
+            if ($changedAfter !== []) {
+                BillingAudit::record('updated', $billing, $changedBefore, $changedAfter, $request->change_reason);
+            }
+        }, 3);
+    } catch (PeriodClosedException $exception) {
+        return back()->withInput()->withErrors(['invoice_date' => $exception->getMessage()]);
+    }
 
     return redirect('/admin/billings/' . $billing->id)->with('success', 'Billing berhasil diperbarui.');
 });
@@ -6715,13 +6700,22 @@ Route::post('/admin/billings/{id}/status', function (Request $request, $id) {
 
     $before = BillingAudit::snapshot($billing);
 
-    DB::transaction(function () use ($billing, $to, $before) {
-        BillingIntegrity::applyStatus($billing, $to);
-        $billing->save();
+    FinancePeriodLock::prepare([$billing->invoice_date]);
 
-        [$changedBefore, $changedAfter] = BillingAudit::diff($before, BillingAudit::snapshot($billing));
-        BillingAudit::record('status_changed', $billing, $changedBefore, $changedAfter);
-    });
+    try {
+        DB::transaction(function () use ($billing, $to, $before) {
+            FinancePeriodLock::shared([$billing->invoice_date]);
+            FinancePeriodLock::assertOpen($billing->invoice_date);
+
+            BillingIntegrity::applyStatus($billing, $to);
+            $billing->save();
+
+            [$changedBefore, $changedAfter] = BillingAudit::diff($before, BillingAudit::snapshot($billing));
+            BillingAudit::record('status_changed', $billing, $changedBefore, $changedAfter);
+        }, 3);
+    } catch (PeriodClosedException $exception) {
+        return redirect('/admin/billings')->with('error', $exception->getMessage());
+    }
 
     return redirect('/admin/billings')->with('success', 'Status billing berhasil diperbarui!');
 });
@@ -6770,8 +6764,15 @@ Route::post('/admin/billings/{id}/void', function (Request $request, $id) {
 
     $voidBefore = BillingAudit::snapshot($billing);
 
+    FinancePeriodLock::prepare([$billing->invoice_date, ClinicTime::today()]);
+
     try {
     DB::transaction(function () use ($billing, $request, $voidBefore, $heldMoney, $disposition) {
+        // Kunci periode lebih dulu: omzet = bulan invoice_date (invoice menjadi void), kas = hari ini (refund). Lalu baca ulang
+        // status tutup buku; keputusan di luar transaction hanya untuk UX.
+        FinancePeriodLock::shared([$billing->invoice_date, ClinicTime::today()]);
+        FinancePeriodLock::assertOpen($billing->invoice_date);
+
         // Kunci invoice agar tidak ada pembayaran yang masuk bersamaan dengan void.
         $locked = Billing::lockForUpdate()->findOrFail($billing->id);
 
@@ -6832,6 +6833,8 @@ Route::post('/admin/billings/{id}/void', function (Request $request, $id) {
             (new PaymentLedger)->refund($billing->fresh(), $heldMoney, $request->refund_method, 'Void invoice: ' . $request->void_reason);
         }
     });
+    } catch (PeriodClosedException $exception) {
+        return redirect('/admin/billings/' . $billing->id)->with('error', $exception->getMessage());
     } catch (\DomainException $exception) {
         return back()->withInput()->withErrors(['money_disposition' => $exception->getMessage()]);
     }

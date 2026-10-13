@@ -39,15 +39,22 @@ class PatientRegistration
         }
 
         $chargeFee = NewPatientAdminFee::enabled();
-        $closedMonth = $chargeFee && BillingIntegrity::isPeriodClosed(ClinicTime::today()) ? BillingIntegrity::monthOf(ClinicTime::today()) : null;
 
-        if ($chargeFee && ! $closedMonth) {
-            // Baris counter nomor invoice dibuat di luar transaction (lihat InvoiceNumberGenerator).
+        if ($chargeFee) {
+            // Baris counter nomor invoice dan baris kunci periode dibuat di luar transaction (lihat InvoiceNumberGenerator).
             (new InvoiceNumberGenerator)->prepare();
+            FinancePeriodLock::prepare([ClinicTime::today()]);
         }
 
         try {
-            [$fee, $pending] = DB::transaction(function () use ($patient, $token, $within, $chargeFee, $closedMonth) {
+            [$fee, $pending] = DB::transaction(function () use ($patient, $token, $within, $chargeFee) {
+                if ($chargeFee) {
+                    // Kunci periode (bersama) SEBAGAI LANGKAH PERTAMA, lalu tentukan terbuka/tertutup dengan locking read: keputusan
+                    // "terbitkan invoice atau catat kewajiban tertunda" tidak bisa basi terhadap tutup buku yang sedang berjalan.
+                    FinancePeriodLock::shared([ClinicTime::today()]);
+                    $closedMonth = FinancePeriodLock::isClosed(ClinicTime::today()) ? BillingIntegrity::monthOf(ClinicTime::today()) : null;
+                }
+
                 $patient->registration_token = $token;
                 $patient->save();
 

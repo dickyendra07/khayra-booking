@@ -84,10 +84,9 @@ Catatan: Pint hanya dijalankan pada file tes baru; `routes/web.php` memang tidak
 
 ## H. Risiko yang masih tersisa
 
-### Release blockers (belum diperbaiki; tercatat sebagai test `todo` di `ReleaseBlockersTest.php`)
-1. **Closing race.** `POST /admin/owner-finance/close` menghitung laporan di luar transaction, sementara pembayaran/refund memeriksa "periode tertutup" di transaction lain tanpa kunci bersama. Pembayaran yang commit di antara perhitungan dan penulisan closing masuk ke bulan itu tetapi tidak ke snapshot. Dampak saat ini: terdeteksi sebagai "selisih snapshot vs data" (tidak hilang, tetapi closing tidak lagi mewakili data). *Rekomendasi:* hitung ulang dan tulis closing di dalam satu transaction yang mengunci baris "gerbang periode" yang juga dikunci oleh setiap penulisan uang (pembayaran, refund, invoice baru, transaksi manual) bulan itu; uji dengan dua koneksi MySQL paralel.
-2. **Invoice pengganti ganda.** Pengecekan "invoice ini sudah digantikan" di checkout dilakukan di luar transaction (`replaces_billing_id`). Dua checkout Terbitkan Ulang paralel untuk invoice void yang sama dapat lolos keduanya. Kredit tidak bisa dipindahkan dua kali (`transferCredit` mengunci dan menghitung ulang), tetapi dua invoice pengganti non-void bisa terbit. *Rekomendasi:* kunci invoice void (`lockForUpdate`) dan cek ulang di dalam transaction; uji paralel.
-Keduanya sebaiknya diperbaiki dan diuji sebelum Rilis 2, bersama pengujian beban kecil di staging.
+### Release blockers — CLOSED (lihat `docs/08-penutupan-release-blockers.md`)
+1. **Closing race — CLOSED.** Tutup buku dan semua penulis finansial memakai kunci periode (`FinancePeriodLock`) di dalam transaction; laporan dihitung setelah kunci eksklusif. Dibuktikan dengan uji paralel nyata di MySQL.
+2. **Invoice pengganti ganda — CLOSED.** Invoice sumber dikunci dan validasi diulang di dalam transaction. Dibuktikan dengan uji paralel nyata di MySQL.
 
 ### Lainnya
 - Token pembayaran/refund kini wajib. Halaman invoice yang sudah terbuka sebelum deploy akan menolak submit ("formulir kedaluwarsa"); muat ulang. Dua tab terbuka menghasilkan dua token berbeda (dua niat pembayaran sungguhan), jadi tetap dibatasi oleh sisa tagihan.
@@ -97,7 +96,7 @@ Keduanya sebaiknya diperbaiki dan diuji sebelum Rilis 2, bersama pengujian beban
 - Logo `khayra-logo.png` tidak termuat di lingkungan QA lokal (aset tidak ada di worktree; tidak berkaitan dengan perubahan ini).
 
 ## I. Kesiapan staging
-**Siap diuji di staging** sebagai Rilis 2, dengan fitur baru tetap mati (ruangan non-billable, admin fee nonaktif, consent v1). Prasyarat sebelum production, selain Rilis 1 (hotfix keamanan) yang stabil dan langkah backup di `docs/04`: perbaiki + uji dua release blocker di atas, jalankan `migrate --pretend` pada salinan data production di staging, dan bandingkan checksum baseline.
+**Siap diuji di staging** sebagai Rilis 2, dengan fitur baru tetap mati (ruangan non-billable, admin fee nonaktif, consent v1). Prasyarat sebelum production, selain Rilis 1 (hotfix keamanan) yang stabil dan langkah backup di `docs/04`: jalankan `migrate --pretend` pada salinan data production di staging, dan bandingkan checksum baseline.
 
 ## J. Keputusan klien yang diperlukan
 1. **PIC**: siapa, di layar mana, per shift atau per hari (5 pertanyaan di `docs/05`).

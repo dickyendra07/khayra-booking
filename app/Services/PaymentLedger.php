@@ -64,8 +64,13 @@ class PaymentLedger
      */
     public function recordPayment(Billing $billing, float $tendered, ?string $method, ?string $reference = null, ?string $idempotencyKey = null): BillingPayment
     {
+        FinancePeriodLock::prepare([ClinicTime::today()]);
+
         return $this->idempotent($billing, $idempotencyKey, function () use ($billing, $tendered, $method, $reference, $idempotencyKey) {
             return DB::transaction(function () use ($billing, $tendered, $method, $reference, $idempotencyKey) {
+                // Kunci periode kas (hari bisnis pembayaran) SEBELUM kunci invoice: urutan kunci seragam di semua penulis.
+                FinancePeriodLock::shared([ClinicTime::today()]);
+
                 $locked = Billing::lockForUpdate()->findOrFail($billing->id);
 
                 if ($replay = $this->replayOf($locked, BillingPayment::TYPE_PAYMENT, $idempotencyKey)) {
@@ -102,7 +107,11 @@ class PaymentLedger
 
         $paidOn = ClinicTime::today();
 
-        if (BillingIntegrity::isPeriodClosed($paidOn)) {
+        // Dipanggil di dalam transaction: kunci periode (idempoten bila sudah diambil pemanggil), lalu baca status tutup buku
+        // dengan locking read agar tidak basi terhadap tutup buku yang baru commit.
+        FinancePeriodLock::shared([$paidOn]);
+
+        if (FinancePeriodLock::isClosed($paidOn)) {
             throw new DomainException('Periode '.BillingIntegrity::monthOf($paidOn).' sudah tutup buku; pembayaran tidak dapat dicatat pada periode tertutup.');
         }
 
@@ -146,8 +155,12 @@ class PaymentLedger
             throw new DomainException('Alasan refund wajib diisi (minimal 5 karakter).');
         }
 
+        FinancePeriodLock::prepare([ClinicTime::today()]);
+
         return $this->idempotent($billing, $idempotencyKey, function () use ($billing, $amount, $method, $reason, $idempotencyKey) {
             return DB::transaction(function () use ($billing, $amount, $method, $reason, $idempotencyKey) {
+                FinancePeriodLock::shared([ClinicTime::today()]);
+
                 $locked = Billing::lockForUpdate()->findOrFail($billing->id);
 
                 if ($replay = $this->replayOf($locked, BillingPayment::TYPE_REFUND, $idempotencyKey)) {
@@ -160,7 +173,7 @@ class PaymentLedger
 
                 $paidOn = ClinicTime::today();
 
-                if (BillingIntegrity::isPeriodClosed($paidOn)) {
+                if (FinancePeriodLock::isClosed($paidOn)) {
                     throw new DomainException('Periode '.BillingIntegrity::monthOf($paidOn).' sudah tutup buku; refund tidak dapat dicatat pada periode tertutup.');
                 }
 
@@ -246,6 +259,9 @@ class PaymentLedger
     public function transferCredit(Billing $from, Billing $to): float
     {
         return DB::transaction(function () use ($from, $to) {
+            // Urutan kunci global: kunci periode lebih dulu (idempoten bila pemanggil sudah mengambilnya), baru kunci invoice.
+            FinancePeriodLock::shared([ClinicTime::today()]);
+
             // Kunci kedua invoice dengan urutan id yang sama agar tidak deadlock.
             $ids = [$from->id, $to->id];
             sort($ids);

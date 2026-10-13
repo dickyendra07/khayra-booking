@@ -6,7 +6,7 @@ use App\Models\Billing;
 use App\Models\BillingPayment;
 use App\Models\FinanceMonthlyClosing;
 use App\Models\PendingRegistrationFee;
-use App\Services\BillingMoney;
+use App\Services\FinanceReport;
 use App\Services\NewPatientAdminFee;
 use App\Services\PaymentLedger;
 use App\Support\InvoiceNumberIndex;
@@ -69,9 +69,9 @@ class BillingAuditIntegrity extends Command
         $drift = [];
 
         foreach (FinanceMonthlyClosing::active()->get() as $closing) {
-            $live = Billing::whereBetween('invoice_date', [$closing->period_start->toDateString(), $closing->period_end->toDateString()])
-                ->where('payment_status', '!=', 'void')->get()
-                ->sum(fn ($b) => BillingMoney::paid($b));
+            // Sumber yang sama dengan closing: invoice lama per tanggal invoice, invoice baru (ledger) per tanggal PEMBAYARAN
+            // bersih dikurangi refund. (Membandingkan per tanggal invoice salah menandai pembayaran invoice bulan lalu pada bulan berjalan.)
+            $live = FinanceReport::billingCashRows($closing->period_start->toDateString(), $closing->period_end->toDateString())->sum('signed');
 
             if (abs($live - (float) $closing->billing_income) >= 1) {
                 $drift[] = "bulan {$closing->month}: snapshot ".(float) $closing->billing_income.', data billing saat ini '.$live;
