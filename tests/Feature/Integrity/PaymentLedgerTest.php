@@ -85,7 +85,7 @@ it('pembayaran sebagian: 200.000 lalu 300.000 tercatat terpisah dengan tanggal d
         ->and((float) $billing->remaining_amount)->toBe(300000.0)
         ->and((float) ledgerFinance($this)['billing_income'])->toBe(200000.0);
 
-    $this->post("/admin/billings/{$billing->id}/payments", ['tendered_amount' => 300000, 'method' => 'qr', 'reference' => 'QR-123'])->assertSessionHas('success');
+    $this->post("/admin/billings/{$billing->id}/payments", idem() + ['tendered_amount' => 300000, 'method' => 'qr', 'reference' => 'QR-123'])->assertSessionHas('success');
 
     $billing->refresh();
     $rows = $billing->payments()->orderBy('id')->get();
@@ -106,7 +106,7 @@ it('pembayaran kedua melebihi sisa: kembalian dipisahkan dan hanya sisa yang dih
     ledgerCheckout($this, 500000, 200000);
     $billing = Billing::firstOrFail();
 
-    $this->post("/admin/billings/{$billing->id}/payments", ['tendered_amount' => 400000, 'method' => 'cash'])->assertSessionHas('success');
+    $this->post("/admin/billings/{$billing->id}/payments", idem() + ['tendered_amount' => 400000, 'method' => 'cash'])->assertSessionHas('success');
 
     $second = $billing->payments()->orderBy('id')->get()[1];
 
@@ -120,7 +120,7 @@ it('pembayaran pada invoice yang sudah lunas ditolak dan tidak menggandakan pend
     ledgerCheckout($this, 500000, 500000);
     $billing = Billing::firstOrFail();
 
-    $this->post("/admin/billings/{$billing->id}/payments", ['tendered_amount' => 100000, 'method' => 'cash'])->assertSessionHas('error');
+    $this->post("/admin/billings/{$billing->id}/payments", idem() + ['tendered_amount' => 100000, 'method' => 'cash'])->assertSessionHas('error');
 
     expect($billing->payments()->count())->toBe(1)->and((float) ledgerFinance($this)['billing_income'])->toBe(500000.0);
 });
@@ -144,7 +144,7 @@ it('pembayaran pada invoice void ditolak', function () {
     $billing = Billing::firstOrFail();
     $this->post("/admin/billings/{$billing->id}/void", ['void_reason' => 'Batal']);
 
-    $this->post("/admin/billings/{$billing->id}/payments", ['tendered_amount' => 100000, 'method' => 'cash'])->assertSessionHas('error');
+    $this->post("/admin/billings/{$billing->id}/payments", idem() + ['tendered_amount' => 100000, 'method' => 'cash'])->assertSessionHas('error');
 
     expect(BillingPayment::count())->toBe(0);
 });
@@ -194,12 +194,12 @@ it('refund memerlukan alasan, tidak melebihi saldo tertahan, dan tidak bisa dila
     $billing = Billing::firstOrFail();
     $this->post("/admin/billings/{$billing->id}/void", ['void_reason' => 'Batal', 'money_disposition' => 'credit']);
 
-    $this->post("/admin/billings/{$billing->id}/refunds", ['amount' => 100000, 'method' => 'cash', 'reason' => 'x'])->assertSessionHasErrors('reason');
-    $this->post("/admin/billings/{$billing->id}/refunds", ['amount' => 600000, 'method' => 'cash', 'reason' => 'Melebihi saldo'])->assertSessionHas('error');
+    $this->post("/admin/billings/{$billing->id}/refunds", idem() + ['amount' => 100000, 'method' => 'cash', 'reason' => 'x'])->assertSessionHasErrors('reason');
+    $this->post("/admin/billings/{$billing->id}/refunds", idem() + ['amount' => 600000, 'method' => 'cash', 'reason' => 'Melebihi saldo'])->assertSessionHas('error');
     expect(BillingPayment::where('type', 'refund')->count())->toBe(0);
 
-    $this->post("/admin/billings/{$billing->id}/refunds", ['amount' => 500000, 'method' => 'cash', 'reason' => 'Pasien batal total'])->assertSessionHas('success');
-    $this->post("/admin/billings/{$billing->id}/refunds", ['amount' => 500000, 'method' => 'cash', 'reason' => 'Refund ganda coba'])->assertSessionHas('error');
+    $this->post("/admin/billings/{$billing->id}/refunds", idem() + ['amount' => 500000, 'method' => 'cash', 'reason' => 'Pasien batal total'])->assertSessionHas('success');
+    $this->post("/admin/billings/{$billing->id}/refunds", idem() + ['amount' => 500000, 'method' => 'cash', 'reason' => 'Refund ganda coba'])->assertSessionHas('error');
 
     expect(BillingPayment::where('type', 'refund')->count())->toBe(1)->and(PaymentLedger::heldOnVoid($billing->fresh()))->toBe(0.0);
 });
@@ -208,7 +208,7 @@ it('refund hanya untuk invoice void; invoice aktif tidak bisa direfund langsung'
     ledgerCheckout($this, 500000, 500000);
     $billing = Billing::firstOrFail();
 
-    $this->post("/admin/billings/{$billing->id}/refunds", ['amount' => 100000, 'method' => 'cash', 'reason' => 'Coba refund aktif'])->assertSessionHas('error');
+    $this->post("/admin/billings/{$billing->id}/refunds", idem() + ['amount' => 100000, 'method' => 'cash', 'reason' => 'Coba refund aktif'])->assertSessionHas('error');
 
     expect(BillingPayment::where('type', 'refund')->count())->toBe(0);
 });
@@ -290,7 +290,7 @@ it('arus kas mengikuti tanggal pembayaran, omzet mengikuti tanggal invoice', fun
     ledgerCheckout($this, 400000, 0, ['invoice_date' => $lastMonthDate]);
     $billing = Billing::firstOrFail();
 
-    $this->post("/admin/billings/{$billing->id}/payments", ['tendered_amount' => 400000, 'method' => 'cash'])->assertSessionHas('success');   // dibayar hari ini
+    $this->post("/admin/billings/{$billing->id}/payments", idem() + ['tendered_amount' => 400000, 'method' => 'cash'])->assertSessionHas('success');   // dibayar hari ini
 
     $last = ledgerFinance($this, $lastMonth);
     $now = ledgerFinance($this);
@@ -311,7 +311,7 @@ it('pembayaran untuk invoice bulan tertutup dicatat di bulan berjalan dan closin
 
     $before = FinanceMonthlyClosing::firstOrFail()->only(['billing_income', 'total_income', 'snapshot']);
 
-    $this->post("/admin/billings/{$billing->id}/payments", ['tendered_amount' => 400000, 'method' => 'cash'])->assertSessionHas('success');
+    $this->post("/admin/billings/{$billing->id}/payments", idem() + ['tendered_amount' => 400000, 'method' => 'cash'])->assertSessionHas('success');
 
     expect(FinanceMonthlyClosing::firstOrFail()->only(['billing_income', 'total_income', 'snapshot']))->toEqual($before)
         ->and((float) ledgerFinance($this)['billing_income'])->toBe(400000.0)
@@ -323,7 +323,7 @@ it('pembayaran tidak dapat dicatat bila bulan berjalan sudah tutup buku', functi
     $billing = Billing::firstOrFail();
     $this->post('/admin/owner-finance/close', ['month' => ClinicTime::monthKey()]);
 
-    $this->post("/admin/billings/{$billing->id}/payments", ['tendered_amount' => 400000, 'method' => 'cash'])->assertSessionHas('error');
+    $this->post("/admin/billings/{$billing->id}/payments", idem() + ['tendered_amount' => 400000, 'method' => 'cash'])->assertSessionHas('error');
 
     expect(BillingPayment::count())->toBe(0);
 });
@@ -415,7 +415,7 @@ it('owner finance dan cetak menampilkan baris pembayaran dan refund', function (
 it('command audit merekonsiliasi buku pembayaran: bersih untuk data konsisten, melaporkan data yang menyimpang', function () {
     ledgerCheckout($this, 500000, 200000);
     $billing = Billing::firstOrFail();
-    $this->post("/admin/billings/{$billing->id}/payments", ['tendered_amount' => 300000, 'method' => 'qr']);
+    $this->post("/admin/billings/{$billing->id}/payments", idem() + ['tendered_amount' => 300000, 'method' => 'qr']);
 
     $this->artisan('billing:audit-integrity')->expectsOutputToContain('10. Invoice ledger')->assertSuccessful();
     $this->artisan('billing:audit-integrity --strict')->assertSuccessful();   // bersih

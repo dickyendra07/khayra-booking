@@ -37,6 +37,7 @@
         .empty { padding:24px; text-align:center; color:#64748b; }
         @media(max-width:900px){ .layout{display:block}.main{padding:16px}.stats,.review-form{grid-template-columns:1fr}.title{font-size:32px} }
     </style>
+    @include('partials.ui-assets')
 </head>
 <body>
 <div class="layout">
@@ -85,8 +86,8 @@
                                 <form method="POST" action="/admin/staff-leaves/{{ $leave->id }}/review" class="review-form">
                                     @csrf
                                     <textarea name="admin_note" rows="2" placeholder="Catatan admin opsional"></textarea>
-                                    <button type="submit" name="status" value="approved" class="approve">Approve</button>
-                                    <button type="submit" name="status" value="rejected" class="reject">Reject</button>
+                                    <button type="submit" name="status" value="approved" class="kx-btn kx-btn--primary kx-btn--sm approve">Approve</button>
+                                    <button type="submit" name="status" value="rejected" class="kx-btn kx-btn--danger kx-btn--sm reject">Reject</button>
                                 </form>
                             @endif
                         </div>

@@ -1,0 +1,472 @@
+/*
+ * Khayra Physio — Application UI design system (presentation layer only)
+ * ---------------------------------------------------------------------
+ * Satu sumber gaya untuk tombol & komponen dasar di seluruh aplikasi.
+ * Dimuat lewat resources/views/partials/ui-assets.blade.php (paling akhir di <head>).
+ *
+ * Tombol:  <a|button class="kx-btn kx-btn--primary [kx-btn--sm|--lg]">
+ *   Varian : --primary | --secondary | --outline | --danger | --icon
+ *   Ukuran : --sm (34px) | default md (42px) | --lg (48px)
+ *   Status : :disabled / [aria-disabled="true"] / .is-loading
+ * Grup aksi: <div class="kx-btn-group"> (wrap otomatis, tidak overflow di mobile)
+ *
+ * Warna hanya memakai palet brand Khayra yang sudah ada (teal #2f7c7a).
+ */
+
+:root {
+    /* Brand (existing) */
+    --kx-brand: #2f7c7a;
+    --kx-brand-light: #3d8a89;
+    --kx-brand-dark: #245f67;
+    --kx-brand-tint: #eef7f5;
+    --kx-brand-tint-hover: #e0f0ed;
+    --kx-brand-tint-border: #d8ebe7;
+    --kx-border: #e6ebea;
+    --kx-border-strong: #cfdcd9;
+    --kx-ink: #17232b;
+    --kx-ink-soft: #2c5b5a;
+    --kx-danger: #be123c;
+    --kx-danger-bg: #fff1f2;
+    --kx-danger-border: #ffe0e6;
+
+    /* Button tokens */
+    --kx-btn-h-sm: 34px;
+    --kx-btn-h-md: 42px;
+    --kx-btn-h-lg: 48px;
+    --kx-btn-radius-sm: 10px;
+    --kx-btn-radius-md: 12px;
+    --kx-btn-radius-lg: 14px;
+    --kx-btn-px-sm: 12px;
+    --kx-btn-px-md: 16px;
+    --kx-btn-px-lg: 22px;
+    --kx-btn-fs-sm: 12px;
+    --kx-btn-fs-md: 13px;
+    --kx-btn-fs-lg: 14px;
+    --kx-btn-weight: 800;
+    --kx-btn-icon: 16px;
+    --kx-btn-gap: 8px;
+    --kx-btn-focus: 0 0 0 3px rgba(47, 124, 122, .30);
+    --kx-btn-transition: background-color .15s ease, border-color .15s ease, color .15s ease, box-shadow .15s ease, transform .15s ease;
+    --kx-btn-disabled-opacity: .55;
+}
+
+/* Target sentuh nyaman di tablet/ponsel (minimal 40px sm, 44px md). */
+@media (max-width: 768px) {
+    :root {
+        --kx-btn-h-sm: 40px;
+        --kx-btn-h-md: 44px;
+        --kx-btn-h-lg: 48px;
+    }
+}
+
+/* ===================== BUTTON — base ===================== */
+.kx-btn {
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--kx-btn-gap);
+    min-height: var(--kx-btn-h-md);
+    height: auto;
+    padding: 0 var(--kx-btn-px-md);
+    margin-top: 0;
+    border: 1px solid transparent;
+    border-radius: var(--kx-btn-radius-md);
+    font-family: inherit;
+    font-size: var(--kx-btn-fs-md);
+    font-weight: var(--kx-btn-weight);
+    line-height: 1.2;
+    letter-spacing: 0;
+    text-align: center;
+    text-decoration: none;
+    text-transform: none;
+    white-space: nowrap;
+    cursor: pointer;
+    box-shadow: none;
+    background: transparent;
+    color: inherit;
+    transition: var(--kx-btn-transition);
+    -webkit-appearance: none;
+    appearance: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.kx-btn svg,
+.kx-btn img,
+.kx-btn .kx-btn__icon {
+    width: var(--kx-btn-icon);
+    height: var(--kx-btn-icon);
+    flex: 0 0 auto;
+}
+
+/* Ukuran */
+.kx-btn.kx-btn--sm {
+    min-height: var(--kx-btn-h-sm);
+    padding: 0 var(--kx-btn-px-sm);
+    border-radius: var(--kx-btn-radius-sm);
+    font-size: var(--kx-btn-fs-sm);
+    gap: 6px;
+}
+
+.kx-btn.kx-btn--lg {
+    min-height: var(--kx-btn-h-lg);
+    padding: 0 var(--kx-btn-px-lg);
+    border-radius: var(--kx-btn-radius-lg);
+    font-size: var(--kx-btn-fs-lg);
+}
+
+.kx-btn.kx-btn--block {
+    display: flex;
+    width: 100%;
+}
+
+/* ===================== BUTTON — varian ===================== */
+/* Primary: aksi utama pada satu konteks (Simpan, Kirim, Checkout, Terapkan). */
+.kx-btn.kx-btn--primary {
+    background: linear-gradient(135deg, var(--kx-brand-light) 0%, var(--kx-brand) 100%);
+    border-color: var(--kx-brand);
+    color: #ffffff;
+    box-shadow: 0 8px 18px rgba(47, 124, 122, .16);
+}
+
+.kx-btn.kx-btn--primary:hover {
+    background: linear-gradient(135deg, var(--kx-brand) 0%, var(--kx-brand-dark) 100%);
+    border-color: var(--kx-brand-dark);
+    box-shadow: 0 10px 22px rgba(47, 124, 122, .22);
+    color: #ffffff;
+}
+
+/* Secondary: aksi pendukung yang tetap menonjol (Buka, Detail, Kirim WA). */
+.kx-btn.kx-btn--secondary {
+    background: var(--kx-brand-tint);
+    border-color: var(--kx-brand-tint-border);
+    color: var(--kx-brand);
+}
+
+.kx-btn.kx-btn--secondary:hover {
+    background: var(--kx-brand-tint-hover);
+    border-color: var(--kx-border-strong);
+    color: var(--kx-brand-dark);
+}
+
+/* Outline: aksi netral/sekunder (Batal, Kembali, Edit, Print, Filter). */
+.kx-btn.kx-btn--outline {
+    background: #ffffff;
+    border-color: var(--kx-border);
+    color: var(--kx-brand);
+}
+
+.kx-btn.kx-btn--outline:hover {
+    background: var(--kx-brand-tint);
+    border-color: var(--kx-brand-tint-border);
+    color: var(--kx-brand-dark);
+}
+
+/* Danger: aksi destruktif (Hapus, Void, Refund, Tolak). Alur konfirmasi tidak berubah. */
+.kx-btn.kx-btn--danger {
+    background: var(--kx-danger-bg);
+    border-color: var(--kx-danger-border);
+    color: var(--kx-danger);
+}
+
+.kx-btn.kx-btn--danger:hover {
+    background: var(--kx-danger);
+    border-color: var(--kx-danger);
+    color: #ffffff;
+}
+
+/* On-dark: tombol di atas latar teal gelap (sidebar). */
+.kx-btn.kx-btn--on-dark {
+    background: rgba(255, 255, 255, .12);
+    border-color: rgba(255, 255, 255, .16);
+    color: #ffffff;
+}
+
+.kx-btn.kx-btn--on-dark:hover {
+    background: rgba(255, 255, 255, .20);
+    border-color: rgba(255, 255, 255, .26);
+    color: #ffffff;
+}
+
+/* Tombol "Install App" (PWA) melayang di pojok kanan bawah. */
+.kx-install-btn {
+    position: fixed;
+    right: 18px;
+    bottom: 18px;
+    z-index: 99999;
+    box-shadow: 0 14px 30px rgba(47, 124, 122, .24);
+}
+
+/* Icon: tombol persegi hanya ikon (wajib aria-label). */
+.kx-btn.kx-btn--icon {
+    width: var(--kx-btn-h-md);
+    min-width: var(--kx-btn-h-md);
+    padding: 0;
+}
+
+.kx-btn.kx-btn--icon.kx-btn--sm {
+    width: var(--kx-btn-h-sm);
+    min-width: var(--kx-btn-h-sm);
+}
+
+.kx-btn.kx-btn--icon.kx-btn--lg {
+    width: var(--kx-btn-h-lg);
+    min-width: var(--kx-btn-h-lg);
+}
+
+/* ===================== BUTTON — fokus, disabled, loading ===================== */
+.kx-btn:focus {
+    outline: none;
+}
+
+.kx-btn:focus-visible {
+    outline: none;
+    box-shadow: var(--kx-btn-focus);
+}
+
+.kx-btn:active:not(:disabled):not([aria-disabled="true"]) {
+    transform: translateY(1px);
+}
+
+.kx-btn:disabled,
+.kx-btn[disabled],
+.kx-btn[aria-disabled="true"],
+.kx-btn.is-disabled {
+    opacity: var(--kx-btn-disabled-opacity);
+    cursor: not-allowed;
+    pointer-events: none;
+    box-shadow: none;
+    transform: none;
+}
+
+.kx-btn.is-loading {
+    position: relative;
+    color: transparent !important;
+    pointer-events: none;
+    cursor: progress;
+}
+
+.kx-btn.is-loading > * {
+    visibility: hidden;
+}
+
+.kx-btn.is-loading::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 16px;
+    height: 16px;
+    margin: -8px 0 0 -8px;
+    border: 2px solid rgba(255, 255, 255, .45);
+    border-top-color: #ffffff;
+    border-radius: 50%;
+    animation: kx-spin .7s linear infinite;
+}
+
+.kx-btn.kx-btn--outline.is-loading::after,
+.kx-btn.kx-btn--secondary.is-loading::after,
+.kx-btn.kx-btn--danger.is-loading::after {
+    border-color: rgba(47, 124, 122, .25);
+    border-top-color: var(--kx-brand);
+}
+
+@keyframes kx-spin {
+    to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .kx-btn { transition: none; }
+    .kx-btn.is-loading::after { animation-duration: 1.6s; }
+}
+
+/* ===================== BUTTON GROUP ===================== */
+.kx-btn-group {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+.kx-btn-group--end { justify-content: flex-end; }
+
+.kx-btn-group > form { display: inline-flex; margin: 0; }
+
+@media (max-width: 575px) {
+    .kx-btn-group--stack { flex-direction: column; align-items: stretch; }
+    .kx-btn-group--stack > .kx-btn,
+    .kx-btn-group--stack > form,
+    .kx-btn-group--stack > form > .kx-btn { width: 100%; }
+}
+
+/* Tombol dalam sel tabel tidak boleh memecah label. */
+td .kx-btn,
+th .kx-btn { vertical-align: middle; }
+
+/* Print: tombol aksi tidak ikut tercetak. */
+@media print {
+    .kx-btn,
+    .kx-btn-group { display: none !important; }
+}
+
+/* ===================== TABEL: kolom aksi selalu terlihat ===================== */
+/* Tabel lebar berada dalam wrapper scroll horizontal; kolom aksi tetap menempel di kanan. */
+.kx-col-actions {
+    position: sticky;
+    right: 0;
+    z-index: 1;
+    background: #ffffff;
+    box-shadow: -12px 0 14px -14px rgba(15, 23, 42, .28);
+    white-space: nowrap;
+}
+
+th.kx-col-actions {
+    background: #f7faf9;
+    z-index: 2;
+}
+
+.kx-col-actions > div,
+.kx-col-actions > .kx-btn-group {
+    flex-wrap: nowrap;
+}
+
+/* ===================== ALERT / NOTIFIKASI ===================== */
+.kx-alert {
+    box-sizing: border-box;
+    margin: 0 0 16px;
+    padding: 13px 16px;
+    border: 1px solid var(--kx-border);
+    border-left-width: 4px;
+    border-radius: 14px;
+    background: #f8fbfa;
+    color: #334155;
+    font-size: 13px;
+    line-height: 1.7;
+}
+
+.kx-alert strong { font-weight: 800; }
+.kx-alert--info    { background: #f1f7f9; border-color: #d6e6ec; color: #28515c; }
+.kx-alert--success { background: #ecfdf5; border-color: #bbf7d0; color: #166534; }
+.kx-alert--warning { background: #fffbeb; border-color: #fde68a; color: #7c5a0b; }
+.kx-alert--danger  { background: var(--kx-danger-bg); border-color: var(--kx-danger-border); color: var(--kx-danger); }
+
+/* ===================== FORM: helper, input group, toggle ===================== */
+.kx-help {
+    display: block;
+    margin-top: 6px;
+    color: #6b7280;
+    font-size: 12px;
+    line-height: 1.6;
+    font-weight: 400;
+}
+
+.kx-input-group {
+    display: flex;
+    align-items: stretch;
+    width: 100%;
+}
+
+.kx-input-group > .kx-addon {
+    display: inline-flex;
+    align-items: center;
+    padding: 0 12px;
+    border: 1px solid #dde5e3;
+    background: #f4f8f7;
+    color: #486168;
+    font-size: 13px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.kx-input-group > .kx-addon:first-child { border-right: 0; border-radius: 14px 0 0 14px; }
+.kx-input-group > .kx-addon:last-child  { border-left: 0; border-radius: 0 14px 14px 0; }
+.kx-input-group > input { min-width: 0; flex: 1 1 auto; }
+.kx-input-group > .kx-addon:first-child + input { border-radius: 0 14px 14px 0; }
+.kx-input-group > input:has(+ .kx-addon:last-child) { border-radius: 14px 0 0 14px; }
+
+.kx-check,
+label.kx-check {
+    display: flex;
+    margin: 0;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 14px;
+    border: 1px solid var(--kx-border);
+    border-radius: 14px;
+    background: #ffffff;
+    cursor: pointer;
+}
+
+.kx-check input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin: 2px 0 0;
+    padding: 0;
+    flex: 0 0 auto;
+    accent-color: var(--kx-brand);
+}
+
+.kx-check strong { display: block; color: #17232b; font-size: 13px; }
+.kx-check small { display: block; margin-top: 2px; color: #6b7280; font-size: 12px; line-height: 1.5; font-weight: 400; }
+
+/* ===================== BADGE / STATUS ===================== */
+.kx-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 999px;
+    background: #f1f5f9;
+    color: #475569;
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1.4;
+    white-space: nowrap;
+}
+
+.kx-badge--success { background: #dcfce7; color: #166534; }
+.kx-badge--warning { background: #fef3c7; color: #92400e; }
+.kx-badge--danger  { background: var(--kx-danger-bg); color: var(--kx-danger); }
+.kx-badge--info    { background: var(--kx-brand-tint); color: var(--kx-brand); }
+
+/* ===================== RESPONSIVE SAFETY ===================== */
+/* Anak grid tidak boleh melebarkan kolom (tabel lebar di dalamnya scroll di wrapper sendiri). */
+.page-grid > *,
+.main-grid > * {
+    min-width: 0;
+}
+
+/* Sidebar admin menjadi blok penuh di <=980px; layout induk harus ikut menumpuk (bukan flex). */
+@media (max-width: 980px) {
+    .layout:has(> .admin-sidebar) {
+        display: block;
+    }
+}
+
+/* ===================== FORM CONTROL & NOTIFIKASI: normalisasi ===================== */
+/* Fokus input seragam (palet brand) menggantikan variasi per halaman. */
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus,
+select:focus,
+textarea:focus {
+    outline: none;
+    border-color: var(--kx-brand);
+    box-shadow: 0 0 0 4px rgba(47, 124, 122, .12);
+}
+
+a:focus-visible,
+summary:focus-visible {
+    outline: 2px solid var(--kx-brand);
+    outline-offset: 2px;
+}
+
+/* Kotak notifikasi lama (error/sukses) memakai radius, padding, dan ukuran font yang sama. */
+.error-box,
+.alert,
+.alert-success,
+.alert-error {
+    box-sizing: border-box;
+    padding: 13px 16px;
+    border-radius: 14px;
+    font-size: 13px;
+    line-height: 1.7;
+}

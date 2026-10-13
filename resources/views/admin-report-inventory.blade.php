@@ -16,10 +16,10 @@
     .title { margin:0; font-size:42px; line-height:1.05; color:#22343a; font-weight:900; letter-spacing:-.7px; }
     .subtitle { margin:12px 0 0; max-width:900px; color:#6b7280; font-size:14px; line-height:1.9; }
     .actions { display:flex; gap:10px; flex-wrap:wrap; }
-    .btn { min-height:42px; border:0; cursor:pointer; padding:0 16px; border-radius:14px; font-size:13px; font-weight:900; text-decoration:none; display:inline-flex; align-items:center; justify-content:center; font-family:Arial,sans-serif; white-space:nowrap; }
-    .btn-primary { background:linear-gradient(135deg,#3d8a89 0%,#2f7c7a 100%); color:#fff; box-shadow:0 12px 24px rgba(47,124,122,.16); }
-    .btn-soft { color:#2f7c7a; background:#fff; border:1px solid #e6ebea; }
-    .btn-dark { background:linear-gradient(135deg,#22343a 0%,#17232b 100%); color:#fff; }
+
+
+
+
     .nav-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:18px; }
     .nav-card { text-decoration:none; color:#22343a; background:#fff; border:1px solid #ecefef; border-radius:18px; padding:16px; font-weight:900; box-shadow:0 8px 20px rgba(15,23,42,.035); }
     .nav-card.active { background:#eef7f5; border-color:#bfe1dc; color:#2f7c7a; }
@@ -82,6 +82,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="/images/khayra-logo.png">
+    @include('partials.ui-assets')
 </head>
 <body>
 @php $activeReport = 'inventory'; @endphp
@@ -97,8 +98,8 @@
                     <p class="subtitle">Laporan stok, stock value, potential sales, stok masuk/keluar, adjustment, low stock, empty stock, dan product usage.</p>
                 </div>
                 <div class="actions">
-                    <a href="/admin/reports/inventory?month={{ $month }}&export=csv" class="btn btn-primary">Export CSV</a>
-                    <a href="/admin/inventory" class="btn btn-soft">Inventory Control</a>
+                    <a href="/admin/reports/inventory?month={{ $month }}&export=csv" class="kx-btn kx-btn--primary btn btn-primary">Export CSV</a>
+                    <a href="/admin/inventory" class="kx-btn kx-btn--outline btn btn-soft">Inventory Control</a>
                 </div>
             </div>
 
@@ -117,7 +118,7 @@
                         <label>Month</label>
                         <input type="month" name="month" value="{{ $month }}">
                     </div>
-                    <button type="submit" class="btn btn-primary">Lihat Report</button>
+                    <button type="submit" class="kx-btn kx-btn--primary btn btn-primary">Lihat Report</button>
                 </form>
             </section>
 
@@ -219,20 +220,7 @@
         button.id = 'khayraInstallAppButton';
         button.type = 'button';
         button.innerText = 'Install App';
-        button.style.position = 'fixed';
-        button.style.right = '18px';
-        button.style.bottom = '18px';
-        button.style.zIndex = '99999';
-        button.style.border = '0';
-        button.style.borderRadius = '999px';
-        button.style.padding = '12px 16px';
-        button.style.background = '#2f7c7a';
-        button.style.color = '#ffffff';
-        button.style.fontWeight = '900';
-        button.style.fontFamily = 'Arial, sans-serif';
-        button.style.fontSize = '13px';
-        button.style.boxShadow = '0 14px 30px rgba(47,124,122,.24)';
-        button.style.cursor = 'pointer';
+        button.className = 'kx-btn kx-btn--primary kx-install-btn';
 
         button.addEventListener('click', function () {
             if (!deferredInstallPrompt) {

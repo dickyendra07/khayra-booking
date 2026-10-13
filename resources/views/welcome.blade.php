@@ -125,29 +125,11 @@
             margin-top: 26px;
         }
 
-        .btn-primary,
-        .btn-secondary {
-            text-decoration: none;
-            padding: 14px 20px;
-            border-radius: 16px;
-            font-size: 15px;
-            font-weight: 800;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-        }
 
-        .btn-primary {
-            background: #0f766e;
-            color: white;
-            box-shadow: 0 12px 26px rgba(15, 118, 110, 0.22);
-        }
 
-        .btn-secondary {
-            background: white;
-            color: #0f766e;
-            border: 1px solid #d7ebe6;
-        }
+
+
+
 
         .hero-points {
             margin-top: 28px;
@@ -293,6 +275,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="/images/khayra-logo.png">
+    @include('partials.ui-assets')
 </head>
 <body>
     <div class="page">
@@ -321,8 +304,8 @@
                 </p>
 
                 <div class="hero-buttons">
-                    <a href="/booking" class="btn-primary">Book Appointment</a>
-                    <a href="/admin" class="btn-secondary">Open Admin Dashboard</a>
+                    <a href="/booking" class="kx-btn kx-btn--primary kx-btn--lg btn-primary">Book Appointment</a>
+                    <a href="/admin" class="kx-btn kx-btn--outline kx-btn--lg btn-secondary">Open Admin Dashboard</a>
                 </div>
 
                 <div class="hero-points">
@@ -404,20 +387,7 @@
         button.id = 'khayraInstallAppButton';
         button.type = 'button';
         button.innerText = 'Install App';
-        button.style.position = 'fixed';
-        button.style.right = '18px';
-        button.style.bottom = '18px';
-        button.style.zIndex = '99999';
-        button.style.border = '0';
-        button.style.borderRadius = '999px';
-        button.style.padding = '12px 16px';
-        button.style.background = '#2f7c7a';
-        button.style.color = '#ffffff';
-        button.style.fontWeight = '900';
-        button.style.fontFamily = 'Arial, sans-serif';
-        button.style.fontSize = '13px';
-        button.style.boxShadow = '0 14px 30px rgba(47,124,122,.24)';
-        button.style.cursor = 'pointer';
+        button.className = 'kx-btn kx-btn--primary kx-install-btn';
 
         button.addEventListener('click', function () {
             if (!deferredInstallPrompt) {

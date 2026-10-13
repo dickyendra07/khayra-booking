@@ -23,9 +23,9 @@
         input:focus, select:focus, textarea:focus { outline: none; border-color: #176f69; box-shadow: 0 0 0 4px rgba(23,111,105,.08); }
         select { color: #111827; font-weight: 700; }
         select option { color: #111827; background: #ffffff; font-weight: 700; }
-        .btn { min-height: 44px; border: 0; cursor: pointer; padding: 0 18px; border-radius: 14px; font-size: 13px; font-weight: 900; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; font-family: Arial, sans-serif; white-space: nowrap; }
-        .btn-primary { background: linear-gradient(135deg, #3d8a89 0%, #2f7c7a 100%); color: white; box-shadow: 0 12px 24px rgba(47,124,122,.16); }
-        .btn-soft { color: #2f7c7a; background: #ffffff; border: 1px solid #d8ebe7; }
+
+
+
         .actions { display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
         .error-box { background: #fff1f2; border: 1px solid #ffe0e6; color: #be123c; padding: 14px 16px; border-radius: 16px; margin-bottom: 18px; font-size: 13px; line-height: 1.8; }
         .hint { margin-top: 6px; color: #94a3b8; font-size: 12px; line-height: 1.6; }
@@ -46,6 +46,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="/images/khayra-logo.png">
+    @include('partials.ui-assets')
 </head>
 <body>
 <div class="layout">
@@ -59,7 +60,7 @@
                     <h1 class="title">Surat Izin / Surat Istirahat Pasien</h1>
                     <p class="subtitle">Buat surat resmi untuk kebutuhan izin aktivitas atau istirahat pasien berdasarkan kondisi fisioterapi.</p>
                 </div>
-                <a href="/admin/documents" class="btn btn-soft">Kembali</a>
+                <a href="/admin/documents" class="kx-btn kx-btn--outline btn btn-soft">Kembali</a>
             </div>
 
             <form method="POST" action="/admin/rest-letter/print" target="_blank">
@@ -167,8 +168,8 @@
                     </div>
 
                     <div class="actions">
-                        <a href="/admin/documents" class="btn btn-soft">Batal</a>
-                        <button type="submit" class="btn btn-primary">Preview / Print Surat</button>
+                        <a href="/admin/documents" class="kx-btn kx-btn--outline btn btn-soft">Batal</a>
+                        <button type="submit" class="kx-btn kx-btn--primary btn btn-primary">Preview / Print Surat</button>
                     </div>
                 </section>
             </form>
@@ -197,20 +198,7 @@
         button.id = 'khayraInstallAppButton';
         button.type = 'button';
         button.innerText = 'Install App';
-        button.style.position = 'fixed';
-        button.style.right = '18px';
-        button.style.bottom = '18px';
-        button.style.zIndex = '99999';
-        button.style.border = '0';
-        button.style.borderRadius = '999px';
-        button.style.padding = '12px 16px';
-        button.style.background = '#2f7c7a';
-        button.style.color = '#ffffff';
-        button.style.fontWeight = '900';
-        button.style.fontFamily = 'Arial, sans-serif';
-        button.style.fontSize = '13px';
-        button.style.boxShadow = '0 14px 30px rgba(47,124,122,.24)';
-        button.style.cursor = 'pointer';
+        button.className = 'kx-btn kx-btn--primary kx-install-btn';
 
         button.addEventListener('click', function () {
             if (!deferredInstallPrompt) {

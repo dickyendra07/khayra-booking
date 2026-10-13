@@ -54,18 +54,7 @@
             flex-wrap: wrap;
         }
 
-        .ghost-link {
-            display: inline-flex;
-            align-items: center;
-            text-decoration: none;
-            padding: 11px 14px;
-            border-radius: 12px;
-            background: #ffffff;
-            border: 1px solid #e6ebea;
-            color: #2c5b5a;
-            font-size: 13px;
-            font-weight: 700;
-        }
+
 
         .hero {
             background: #ffffff;
@@ -418,35 +407,13 @@
         .billing-unpaid { background: #fee2e2; color: #b91c1c; }
         .billing-partial { background: #fef3c7; color: #92400e; }
 
-        .detail-link,
-        .primary-link,
-        .secondary-link {
-            display: inline-flex;
-            align-items: center;
-            text-decoration: none;
-            padding: 10px 14px;
-            border-radius: 12px;
-            font-size: 13px;
-            font-weight: 700;
-        }
 
-        .detail-link {
-            background: #f4f8f8;
-            color: #2f7c7a;
-            border: 1px solid #e3ebea;
-        }
 
-        .primary-link {
-            background: linear-gradient(135deg, #3d8a89 0%, #2f7c7a 100%);
-            color: #ffffff;
-            border: none;
-        }
 
-        .secondary-link {
-            background: #ffffff;
-            color: #2f7c7a;
-            border: 1px solid #e4ebea;
-        }
+
+
+
+
 
         .action-row {
             display: flex;
@@ -516,6 +483,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="/images/khayra-logo.png">
+    @include('partials.ui-assets')
 </head>
 <body>
 @php
@@ -539,8 +507,8 @@
             </div>
 
             <div class="topbar-actions">
-                <a href="/patient" class="ghost-link">← Kembali ke Portal</a>
-                <a href="/" class="ghost-link">Home</a>
+                <a href="/patient" class="kx-btn kx-btn--outline ghost-link">← Kembali ke Portal</a>
+                <a href="/" class="kx-btn kx-btn--outline ghost-link">Home</a>
             </div>
         </div>
 
@@ -806,7 +774,7 @@
                                                 </span>
                                             </td>
                                             <td>
-                                                <a href="/patient/billings/{{ $billing->id }}" class="detail-link">Lihat Detail</a>
+                                                <a href="/patient/billings/{{ $billing->id }}" class="kx-btn kx-btn--secondary detail-link">Lihat Detail</a>
                                             </td>
                                         </tr>
                                     @endforeach
@@ -832,8 +800,8 @@
                         </p>
 
                         <div class="action-row">
-                            <a href="{{ $adminWhatsappLink }}" target="_blank" class="primary-link">Hubungi Admin Klinik</a>
-                            <a href="/patient" class="secondary-link">Kembali ke Portal</a>
+                            <a href="{{ $adminWhatsappLink }}" target="_blank" class="kx-btn kx-btn--primary primary-link">Hubungi Admin Klinik</a>
+                            <a href="/patient" class="kx-btn kx-btn--outline secondary-link">Kembali ke Portal</a>
                         </div>
                     </div>
                 </section>
@@ -863,20 +831,7 @@
         button.id = 'khayraInstallAppButton';
         button.type = 'button';
         button.innerText = 'Install App';
-        button.style.position = 'fixed';
-        button.style.right = '18px';
-        button.style.bottom = '18px';
-        button.style.zIndex = '99999';
-        button.style.border = '0';
-        button.style.borderRadius = '999px';
-        button.style.padding = '12px 16px';
-        button.style.background = '#2f7c7a';
-        button.style.color = '#ffffff';
-        button.style.fontWeight = '900';
-        button.style.fontFamily = 'Arial, sans-serif';
-        button.style.fontSize = '13px';
-        button.style.boxShadow = '0 14px 30px rgba(47,124,122,.24)';
-        button.style.cursor = 'pointer';
+        button.className = 'kx-btn kx-btn--primary kx-install-btn';
 
         button.addEventListener('click', function () {
             if (!deferredInstallPrompt) {

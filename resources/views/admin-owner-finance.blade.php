@@ -113,27 +113,13 @@
             font-weight: 900;
         }
 
-        .btn {
-            min-height: 44px;
-            border: 0;
-            border-radius: 14px;
-            padding: 0 16px;
-            font-size: 13px;
-            font-weight: 900;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-family: Arial, sans-serif;
-            white-space: nowrap;
-        }
 
-        .btn-white { background: #ffffff; color: #2f7c7a; }
-        .btn-soft { background: #ffffff; color: #2f7c7a; border: 1px solid #d8ebe7; }
-        .btn-dark { background: #111827; color: #ffffff; }
-        .btn-red { background: #fee2e2; color: #b91c1c; }
-        .btn-green { background: #0f766e; color: #ffffff; }
+
+
+
+
+
+
 
         .stats-grid {
             display: grid;
@@ -330,6 +316,7 @@
             .field-wide, .field-full { grid-column: auto; }
         }
     </style>
+    @include('partials.ui-assets')
 </head>
 <body>
 <div class="layout">
@@ -363,7 +350,7 @@
                             <br>Notes: {{ $closing->notes }}
                         @endif
                     </div>
-                    <a href="/admin/owner-finance/print?month={{ $month }}" class="btn btn-green" target="_blank">Print Closed Report</a>
+                    <a href="/admin/owner-finance/print?month={{ $month }}" class="kx-btn kx-btn--primary btn btn-green" target="_blank">Print Closed Report</a>
                 </div>
             @endif
 
@@ -377,9 +364,9 @@
                     </p>
 
                     <div class="quick-links">
-                        <a href="/admin/owner-dashboard?month={{ $month }}" class="btn btn-soft">Back to Owner Dashboard</a>
-                        <a href="/admin/billings" class="btn btn-soft">Open Billing Ledger</a>
-                        <a href="/admin/owner-finance/print?month={{ $month }}" class="btn btn-green" target="_blank">Print Monthly Report</a>
+                        <a href="/admin/owner-dashboard?month={{ $month }}" class="kx-btn kx-btn--outline btn btn-soft">Back to Owner Dashboard</a>
+                        <a href="/admin/billings" class="kx-btn kx-btn--outline btn btn-soft">Open Billing Ledger</a>
+                        <a href="/admin/owner-finance/print?month={{ $month }}" class="kx-btn kx-btn--primary btn btn-green" target="_blank">Print Monthly Report</a>
                     </div>
                 </div>
 
@@ -391,7 +378,7 @@
 
                     <form method="GET" action="/admin/owner-finance" class="period-form">
                         <input type="month" name="month" value="{{ $month }}">
-                        <button type="submit" class="btn btn-white">Update Period</button>
+                        <button type="submit" class="kx-btn kx-btn--outline btn btn-white">Update Period</button>
                     </form>
                 </div>
             </section>
@@ -413,6 +400,20 @@
                     <div class="stat-label">Refund &amp; Kredit Tertahan</div>
                     <div class="stat-value money-negative">Rp {{ number_format($summary['refunds'] ?? 0, 0, ',', '.') }}</div>
                     <div class="stat-sub">Refund bulan ini (sudah mengurangi Billing Income). Kredit tertahan pada invoice void: Rp {{ number_format($summary['held_credit'] ?? 0, 0, ',', '.') }}.</div>
+                </div>
+
+                @php($byCategory = $summary['revenue_by_category'] ?? ['rows' => [], 'uncategorised' => 0])
+                <div class="stat-card" id="revenue-by-category">
+                    <div class="stat-label">Omzet per Kategori</div>
+                    @forelse($byCategory['rows'] as $categoryRow)
+                        <div class="stat-sub" style="display:flex;justify-content:space-between;gap:12px;"><span>{{ $categoryRow['label'] }}</span><strong>Rp {{ number_format($categoryRow['amount'], 0, ',', '.') }}</strong></div>
+                    @empty
+                        <div class="stat-sub">Belum ada invoice berkategori bulan ini.</div>
+                    @endforelse
+                    @if(abs($byCategory['uncategorised']) >= 1)
+                        <div class="stat-sub" style="display:flex;justify-content:space-between;gap:12px;"><span>Invoice lama / tanpa kategori</span><strong>Rp {{ number_format($byCategory['uncategorised'], 0, ',', '.') }}</strong></div>
+                    @endif
+                    <div class="stat-sub">Setelah diskon; biaya ruangan dan biaya admin terpisah dari treatment. Total = Omzet.</div>
                 </div>
 
                 <div class="stat-card">
@@ -528,7 +529,7 @@
                             </div>
                         </div>
 
-                        <button type="submit" class="btn btn-dark" style="margin-top:16px;">Save Transaction</button>
+                        <button type="submit" class="kx-btn kx-btn--primary btn btn-dark" style="margin-top:16px;">Save Transaction</button>
                     </form>
                 @else
                     <div class="empty">Bulan ini sudah tutup buku. Transaksi manual tidak dapat ditambah atau dihapus.</div>
@@ -545,7 +546,7 @@
                     </div>
 
                     <div class="action-row" style="margin-top:0;">
-                        <a href="/admin/owner-finance/print?month={{ $month }}" class="btn btn-soft" target="_blank">Print PDF</a>
+                        <a href="/admin/owner-finance/print?month={{ $month }}" class="kx-btn kx-btn--outline btn btn-soft" target="_blank">Print PDF</a>
                     </div>
                 </div>
 
@@ -593,11 +594,11 @@
                                     <td>
                                         @if($transaction['kind'] !== 'manual')
                                             {{-- Baris dari invoice (pembayaran/refund/invoice lama) tidak dapat dihapus di sini. --}}
-                                            <a class="btn btn-soft" href="{{ $transaction['url'] }}">Open Billing</a>
+                                            <a class="kx-btn kx-btn--outline btn btn-soft" href="{{ $transaction['url'] }}">Open Billing</a>
                                         @elseif(!$closing)
                                             <form method="POST" action="/admin/owner-finance/transactions/{{ $transaction['id'] }}/delete" onsubmit="return confirm('Hapus transaksi manual ini?')">
                                                 @csrf
-                                                <button type="submit" class="btn btn-red">Delete</button>
+                                                <button type="submit" class="kx-btn kx-btn--danger btn btn-red">Delete</button>
                                             </form>
                                         @else
                                             <span class="pill pill-slate">Locked</span>
@@ -635,7 +636,7 @@
                             <label>Closing Notes</label>
                             <textarea name="notes" placeholder="Contoh: Tutup buku final bulan {{ $monthLabel }}"></textarea>
 
-                            <button type="submit" class="btn btn-green" style="margin-top:14px;">Tutup Buku Bulan Ini</button>
+                            <button type="submit" class="kx-btn kx-btn--primary btn btn-green" style="margin-top:14px;">Tutup Buku Bulan Ini</button>
                         </form>
                     @else
                         <div class="empty">
@@ -659,7 +660,7 @@
                                 <label style="margin-top:10px;display:block;">Password admin</label>
                                 <input type="password" name="password" required autocomplete="current-password">
 
-                                <button type="submit" class="btn" style="margin-top:14px;background:#be123c;color:#fff;">Buka Kembali Buku</button>
+                                <button type="submit" class="kx-btn kx-btn--danger btn" style="margin-top:14px;">Buka Kembali Buku</button>
                             </form>
                         </details>
                     @endif

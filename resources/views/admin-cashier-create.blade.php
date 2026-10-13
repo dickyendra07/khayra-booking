@@ -16,10 +16,10 @@
         .title { margin: 0; font-size: 42px; line-height: 1.05; color: #22343a; font-weight: 900; }
         .subtitle { margin: 12px 0 0; max-width: 850px; color: #6b7280; font-size: 14px; line-height: 1.9; }
 
-        .btn { min-height: 42px; border: 0; cursor: pointer; padding: 0 16px; border-radius: 14px; font-size: 13px; font-weight: 900; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; font-family: Arial, sans-serif; white-space: nowrap; }
-        .btn-soft { color: #2f7c7a; background: #ffffff; border: 1px solid #e6ebea; }
-        .btn-primary { background: linear-gradient(135deg, #3d8a89 0%, #2f7c7a 100%); color: #ffffff; box-shadow: 0 12px 24px rgba(47,124,122,.16); }
-        .btn-danger { background: #fff1f2; color: #be123c; border: 1px solid #ffe0e6; }
+
+
+
+
 
         .hero, .section-card {
             background: #ffffff;
@@ -114,6 +114,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="/images/khayra-logo.png">
+    @include('partials.ui-assets')
 </head>
 <body>
 <div class="layout">
@@ -130,7 +131,7 @@
                     </p>
                 </div>
 
-                <a href="/admin/billings" class="btn btn-soft">Lihat Billing</a>
+                <a href="/admin/billings" class="kx-btn kx-btn--outline btn btn-soft">Lihat Billing</a>
             </div>
 
             <section class="hero">
@@ -242,11 +243,12 @@
                         </div>
 
                         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                            <button type="button" class="btn btn-soft" onclick="addBookingFeeItem()">+ Booking Fee Rp50.000</button>
-                            <button type="button" class="btn btn-primary" onclick="addLineItem()">+ Tambah Item</button>
+                            <button type="button" class="kx-btn kx-btn--outline btn btn-soft" onclick="addBookingFeeItem()">+ Booking Fee Rp50.000</button>
+                            <button type="button" class="kx-btn kx-btn--primary btn btn-primary" onclick="addLineItem()">+ Tambah Item</button>
                         </div>
                     </div>
 
+                    <div id="adminFeeIndicator" style="display:none;margin-bottom:10px;padding:10px 14px;border-radius:12px;font-size:13px;line-height:1.6;border:1px solid #e2e8f0;background:#f8fafc;color:#334155;"></div>
                     <div id="chargeSuggestions" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;"></div>
 
                     <div id="lineItems"></div>
@@ -341,8 +343,8 @@
                     <textarea name="notes" rows="4" placeholder="Contoh: pembayaran lengkap, paket treatment, atau catatan administrasi.">{{ old('notes') }}</textarea>
 
                     <div class="submit-row">
-                        <a href="/admin/billings" class="btn btn-soft">Batal</a>
-                        <button type="submit" class="btn btn-primary">Simpan Checkout</button>
+                        <a href="/admin/billings" class="kx-btn kx-btn--outline btn btn-soft">Batal</a>
+                        <button type="submit" class="kx-btn kx-btn--primary btn btn-primary">Simpan Checkout</button>
                     </div>
                 </section>
             </form>
@@ -431,7 +433,7 @@
 
             <div class="field">
                 <label>&nbsp;</label>
-                <button type="button" class="btn btn-danger" onclick="removeLineItem(this)">Hapus</button>
+                <button type="button" class="kx-btn kx-btn--danger btn btn-danger" onclick="removeLineItem(this)">Hapus</button>
             </div>
         </div>
 
@@ -463,7 +465,7 @@
     const CREDIT_AVAILABLE = @json((float) ($creditAvailable ?? 0));
     const ROOM_RATES = @json($roomRates ?? new stdClass);
     const BILLED_VISITS = @json($billedVisitIds ?? []);
-    const ADMIN_FEE = @json($adminFee ?? ['enabled' => false, 'amount' => 0, 'chargedPatientIds' => []]);
+    const ADMIN_FEE = @json($adminFee);
 
     function hasReferenceLine(type, id) {
         return Array.from(document.querySelectorAll('.line-item')).some(row =>
@@ -502,7 +504,7 @@
         if (room && visitOption.value && !BILLED_VISITS.includes(Number(visitOption.value)) && !hasReferenceLine('visit_room', visitOption.value)) {
             const button = document.createElement('button');
             button.type = 'button';
-            button.className = 'btn btn-soft';
+            button.className = 'kx-btn kx-btn--outline btn btn-soft';
             button.textContent = '+ Biaya ruangan ' + room.name + ' (Rp ' + Number(room.rate).toLocaleString('id-ID') + ' ' + room.unitLabel.toLowerCase() + ')';
             button.onclick = () => addReferenceLine({
                 type: 'visit_room', id: visitOption.value, category: 'room_charge', price: room.rate, quantity: 1,
@@ -513,19 +515,27 @@
         }
 
         const patientSelect = document.getElementById('patientSelect');
+        const indicator = document.getElementById('adminFeeIndicator');
+        const patientState = patientSelect && patientSelect.value && ADMIN_FEE.patients ? ADMIN_FEE.patients[patientSelect.value] : null;
 
-        if (ADMIN_FEE.enabled && patientSelect && patientSelect.value
-            && !ADMIN_FEE.chargedPatientIds.includes(Number(patientSelect.value)) && !hasReferenceLine('patient_admin_fee', patientSelect.value)) {
-            const button = document.createElement('button');
-            button.type = 'button';
-            button.className = 'btn btn-soft';
-            button.textContent = '+ Biaya administrasi pasien baru (Rp ' + Number(ADMIN_FEE.amount).toLocaleString('id-ID') + ')';
-            button.onclick = () => addReferenceLine({
-                type: 'patient_admin_fee', id: patientSelect.value, category: 'admin_fee', price: ADMIN_FEE.amount, quantity: 1,
-                description: 'Biaya Administrasi Awal Kedatangan', hint: 'Biaya admin: komponen tersendiri, tidak didiskon.',
-            });
-            box.appendChild(button);
+        // Indikator biaya administrasi (informasi saja): tagihan dibuat otomatis saat registrasi pasien, bukan di kasir.
+        if (indicator) {
+            indicator.style.display = patientState ? 'block' : 'none';
+
+            if (patientState) {
+                const tone = {
+                    charged: ['#ecfdf5', '#bbf7d0', '#166534'], voided: ['#fffbeb', '#fde68a', '#92400e'],
+                    not_applicable: ['#f8fafc', '#e2e8f0', '#475569'],
+                }[patientState.state] || ['#f8fafc', '#e2e8f0', '#475569'];
+                indicator.style.background = tone[0];
+                indicator.style.borderColor = tone[1];
+                indicator.style.color = tone[2];
+                indicator.textContent = patientState.label;
+            }
         }
+
+        // Koreksi: bila invoice administrasi di-void, baris biayanya dapat diterbitkan ulang lewat Terbitkan Ulang
+        // (halaman detail invoice), bukan lewat saran di kasir.
     }
     const MANUAL_DEFAULT_CATEGORY = @json(config('clinic.billing.manual_service_default_category'));
 
@@ -950,20 +960,7 @@
         button.id = 'khayraInstallAppButton';
         button.type = 'button';
         button.innerText = 'Install App';
-        button.style.position = 'fixed';
-        button.style.right = '18px';
-        button.style.bottom = '18px';
-        button.style.zIndex = '99999';
-        button.style.border = '0';
-        button.style.borderRadius = '999px';
-        button.style.padding = '12px 16px';
-        button.style.background = '#2f7c7a';
-        button.style.color = '#ffffff';
-        button.style.fontWeight = '900';
-        button.style.fontFamily = 'Arial, sans-serif';
-        button.style.fontSize = '13px';
-        button.style.boxShadow = '0 14px 30px rgba(47,124,122,.24)';
-        button.style.cursor = 'pointer';
+        button.className = 'kx-btn kx-btn--primary kx-install-btn';
 
         button.addEventListener('click', function () {
             if (!deferredInstallPrompt) {

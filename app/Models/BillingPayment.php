@@ -23,7 +23,7 @@ class BillingPayment extends Model
 
     protected $fillable = [
         'billing_id', 'type', 'method', 'tendered_amount', 'change_amount', 'amount',
-        'paid_at', 'paid_on', 'reference', 'reason', 'recorded_by', 'linked_billing_id', 'reverses_payment_id',
+        'paid_at', 'paid_on', 'reference', 'reason', 'recorded_by', 'linked_billing_id', 'reverses_payment_id', 'idempotency_key',
     ];
 
     protected $casts = [

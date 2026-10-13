@@ -56,35 +56,13 @@
             flex-wrap: wrap;
         }
 
-        .back-link,
-        .edit-link,
-        .patient-link {
-            display: inline-block;
-            text-decoration: none;
-            padding: 12px 16px;
-            border-radius: 14px;
-            font-weight: 700;
-            white-space: nowrap;
-            font-size: 14px;
-        }
 
-        .back-link {
-            background: white;
-            color: #0f766e;
-            border: 1px solid #d7ebe6;
-        }
 
-        .edit-link {
-            background: #eff6ff;
-            color: #1d4ed8;
-            border: 1px solid #cfe0ff;
-        }
 
-        .patient-link {
-            background: #eefcf5;
-            color: #15803d;
-            border: 1px solid #bbf7d0;
-        }
+
+
+
+
 
         .alert-success {
             background: #dcfce7;
@@ -253,6 +231,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="/images/khayra-logo.png">
+    @include('partials.ui-assets')
 </head>
 <body>
 <div class="layout">
@@ -266,19 +245,19 @@
             </div>
 
             <div class="topbar-actions">
-                <a href="/admin/bookings/{{ $booking->id }}/edit" class="edit-link">Edit Booking</a>
+                <a href="/admin/bookings/{{ $booking->id }}/edit" class="kx-btn kx-btn--secondary edit-link">Edit Booking</a>
                 @if($booking->patient)
-                    <a href="/admin/visits/create?booking_id={{ $booking->id }}" class="patient-link">Buat Visit & Rekam Medis</a>
+                    <a href="/admin/visits/create?booking_id={{ $booking->id }}" class="kx-btn kx-btn--secondary patient-link">Buat Visit & Rekam Medis</a>
                 @endif
 
                 @if(!$booking->patient_id)
                     <form method="POST" action="/admin/bookings/{{ $booking->id }}/create-patient" style="margin:0;">
                         @csrf
-                        <button type="submit" class="patient-link" style="cursor:pointer;">Create Patient</button>
+                        <button type="submit" class="kx-btn kx-btn--secondary patient-link" style="cursor:pointer;">Create Patient</button>
                     </form>
                 @endif
 
-                <a href="/admin/bookings" class="back-link">← Kembali ke Bookings</a>
+                <a href="/admin/bookings" class="kx-btn kx-btn--outline back-link">← Kembali ke Bookings</a>
             </div>
         </div>
 
@@ -315,6 +294,11 @@
                             Belum terhubung
                         @endif
                     </div>
+                </div>
+
+                <div class="summary-box">
+                    <div class="summary-label">PIC (Fisioterapis)</div>
+                    <div class="summary-value">{{ optional($booking->therapist)->full_name ?: 'Belum ditentukan' }}</div>
                 </div>
 
                 <div class="summary-box">
@@ -389,20 +373,7 @@
         button.id = 'khayraInstallAppButton';
         button.type = 'button';
         button.innerText = 'Install App';
-        button.style.position = 'fixed';
-        button.style.right = '18px';
-        button.style.bottom = '18px';
-        button.style.zIndex = '99999';
-        button.style.border = '0';
-        button.style.borderRadius = '999px';
-        button.style.padding = '12px 16px';
-        button.style.background = '#2f7c7a';
-        button.style.color = '#ffffff';
-        button.style.fontWeight = '900';
-        button.style.fontFamily = 'Arial, sans-serif';
-        button.style.fontSize = '13px';
-        button.style.boxShadow = '0 14px 30px rgba(47,124,122,.24)';
-        button.style.cursor = 'pointer';
+        button.className = 'kx-btn kx-btn--primary kx-install-btn';
 
         button.addEventListener('click', function () {
             if (!deferredInstallPrompt) {

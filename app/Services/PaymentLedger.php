@@ -6,6 +6,7 @@ use App\Models\Billing;
 use App\Models\BillingPayment;
 use App\Support\ClinicTime;
 use DomainException;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -55,35 +56,50 @@ class PaymentLedger
     /**
      * Catat pembayaran pada invoice yang sudah ada (cicilan atau pelunasan).
      *
+     * Idempoten bila $idempotencyKey diberikan: pengiriman ulang dengan kunci yang sama mengembalikan baris
+     * yang sudah tercatat (wasRecentlyCreated = false) dan TIDAK menambah baris. Pengecekan dilakukan di dalam
+     * transaction setelah invoice dikunci, dan dijaga unique index database sebagai lapis terakhir.
+     *
      * @throws DomainException bila tidak boleh dicatat
      */
-    public function recordPayment(Billing $billing, float $tendered, ?string $method, ?string $reference = null): BillingPayment
+    public function recordPayment(Billing $billing, float $tendered, ?string $method, ?string $reference = null, ?string $idempotencyKey = null): BillingPayment
     {
-        return DB::transaction(function () use ($billing, $tendered, $method, $reference) {
-            $locked = Billing::lockForUpdate()->findOrFail($billing->id);
+        FinancePeriodLock::prepare([ClinicTime::today()]);
 
-            if (! $locked->is_ledger) {
-                throw new DomainException('Invoice lama (legacy) tidak memakai buku pembayaran.');
-            }
+        return $this->idempotent($billing, $idempotencyKey, function () use ($billing, $tendered, $method, $reference, $idempotencyKey) {
+            return DB::transaction(function () use ($billing, $tendered, $method, $reference, $idempotencyKey) {
+                // Kunci periode kas (hari bisnis pembayaran) SEBELUM kunci invoice: urutan kunci seragam di semua penulis.
+                FinancePeriodLock::shared([ClinicTime::today()]);
 
-            if ($locked->payment_status === 'void' || $locked->voided_at) {
-                throw new DomainException('Invoice void tidak dapat menerima pembayaran.');
-            }
+                $locked = Billing::lockForUpdate()->findOrFail($billing->id);
 
-            $payment = $this->applyPayment($locked, $tendered, $method, $reference);
-            BillingAudit::record('payment_recorded', $locked, null, [
-                'tendered' => $payment->tendered_amount, 'change' => $payment->change_amount, 'net' => $payment->amount,
-                'method' => $payment->method, 'paid_on' => $payment->paid_on->toDateString(),
-            ]);
+                if ($replay = $this->replayOf($locked, BillingPayment::TYPE_PAYMENT, $idempotencyKey)) {
+                    return $replay;
+                }
 
-            return $payment;
+                if (! $locked->is_ledger) {
+                    throw new DomainException('Invoice lama (legacy) tidak memakai buku pembayaran.');
+                }
+
+                if ($locked->payment_status === 'void' || $locked->voided_at) {
+                    throw new DomainException('Invoice void tidak dapat menerima pembayaran.');
+                }
+
+                $payment = $this->applyPayment($locked, $tendered, $method, $reference, $idempotencyKey);
+                BillingAudit::record('payment_recorded', $locked, null, [
+                    'tendered' => $payment->tendered_amount, 'change' => $payment->change_amount, 'net' => $payment->amount,
+                    'method' => $payment->method, 'paid_on' => $payment->paid_on->toDateString(),
+                ]);
+
+                return $payment;
+            });
         });
     }
 
     /**
      * Pembayaran awal saat invoice baru dibuat (invoice sudah terkunci oleh transaction pembuatnya).
      */
-    public function applyPayment(Billing $billing, float $tendered, ?string $method, ?string $reference = null): BillingPayment
+    public function applyPayment(Billing $billing, float $tendered, ?string $method, ?string $reference = null, ?string $idempotencyKey = null): BillingPayment
     {
         if ($tendered <= 0) {
             throw new DomainException('Jumlah pembayaran harus lebih dari 0.');
@@ -91,7 +107,11 @@ class PaymentLedger
 
         $paidOn = ClinicTime::today();
 
-        if (BillingIntegrity::isPeriodClosed($paidOn)) {
+        // Dipanggil di dalam transaction: kunci periode (idempoten bila sudah diambil pemanggil), lalu baca status tutup buku
+        // dengan locking read agar tidak basi terhadap tutup buku yang baru commit.
+        FinancePeriodLock::shared([$paidOn]);
+
+        if (FinancePeriodLock::isClosed($paidOn)) {
             throw new DomainException('Periode '.BillingIntegrity::monthOf($paidOn).' sudah tutup buku; pembayaran tidak dapat dicatat pada periode tertutup.');
         }
 
@@ -115,6 +135,7 @@ class PaymentLedger
             'paid_on' => $paidOn,
             'reference' => $reference,
             'recorded_by' => session('admin_email') ?: 'admin',
+            'idempotency_key' => $idempotencyKey,
         ]);
 
         $this->sync($billing);
@@ -124,52 +145,108 @@ class PaymentLedger
 
     /**
      * Refund uang yang tertahan pada invoice void. Alasan wajib. Tidak bisa melebihi saldo tertahan.
+     * Idempoten seperti recordPayment bila $idempotencyKey diberikan.
      *
      * @throws DomainException
      */
-    public function refund(Billing $billing, float $amount, string $method, string $reason): BillingPayment
+    public function refund(Billing $billing, float $amount, string $method, string $reason, ?string $idempotencyKey = null): BillingPayment
     {
         if (mb_strlen(trim($reason)) < 5) {
             throw new DomainException('Alasan refund wajib diisi (minimal 5 karakter).');
         }
 
-        return DB::transaction(function () use ($billing, $amount, $method, $reason) {
-            $locked = Billing::lockForUpdate()->findOrFail($billing->id);
+        FinancePeriodLock::prepare([ClinicTime::today()]);
 
-            if (! $locked->is_ledger || ($locked->payment_status !== 'void' && ! $locked->voided_at)) {
-                throw new DomainException('Refund hanya untuk invoice void yang memakai buku pembayaran.');
-            }
+        return $this->idempotent($billing, $idempotencyKey, function () use ($billing, $amount, $method, $reason, $idempotencyKey) {
+            return DB::transaction(function () use ($billing, $amount, $method, $reason, $idempotencyKey) {
+                FinancePeriodLock::shared([ClinicTime::today()]);
 
-            $paidOn = ClinicTime::today();
+                $locked = Billing::lockForUpdate()->findOrFail($billing->id);
 
-            if (BillingIntegrity::isPeriodClosed($paidOn)) {
-                throw new DomainException('Periode '.BillingIntegrity::monthOf($paidOn).' sudah tutup buku; refund tidak dapat dicatat pada periode tertutup.');
-            }
+                if ($replay = $this->replayOf($locked, BillingPayment::TYPE_REFUND, $idempotencyKey)) {
+                    return $replay;
+                }
 
-            $held = self::heldOnVoid($locked);
-            $amount = round($amount, 2);
+                if (! $locked->is_ledger || ($locked->payment_status !== 'void' && ! $locked->voided_at)) {
+                    throw new DomainException('Refund hanya untuk invoice void yang memakai buku pembayaran.');
+                }
 
-            if ($amount <= 0 || $amount > $held + 0.001) {
-                throw new DomainException('Jumlah refund harus lebih dari 0 dan tidak melebihi saldo tertahan Rp'.number_format($held, 0, ',', '.').'.');
-            }
+                $paidOn = ClinicTime::today();
 
-            $refund = BillingPayment::create([
-                'billing_id' => $locked->id,
-                'type' => BillingPayment::TYPE_REFUND,
-                'method' => $method,
-                'tendered_amount' => $amount,
-                'change_amount' => 0,
-                'amount' => $amount,
-                'paid_at' => now(),
-                'paid_on' => $paidOn,
-                'reason' => $reason,
-                'recorded_by' => session('admin_email') ?: 'admin',
-            ]);
+                if (FinancePeriodLock::isClosed($paidOn)) {
+                    throw new DomainException('Periode '.BillingIntegrity::monthOf($paidOn).' sudah tutup buku; refund tidak dapat dicatat pada periode tertutup.');
+                }
 
-            BillingAudit::record('refund_recorded', $locked, null, ['amount' => $amount, 'method' => $method, 'paid_on' => $paidOn], $reason);
+                $held = self::heldOnVoid($locked);
+                $amount = round($amount, 2);
 
-            return $refund;
+                if ($amount <= 0 || $amount > $held + 0.001) {
+                    throw new DomainException('Jumlah refund harus lebih dari 0 dan tidak melebihi saldo tertahan Rp'.number_format($held, 0, ',', '.').'.');
+                }
+
+                $refund = BillingPayment::create([
+                    'billing_id' => $locked->id,
+                    'type' => BillingPayment::TYPE_REFUND,
+                    'method' => $method,
+                    'tendered_amount' => $amount,
+                    'change_amount' => 0,
+                    'amount' => $amount,
+                    'paid_at' => now(),
+                    'paid_on' => $paidOn,
+                    'reason' => $reason,
+                    'recorded_by' => session('admin_email') ?: 'admin',
+                    'idempotency_key' => $idempotencyKey,
+                ]);
+
+                BillingAudit::record('refund_recorded', $locked, null, ['amount' => $amount, 'method' => $method, 'paid_on' => $paidOn], $reason);
+
+                return $refund;
+            });
         });
+    }
+
+    /**
+     * Baris yang sudah tercatat untuk kunci ini (pengiriman ulang). Kunci yang sama TIDAK boleh dipakai
+     * untuk invoice atau jenis transaksi lain: itu bukan pengiriman ulang, melainkan kesalahan/penyalahgunaan.
+     *
+     * @throws DomainException
+     */
+    private function replayOf(Billing $locked, string $type, ?string $key): ?BillingPayment
+    {
+        if (! $key) {
+            return null;
+        }
+
+        $existing = BillingPayment::where('idempotency_key', $key)->first();
+
+        if (! $existing) {
+            return null;
+        }
+
+        if ((int) $existing->billing_id !== (int) $locked->id || $existing->type !== $type) {
+            throw new DomainException('Token pengiriman ini sudah dipakai untuk transaksi lain. Muat ulang halaman lalu ulangi.');
+        }
+
+        return $existing;
+    }
+
+    /**
+     * Lapis terakhir: bila dua request dengan kunci yang sama lolos bersamaan sampai insert, unique index
+     * database menolak yang kedua dan kita kembalikan baris pemenangnya, bukan error.
+     */
+    private function idempotent(Billing $billing, ?string $key, callable $callback): BillingPayment
+    {
+        try {
+            return $callback();
+        } catch (UniqueConstraintViolationException $exception) {
+            $existing = $key ? BillingPayment::where('idempotency_key', $key)->where('billing_id', $billing->id)->first() : null;
+
+            if (! $existing) {
+                throw $exception;
+            }
+
+            return $existing;
+        }
     }
 
     /**
@@ -182,6 +259,9 @@ class PaymentLedger
     public function transferCredit(Billing $from, Billing $to): float
     {
         return DB::transaction(function () use ($from, $to) {
+            // Urutan kunci global: kunci periode lebih dulu (idempoten bila pemanggil sudah mengambilnya), baru kunci invoice.
+            FinancePeriodLock::shared([ClinicTime::today()]);
+
             // Kunci kedua invoice dengan urutan id yang sama agar tidak deadlock.
             $ids = [$from->id, $to->id];
             sort($ids);

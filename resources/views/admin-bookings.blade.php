@@ -75,30 +75,11 @@
             flex-wrap: wrap;
         }
 
-        .ghost-link,
-        .primary-link {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            text-decoration: none;
-            padding: 11px 14px;
-            border-radius: 12px;
-            font-size: 13px;
-            font-weight: 800;
-        }
 
-        .ghost-link {
-            background: #ffffff;
-            border: 1px solid #e6ebea;
-            color: #2c5b5a;
-        }
 
-        .primary-link {
-            background: linear-gradient(135deg, #3d8a89 0%, #2f7c7a 100%);
-            border: 1px solid #2f7c7a;
-            color: #ffffff;
-            box-shadow: 0 12px 22px rgba(47,124,122,.14);
-        }
+
+
+
 
         .hero {
             background: #ffffff;
@@ -336,17 +317,7 @@
             box-shadow: 0 0 0 4px rgba(23,111,105,.08);
         }
 
-        .filter-btn {
-            height: 50px;
-            padding: 0 22px;
-            border: none;
-            border-radius: 14px;
-            background: linear-gradient(135deg, #0f172a 0%, #1f2d3d 100%);
-            color: #ffffff;
-            font-size: 14px;
-            font-weight: 800;
-            cursor: pointer;
-        }
+
 
         .preview-grid {
             display: grid;
@@ -745,63 +716,21 @@
             margin-bottom: 10px;
         }
 
-        .action-link,
-        button.action-link,
-        .mini-submit {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            text-decoration: none;
-            padding: 9px 12px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 800;
-            border: 1px solid transparent;
-            cursor: pointer;
-            font-family: Arial, sans-serif;
-            transition: all .18s ease;
-            font-family: Arial, sans-serif;
-        }
 
-        button.action-link {
-            cursor: pointer;
-        }
 
-        .btn-detail {
-            background: #eef7f5;
-            color: #2f7c7a;
-            border-color: #d8ebe7;
-        }
 
-        .btn-edit {
-            background: #eef2ff;
-            color: #3457d5;
-            border-color: #dde5ff;
-        }
 
-        .btn-create {
-            background: #ecfdf5;
-            color: #166534;
-            border-color: #ccefd9;
-        }
 
-        .btn-wa {
-            background: #f0fdf4;
-            color: #15803d;
-            border-color: #bbf7d0;
-        }
 
-        .btn-visit {
-            background: #fff7ed;
-            color: #c2410c;
-            border-color: #fed7aa;
-        }
 
-        .action-link:hover,
-        .mini-submit:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
-        }
+
+
+
+
+
+
+
+
 
         .status-form {
             display: flex;
@@ -818,13 +747,7 @@
             font-size: 12px;
         }
 
-        .mini-submit {
-            height: 40px;
-            padding: 0 14px;
-            background: linear-gradient(135deg, #3d8a89 0%, #2f7c7a 100%);
-            color: #ffffff;
-            border: none;
-        }
+
 
 
         .quick-action-row {
@@ -834,37 +757,13 @@
             margin-top: 10px;
         }
 
-        .quick-action-btn {
-            border: none;
-            min-height: 34px;
-            padding: 0 11px;
-            border-radius: 999px;
-            background: #f7faf9;
-            color: #2f7c7a;
-            border: 1px solid #dcebe8;
-            font-size: 11px;
-            font-weight: 900;
-            cursor: pointer;
-            font-family: Arial, sans-serif;
-        }
 
-        .quick-action-btn.dark {
-            background: #17232b;
-            border-color: #17232b;
-            color: #ffffff;
-        }
 
-        .quick-action-btn.warn {
-            background: #fff7ed;
-            border-color: #fed7aa;
-            color: #c2410c;
-        }
 
-        .quick-action-btn.danger {
-            background: #fef2f2;
-            border-color: #fecaca;
-            color: #b91c1c;
-        }
+
+
+
+
 
         .empty-state {
             padding: 28px;
@@ -920,31 +819,9 @@
             flex-wrap: wrap;
             margin: 12px 0 18px;
         }
-        .scheduler-action-btn {
-            min-height: 42px;
-            border: 0;
-            cursor: pointer;
-            padding: 0 16px;
-            border-radius: 14px;
-            font-size: 13px;
-            font-weight: 900;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-family: Arial, sans-serif;
-            white-space: nowrap;
-        }
-        .scheduler-action-btn.primary {
-            background: linear-gradient(135deg, #3d8a89 0%, #2f7c7a 100%);
-            color: #ffffff;
-            box-shadow: 0 12px 24px rgba(47,124,122,.16);
-        }
-        .scheduler-action-btn.soft {
-            color: #2f7c7a;
-            background: #ffffff;
-            border: 1px solid #d8ebe7;
-        }
+
+
+
 
     
         /* 5F Booking Scheduler Polish */
@@ -1075,30 +952,9 @@
             font-family: Arial, Helvetica, sans-serif !important;
         }
 
-        .mini-submit {
-            height: 42px !important;
-            min-height: 42px !important;
-            border-radius: 14px !important;
-            padding: 0 18px !important;
-            font-size: 13px !important;
-            font-weight: 900 !important;
-            font-family: Arial, Helvetica, sans-serif !important;
-            white-space: nowrap !important;
-        }
 
-        .action-link {
-            min-height: 36px !important;
-            border-radius: 13px !important;
-            padding: 0 14px !important;
-            display: inline-flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            font-size: 12px !important;
-            font-weight: 900 !important;
-            font-family: Arial, Helvetica, sans-serif !important;
-            line-height: 1 !important;
-            white-space: nowrap !important;
-        }
+
+
 
         .status-pill {
             min-height: 28px !important;
@@ -1180,8 +1036,12 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="/images/khayra-logo.png">
+    @include('partials.ui-assets')
 </head>
 <body>
+@php
+    $picNames = \App\Models\Therapist::pluck('full_name', 'id');
+@endphp
 <div class="layout">
     @include('partials.admin-sidebar', ['activeMenu' => 'bookings'])
 
@@ -1197,8 +1057,8 @@
                 </div>
 
                 <div class="top-actions">
-                    <a href="/admin/dashboard" class="ghost-link">Dashboard ERM</a>
-                    <a href="/booking" class="primary-link">Open Public Booking</a>
+                    <a href="/admin/dashboard" class="kx-btn kx-btn--outline ghost-link">Dashboard ERM</a>
+                    <a href="/booking" class="kx-btn kx-btn--primary primary-link">Open Public Booking</a>
                 </div>
             </div>
 
@@ -1269,15 +1129,15 @@
 
                     
                 <div class="scheduler-action-row">
-                    <a href="/admin/bookings/calendar?date={{ $selectedDate ?? \App\Support\ClinicTime::today() }}" class="scheduler-action-btn primary">Calendar View</a>
-                    <a href="/admin/bookings/create?date={{ $selectedDate ?? \App\Support\ClinicTime::today() }}" class="scheduler-action-btn soft">+ Buat Appointment</a>
+                    <a href="/admin/bookings/calendar?date={{ $selectedDate ?? \App\Support\ClinicTime::today() }}" class="kx-btn kx-btn--outline scheduler-action-btn primary">Calendar View</a>
+                    <a href="/admin/bookings/create?date={{ $selectedDate ?? \App\Support\ClinicTime::today() }}" class="kx-btn kx-btn--primary scheduler-action-btn soft">+ Buat Appointment</a>
                 </div>
 <form method="GET" action="/admin/bookings" class="date-form">
                         <div class="field">
                             <label>Pilih Tanggal</label>
                             <input type="date" name="date" value="{{ $selectedDate }}">
                         </div>
-                        <button type="submit" class="filter-btn">Lihat Jadwal</button>
+                        <button type="submit" class="kx-btn kx-btn--primary kx-btn--lg filter-btn">Lihat Jadwal</button>
                     </form>
                 </div>
 
@@ -1316,6 +1176,7 @@
                                                 <div class="agenda-name">{{ $booking->full_name ?: '-' }}</div>
                                                 <div class="agenda-meta">
                                                     {{ $booking->service ?: '-' }} · WA {{ $booking->whatsapp ?: '-' }}
+                                                    · PIC: {{ $picNames[$booking->therapist_id] ?? 'Belum ditentukan' }}
                                                     @if($booking->patient)
                                                         · Linked Patient #{{ $booking->patient->id }}
                                                     @endif
@@ -1330,16 +1191,16 @@
                                         </div>
 
                                         <div class="agenda-actions">
-                                            <a href="/admin/bookings/{{ $booking->id }}" class="action-link btn-detail">Detail</a>
-                                            <a href="/admin/bookings/{{ $booking->id }}/edit" class="action-link btn-edit">Edit</a>
+                                            <a href="/admin/bookings/{{ $booking->id }}" class="kx-btn kx-btn--secondary kx-btn--sm action-link btn-detail">Detail</a>
+                                            <a href="/admin/bookings/{{ $booking->id }}/edit" class="kx-btn kx-btn--outline kx-btn--sm action-link btn-edit">Edit</a>
 
                                             @if(!$booking->patient)
                                                 <form method="POST" action="/admin/bookings/{{ $booking->id }}/create-patient" style="margin:0;">
                                                         @csrf
-                                                        <button type="submit" class="action-link btn-create">Create Patient</button>
+                                                        <button type="submit" class="kx-btn kx-btn--primary kx-btn--sm action-link btn-create">Create Patient</button>
                                                     </form>
                                             @else
-                                                <a href="/admin/visits/create?booking_id={{ $booking->id }}" class="action-link btn-visit">Create Visit</a>
+                                                <a href="/admin/visits/create?booking_id={{ $booking->id }}" class="kx-btn kx-btn--secondary kx-btn--sm action-link btn-visit">Create Visit</a>
                                             @endif
                                         </div>
 
@@ -1354,7 +1215,7 @@
                                                 <option value="cancelled" {{ $booking->status == 'cancelled' ? 'selected' : '' }}>Cancelled</option>
                                                 <option value="no_show" {{ $booking->status == 'no_show' ? 'selected' : '' }}>No Show</option>
                                             </select>
-                                            <button type="submit" class="mini-submit">Update</button>
+                                            <button type="submit" class="kx-btn kx-btn--primary kx-btn--sm mini-submit">Update</button>
                                         </form>
                                     </div>
                                 </div>
@@ -1484,7 +1345,7 @@
                     </div>
 
                     <div class="field">
-                        <button type="submit" class="filter-btn">Terapkan Filter</button>
+                        <button type="submit" class="kx-btn kx-btn--primary kx-btn--lg filter-btn">Terapkan Filter</button>
                     </div>
                 </form>
             </section>
@@ -1502,11 +1363,12 @@
                                     <th>Kontak</th>
                                     <th>Layanan</th>
                                     <th>Jadwal</th>
+                                    <th>PIC Fisioterapis</th>
                                     <th>Room</th>
                                     <th>Keluhan Awal</th>
                                     <th>Status</th>
                                     <th>Relasi Pasien</th>
-                                    <th>Action</th>
+                                    <th class="kx-col-actions">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -1530,6 +1392,11 @@
                                         <td>
                                             <div class="primary-text">{{ $booking->booking_date ?: '-' }}</div>
                                             <div class="secondary-text">{{ $booking->booking_time ?: '-' }}</div>
+                                        </td>
+
+                                        <td>
+                                            <div class="primary-text">{{ $picNames[$booking->therapist_id] ?? 'Belum ditentukan' }}</div>
+                                            <div class="secondary-text">PIC (fisioterapis)</div>
                                         </td>
 
                                         <td>
@@ -1563,7 +1430,7 @@
                                             @endif
                                         </td>
 
-                                        <td>
+                                        <td class="kx-col-actions">
                                             @php
                                                 $cleanWhatsapp = preg_replace('/[^0-9]/', '', (string) $booking->whatsapp);
 
@@ -1599,18 +1466,18 @@
 
                                             <div class="action-stack">
                                                 @if($waLink)
-                                                    <a href="{{ $waLink }}" target="_blank" class="action-link btn-wa">Reminder WA</a>
+                                                    <a href="{{ $waLink }}" target="_blank" class="kx-btn kx-btn--secondary kx-btn--sm action-link btn-wa">Reminder WA</a>
                                                 @endif
-                                                <a href="/admin/bookings/{{ $booking->id }}" class="action-link btn-detail">Detail</a>
-                                                <a href="/admin/bookings/{{ $booking->id }}/edit" class="action-link btn-edit">Edit</a>
+                                                <a href="/admin/bookings/{{ $booking->id }}" class="kx-btn kx-btn--secondary kx-btn--sm action-link btn-detail">Detail</a>
+                                                <a href="/admin/bookings/{{ $booking->id }}/edit" class="kx-btn kx-btn--outline kx-btn--sm action-link btn-edit">Edit</a>
 
                                                 @if(!$booking->patient)
                                                     <form method="POST" action="/admin/bookings/{{ $booking->id }}/create-patient" style="margin:0;">
                                                         @csrf
-                                                        <button type="submit" class="action-link btn-create">Create Patient</button>
+                                                        <button type="submit" class="kx-btn kx-btn--primary kx-btn--sm action-link btn-create">Create Patient</button>
                                                     </form>
                                                 @else
-                                                    <a href="/admin/visits/create?booking_id={{ $booking->id }}" class="action-link btn-visit">Create Visit</a>
+                                                    <a href="/admin/visits/create?booking_id={{ $booking->id }}" class="kx-btn kx-btn--secondary kx-btn--sm action-link btn-visit">Create Visit</a>
                                                 @endif
                                             </div>
 
@@ -1625,14 +1492,14 @@
                                                     <option value="cancelled" {{ $booking->status == 'cancelled' ? 'selected' : '' }}>Cancelled</option>
                                                     <option value="no_show" {{ $booking->status == 'no_show' ? 'selected' : '' }}>No Show</option>
                                                 </select>
-                                                <button type="submit" class="mini-submit">Update</button>
+                                                <button type="submit" class="kx-btn kx-btn--primary kx-btn--sm mini-submit">Update</button>
                                             </form>
                                             <div class="quick-action-row">
                                                 @if($booking->status === 'pending')
                                                     <form method="POST" action="/admin/bookings/{{ $booking->id }}/status" style="margin:0;">
                                                         @csrf
                                                         <input type="hidden" name="status" value="confirmed">
-                                                        <button type="submit" class="quick-action-btn">Confirm</button>
+                                                        <button type="submit" class="kx-btn kx-btn--outline kx-btn--sm quick-action-btn">Confirm</button>
                                                     </form>
                                                 @endif
 
@@ -1640,7 +1507,7 @@
                                                     <form method="POST" action="/admin/bookings/{{ $booking->id }}/status" style="margin:0;">
                                                         @csrf
                                                         <input type="hidden" name="status" value="arrived">
-                                                        <button type="submit" class="quick-action-btn">Arrived</button>
+                                                        <button type="submit" class="kx-btn kx-btn--outline kx-btn--sm quick-action-btn">Arrived</button>
                                                     </form>
                                                 @endif
 
@@ -1648,7 +1515,7 @@
                                                     <form method="POST" action="/admin/bookings/{{ $booking->id }}/status" style="margin:0;">
                                                         @csrf
                                                         <input type="hidden" name="status" value="in_treatment">
-                                                        <button type="submit" class="quick-action-btn dark">Start Treatment</button>
+                                                        <button type="submit" class="kx-btn kx-btn--primary kx-btn--sm quick-action-btn dark">Start Treatment</button>
                                                     </form>
                                                 @endif
 
@@ -1656,7 +1523,7 @@
                                                     <form method="POST" action="/admin/bookings/{{ $booking->id }}/status" style="margin:0;">
                                                         @csrf
                                                         <input type="hidden" name="status" value="completed">
-                                                        <button type="submit" class="quick-action-btn">Complete</button>
+                                                        <button type="submit" class="kx-btn kx-btn--outline kx-btn--sm quick-action-btn">Complete</button>
                                                     </form>
                                                 @endif
 
@@ -1664,7 +1531,7 @@
                                                     <form method="POST" action="/admin/bookings/{{ $booking->id }}/status" style="margin:0;">
                                                         @csrf
                                                         <input type="hidden" name="status" value="no_show">
-                                                        <button type="submit" class="quick-action-btn warn">No Show</button>
+                                                        <button type="submit" class="kx-btn kx-btn--secondary kx-btn--sm quick-action-btn warn">No Show</button>
                                                     </form>
                                                 @endif
 
@@ -1672,7 +1539,7 @@
                                                     <form method="POST" action="/admin/bookings/{{ $booking->id }}/status" style="margin:0;">
                                                         @csrf
                                                         <input type="hidden" name="status" value="cancelled">
-                                                        <button type="submit" class="quick-action-btn danger">Cancel</button>
+                                                        <button type="submit" class="kx-btn kx-btn--danger kx-btn--sm quick-action-btn danger">Cancel</button>
                                                     </form>
                                                 @endif
                                             </div>
@@ -1714,20 +1581,7 @@
         button.id = 'khayraInstallAppButton';
         button.type = 'button';
         button.innerText = 'Install App';
-        button.style.position = 'fixed';
-        button.style.right = '18px';
-        button.style.bottom = '18px';
-        button.style.zIndex = '99999';
-        button.style.border = '0';
-        button.style.borderRadius = '999px';
-        button.style.padding = '12px 16px';
-        button.style.background = '#2f7c7a';
-        button.style.color = '#ffffff';
-        button.style.fontWeight = '900';
-        button.style.fontFamily = 'Arial, sans-serif';
-        button.style.fontSize = '13px';
-        button.style.boxShadow = '0 14px 30px rgba(47,124,122,.24)';
-        button.style.cursor = 'pointer';
+        button.className = 'kx-btn kx-btn--primary kx-install-btn';
 
         button.addEventListener('click', function () {
             if (!deferredInstallPrompt) {

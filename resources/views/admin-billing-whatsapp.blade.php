@@ -20,18 +20,7 @@
             justify-content: flex-end;
             margin-bottom: 18px;
         }
-        .ghost-link {
-            display: inline-flex;
-            align-items: center;
-            text-decoration: none;
-            padding: 11px 14px;
-            border-radius: 12px;
-            background: #ffffff;
-            border: 1px solid #e6ebea;
-            color: #2c5b5a;
-            font-size: 13px;
-            font-weight: 700;
-        }
+
         .section-card {
             background: #ffffff;
             border: 1px solid #ecefef;
@@ -105,17 +94,7 @@
             justify-content: flex-end;
             margin-top: 22px;
         }
-        .submit-btn {
-            border: none;
-            background: linear-gradient(135deg, #3d8a89 0%, #2f7c7a 100%);
-            color: #ffffff;
-            padding: 14px 22px;
-            border-radius: 14px;
-            font-size: 14px;
-            font-weight: 800;
-            cursor: pointer;
-            box-shadow: 0 10px 20px rgba(47,124,122,.16);
-        }
+
         @media (max-width: 860px) {
             .layout { display: block; }
             .main { padding: 16px; }
@@ -131,6 +110,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="/images/khayra-logo.png">
+    @include('partials.ui-assets')
 </head>
 <body>
 <div class="layout">
@@ -139,7 +119,7 @@
     <main class="main">
         <div class="container">
             <div class="top-actions">
-                <a href="/admin/billings/{{ $billing->id }}" class="ghost-link">← Kembali ke Detail Billing</a>
+                <a href="/admin/billings/{{ $billing->id }}" class="kx-btn kx-btn--outline ghost-link">← Kembali ke Detail Billing</a>
             </div>
 
             <section class="section-card">
@@ -162,8 +142,8 @@
                 </div>
 
                 <div class="actions">
-                    <a href="{{ $waUrl }}" target="_blank" rel="noopener noreferrer" class="submit-btn" style="text-decoration:none;display:inline-flex;align-items:center;">Buka WhatsApp</a>
-                    <a href="/admin/billings/{{ $billing->id }}/print" target="_blank" class="ghost-link" style="margin-left:12px;">Print / Save PDF (lampirkan manual)</a>
+                    <a href="{{ $waUrl }}" target="_blank" rel="noopener noreferrer" class="kx-btn kx-btn--primary submit-btn" style="text-decoration:none;display:inline-flex;align-items:center;">Buka WhatsApp</a>
+                    <a href="/admin/billings/{{ $billing->id }}/print" target="_blank" class="kx-btn kx-btn--outline ghost-link" style="margin-left:12px;">Print / Save PDF (lampirkan manual)</a>
                 </div>
             </section>
         </div>

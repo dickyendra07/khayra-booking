@@ -62,31 +62,11 @@
             flex-wrap: wrap;
         }
 
-        .btn {
-            min-height: 42px;
-            border: 0;
-            cursor: pointer;
-            padding: 0 16px;
-            border-radius: 14px;
-            font-size: 13px;
-            font-weight: 900;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-family: Arial, sans-serif;
-        }
 
-        .btn-primary {
-            background: linear-gradient(135deg, #3d8a89 0%, #2f7c7a 100%);
-            color: #ffffff;
-        }
 
-        .btn-soft {
-            color: #2f7c7a;
-            background: #ffffff;
-            border: 1px solid #e6ebea;
-        }
+
+
+
 
         .alert {
             padding: 14px 16px;
@@ -324,6 +304,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="/images/khayra-logo.png">
+    @include('partials.ui-assets')
 </head>
 <body>
 <div class="layout">
@@ -341,8 +322,8 @@
                 </div>
 
                 <div class="actions">
-                    <a href="/admin/inventory" class="btn btn-soft">← Inventory Control</a>
-                    <a href="/admin/inventory/monthly-summary" class="btn btn-primary">Monthly Summary</a>
+                    <a href="/admin/inventory" class="kx-btn kx-btn--outline btn btn-soft">← Inventory Control</a>
+                    <a href="/admin/inventory/monthly-summary" class="kx-btn kx-btn--primary btn btn-primary">Monthly Summary</a>
                 </div>
             </div>
 
@@ -436,7 +417,7 @@
                             </div>
 
                             <div class="submit-row">
-                                <button type="submit" class="btn btn-primary">Simpan Stock Opname</button>
+                                <button type="submit" class="kx-btn kx-btn--primary btn btn-primary">Simpan Stock Opname</button>
                             </div>
                         </form>
                     </section>
@@ -550,20 +531,7 @@ document.addEventListener('DOMContentLoaded', function() {
         button.id = 'khayraInstallAppButton';
         button.type = 'button';
         button.innerText = 'Install App';
-        button.style.position = 'fixed';
-        button.style.right = '18px';
-        button.style.bottom = '18px';
-        button.style.zIndex = '99999';
-        button.style.border = '0';
-        button.style.borderRadius = '999px';
-        button.style.padding = '12px 16px';
-        button.style.background = '#2f7c7a';
-        button.style.color = '#ffffff';
-        button.style.fontWeight = '900';
-        button.style.fontFamily = 'Arial, sans-serif';
-        button.style.fontSize = '13px';
-        button.style.boxShadow = '0 14px 30px rgba(47,124,122,.24)';
-        button.style.cursor = 'pointer';
+        button.className = 'kx-btn kx-btn--primary kx-install-btn';
 
         button.addEventListener('click', function () {
             if (!deferredInstallPrompt) {

@@ -46,17 +46,7 @@
             flex-wrap: wrap;
         }
 
-        .ghost-link {
-            display: inline-block;
-            text-decoration: none;
-            padding: 10px 14px;
-            border-radius: 12px;
-            background: white;
-            color: #0f766e;
-            border: 1px solid #d7ebe6;
-            font-size: 14px;
-            font-weight: 700;
-        }
+
 
         .hero {
             display: grid;
@@ -352,29 +342,11 @@
             color: #0f766e;
         }
 
-        .tiny-btn,
-        .remove-btn,
-        .submit-btn {
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            font-weight: 800;
-        }
 
-        .tiny-btn {
-            padding: 10px 14px;
-            background: #0f766e;
-            color: white;
-            font-size: 13px;
-            margin-top: 6px;
-        }
 
-        .remove-btn {
-            padding: 8px 10px;
-            background: #111827;
-            color: white;
-            font-size: 12px;
-        }
+        .tiny-btn { margin-top: 6px; }
+
+
 
         .checkbox-row {
             display: flex;
@@ -398,13 +370,7 @@
             margin-top: 20px;
         }
 
-        .submit-btn {
-            padding: 15px 22px;
-            background: #0f766e;
-            color: white;
-            font-size: 15px;
-            box-shadow: 0 12px 26px rgba(15,118,110,.16);
-        }
+
 
         @media (max-width: 1180px) {
             .hero,
@@ -616,17 +582,9 @@
             box-shadow: 0 12px 26px rgba(15,118,110,.16);
         }
 
-        .soft-action {
-            background: #ffffff;
-            color: #0f766e;
-            border-color: #d7ebe6;
-        }
 
-        .blue-action {
-            background: #eff6ff;
-            color: #1d4ed8;
-            border-color: #cfe0ff;
-        }
+
+
 
         @media (max-width: 1180px) {
             .clinical-summary-grid {
@@ -1394,18 +1352,7 @@
             outline: none;
         }
 
-        .pain-area-remove {
-            width: 34px;
-            height: 34px;
-            border: 0;
-            border-radius: 999px;
-            background: #fff1f2;
-            color: #e11d48;
-            font-size: 16px;
-            font-weight: 950;
-            cursor: pointer;
-            font-family: inherit;
-        }
+        .pain-area-remove { width: 34px; }
 
         .pain-area-empty {
             color: #94a3b8;
@@ -1427,9 +1374,7 @@
                 grid-template-columns: 1fr;
             }
 
-            .pain-area-remove {
-                width: 100%;
-            }
+            .pain-area-remove { width: 100%; }
         }
 
     
@@ -2268,24 +2213,9 @@
             border-top: 1px solid #eef3f2;
         }
 
-        .mr-tab-nav-btn {
-            border: 1px solid #d8ebe7;
-            background: #ffffff;
-            color: #2f7c7a;
-            cursor: pointer;
-            min-height: 42px;
-            padding: 0 15px;
-            border-radius: 14px;
-            font-size: 13px;
-            font-weight: 900;
-            font-family: Arial, sans-serif;
-        }
 
-        .mr-tab-nav-btn.primary {
-            background: #2f7c7a;
-            color: #ffffff;
-            border-color: #2f7c7a;
-        }
+
+
 
         @keyframes mrTabFade {
             from { opacity: 0; transform: translateY(4px); }
@@ -2326,6 +2256,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="/images/khayra-logo.png">
+    @include('partials.ui-assets')
 </head>
 <body>
 @php
@@ -2450,9 +2381,9 @@
         <div class="topbar">
             <div class="brand">Khayra Therapist Dashboard</div>
             <div class="topbar-actions">
-                <a href="/therapist/visits/{{ $visit->id }}/report" class="ghost-link">View Report</a>
-                <a href="/therapist/visits/{{ $visit->id }}/report/print" target="_blank" class="ghost-link">Print Report</a>
-                <a href="/therapist/dashboard" class="ghost-link">← Kembali ke Dashboard</a>
+                <a href="/therapist/visits/{{ $visit->id }}/report" class="kx-btn kx-btn--outline ghost-link">View Report</a>
+                <a href="/therapist/visits/{{ $visit->id }}/report/print" target="_blank" class="kx-btn kx-btn--outline ghost-link">Print Report</a>
+                <a href="/therapist/dashboard" class="kx-btn kx-btn--outline ghost-link">← Kembali ke Dashboard</a>
             </div>
         </div>
 
@@ -2548,8 +2479,8 @@
                 </div>
 
                 <div class="clinical-action-row">
-                    <a href="/therapist/visits/{{ $visit->id }}/report" class="blue-action">View Clinical Report</a>
-                    <a href="/therapist/visits/{{ $visit->id }}/report/print" target="_blank" class="soft-action">Print / Save PDF</a>
+                    <a href="/therapist/visits/{{ $visit->id }}/report" class="kx-btn kx-btn--secondary blue-action">View Clinical Report</a>
+                    <a href="/therapist/visits/{{ $visit->id }}/report/print" target="_blank" class="kx-btn kx-btn--outline soft-action">Print / Save PDF</a>
                 </div>
             </div>
 
@@ -2974,7 +2905,7 @@
                                 <div class="inline-card history-row">
                                     <div class="inline-head">
                                         <div class="inline-title">History Item</div>
-                                        <button type="button" class="remove-btn" onclick="removeRow(this)">Hapus</button>
+                                        <button type="button" class="kx-btn kx-btn--danger kx-btn--sm remove-btn" onclick="removeRow(this)">Hapus</button>
                                     </div>
 
                                     <div class="grid-3">
@@ -2997,7 +2928,7 @@
                             @endforeach
                         </div>
 
-                        <button type="button" class="tiny-btn" onclick="addHistoryRow()">+ Tambah History</button>
+                        <button type="button" class="kx-btn kx-btn--primary kx-btn--sm tiny-btn" onclick="addHistoryRow()">+ Tambah History</button>
                     </div>
 
                     <div class="form-section">
@@ -3009,7 +2940,7 @@
                                 <div class="inline-card comorbidity-row">
                                     <div class="inline-head">
                                         <div class="inline-title">Comorbidity Item</div>
-                                        <button type="button" class="remove-btn" onclick="removeRow(this)">Hapus</button>
+                                        <button type="button" class="kx-btn kx-btn--danger kx-btn--sm remove-btn" onclick="removeRow(this)">Hapus</button>
                                     </div>
 
                                     <div class="grid-3">
@@ -3047,12 +2978,12 @@
                             @endforeach
                         </div>
 
-                        <button type="button" class="tiny-btn" onclick="addComorbidityRow()">+ Tambah Comorbidity</button>
+                        <button type="button" class="kx-btn kx-btn--primary kx-btn--sm tiny-btn" onclick="addComorbidityRow()">+ Tambah Comorbidity</button>
                     </div>
 
                             <div class="mr-tab-actions">
                                 <span></span>
-                                <button type="button" class="mr-tab-nav-btn primary" data-mr-next="examination">Next: Examination →</button>
+                                <button type="button" class="kx-btn kx-btn--primary mr-tab-nav-btn primary" data-mr-next="examination">Next: Examination →</button>
                             </div>
                         </div>
 
@@ -3134,7 +3065,7 @@
                                     <input type="hidden" name="supporting_data_id[]" value="{{ old('supporting_data_id.' . $index, $supportingId) }}">
                                     <div class="inline-head">
                                         <div class="inline-title">Supporting Data Item</div>
-                                        <button type="button" class="remove-btn" onclick="removeRow(this)">Hapus</button>
+                                        <button type="button" class="kx-btn kx-btn--danger kx-btn--sm remove-btn" onclick="removeRow(this)">Hapus</button>
                                     </div>
 
                                     <div class="grid-3">
@@ -3172,7 +3103,7 @@
                             @endforeach
                         </div>
 
-                        <button type="button" class="tiny-btn" onclick="addSupportingDataRow()">+ Tambah Supporting Data</button>
+                        <button type="button" class="kx-btn kx-btn--primary kx-btn--sm tiny-btn" onclick="addSupportingDataRow()">+ Tambah Supporting Data</button>
                     </div>
 
                     <div class="form-section">
@@ -3275,8 +3206,8 @@
                     </div>
 
                             <div class="mr-tab-actions">
-                                <button type="button" class="mr-tab-nav-btn" data-mr-next="anamnesa">← Back: Anamnesa</button>
-                                <button type="button" class="mr-tab-nav-btn primary" data-mr-next="diagnosis">Next: Diagnosis →</button>
+                                <button type="button" class="kx-btn kx-btn--outline mr-tab-nav-btn" data-mr-next="anamnesa">← Back: Anamnesa</button>
+                                <button type="button" class="kx-btn kx-btn--primary mr-tab-nav-btn primary" data-mr-next="diagnosis">Next: Diagnosis →</button>
                             </div>
                         </div>
 
@@ -3393,8 +3324,8 @@
                     </div>
 
                             <div class="mr-tab-actions">
-                                <button type="button" class="mr-tab-nav-btn" data-mr-next="examination">← Back: Examination</button>
-                                <button type="button" class="mr-tab-nav-btn primary" data-mr-next="program">Next: Program →</button>
+                                <button type="button" class="kx-btn kx-btn--outline mr-tab-nav-btn" data-mr-next="examination">← Back: Examination</button>
+                                <button type="button" class="kx-btn kx-btn--primary mr-tab-nav-btn primary" data-mr-next="program">Next: Program →</button>
                             </div>
                         </div>
 
@@ -3482,7 +3413,7 @@
                                 <div class="inline-card home-exercise-row">
                                     <div class="inline-head">
                                         <div class="inline-title">Home Exercise Item</div>
-                                        <button type="button" class="remove-btn" onclick="removeRow(this)">Hapus</button>
+                                        <button type="button" class="kx-btn kx-btn--danger kx-btn--sm remove-btn" onclick="removeRow(this)">Hapus</button>
                                     </div>
 
                                     <div class="grid-3">
@@ -3517,12 +3448,12 @@
                             @endforeach
                         </div>
 
-                        <button type="button" class="tiny-btn" onclick="addHomeExerciseRow()">+ Tambah Home Exercise</button>
+                        <button type="button" class="kx-btn kx-btn--primary kx-btn--sm tiny-btn" onclick="addHomeExerciseRow()">+ Tambah Home Exercise</button>
                     </div>
 
                             <div class="mr-tab-actions">
-                                <button type="button" class="mr-tab-nav-btn" data-mr-next="diagnosis">← Back: Diagnosis</button>
-                                <button type="button" class="mr-tab-nav-btn primary" data-mr-next="intervention">Next: Intervention →</button>
+                                <button type="button" class="kx-btn kx-btn--outline mr-tab-nav-btn" data-mr-next="diagnosis">← Back: Diagnosis</button>
+                                <button type="button" class="kx-btn kx-btn--primary mr-tab-nav-btn primary" data-mr-next="intervention">Next: Intervention →</button>
                             </div>
                         </div>
 
@@ -3625,8 +3556,8 @@
                     </div>
 
                             <div class="mr-tab-actions">
-                                <button type="button" class="mr-tab-nav-btn" data-mr-next="program">← Back: Program</button>
-                                <button type="button" class="mr-tab-nav-btn primary" data-mr-next="history">Next: History →</button>
+                                <button type="button" class="kx-btn kx-btn--outline mr-tab-nav-btn" data-mr-next="program">← Back: Program</button>
+                                <button type="button" class="kx-btn kx-btn--primary mr-tab-nav-btn primary" data-mr-next="history">Next: History →</button>
                             </div>
                         </div>
 
@@ -3681,14 +3612,14 @@
                     </div>
 
                             <div class="mr-tab-actions">
-                                <button type="button" class="mr-tab-nav-btn" data-mr-next="intervention">← Back: Intervention</button>
-                                <button type="submit" class="mr-tab-nav-btn primary">Simpan Medical Record V2</button>
+                                <button type="button" class="kx-btn kx-btn--outline mr-tab-nav-btn" data-mr-next="intervention">← Back: Intervention</button>
+                                <button type="submit" class="kx-btn kx-btn--primary mr-tab-nav-btn primary">Simpan Medical Record V2</button>
                             </div>
                         </div>
                     </div>
 
                     <div class="submit-row">
-                        <button type="submit" class="submit-btn">Simpan Medical Record V2</button>
+                        <button type="submit" class="kx-btn kx-btn--primary submit-btn">Simpan Medical Record V2</button>
                     </div>
                 </form>
                 </section>
@@ -3787,7 +3718,7 @@
         div.innerHTML = `
             <div class="inline-head">
                 <div class="inline-title">History Item</div>
-                <button type="button" class="remove-btn" onclick="removeRow(this)">Hapus</button>
+                <button type="button" class="kx-btn kx-btn--danger kx-btn--sm remove-btn" onclick="removeRow(this)">Hapus</button>
             </div>
             <div class="grid-3">
                 <div class="field">
@@ -3815,7 +3746,7 @@
         div.innerHTML = `
             <div class="inline-head">
                 <div class="inline-title">Comorbidity Item</div>
-                <button type="button" class="remove-btn" onclick="removeRow(this)">Hapus</button>
+                <button type="button" class="kx-btn kx-btn--danger kx-btn--sm remove-btn" onclick="removeRow(this)">Hapus</button>
             </div>
             <div class="grid-3">
                 <div class="field">
@@ -3856,7 +3787,7 @@
             <input type="hidden" name="supporting_data_id[]" value="">
             <div class="inline-head">
                 <div class="inline-title">Supporting Data Item</div>
-                <button type="button" class="remove-btn" onclick="removeRow(this)">Hapus</button>
+                <button type="button" class="kx-btn kx-btn--danger kx-btn--sm remove-btn" onclick="removeRow(this)">Hapus</button>
             </div>
             <div class="grid-3">
                 <div class="field">
@@ -3950,7 +3881,7 @@
         div.innerHTML = `
             <div class="inline-head">
                 <div class="inline-title">Home Exercise Item</div>
-                <button type="button" class="remove-btn" onclick="removeRow(this)">Hapus</button>
+                <button type="button" class="kx-btn kx-btn--danger kx-btn--sm remove-btn" onclick="removeRow(this)">Hapus</button>
             </div>
             <div class="grid-3">
                 <div class="field">
@@ -4098,7 +4029,7 @@
                         }).join('')}
                     </select>
 
-                    <button type="button" class="pain-area-remove" data-remove-area="${item.area}">×</button>
+                    <button type="button" class="kx-btn kx-btn--danger kx-btn--sm pain-area-remove" data-remove-area="${item.area}">×</button>
                 `;
 
                 list.appendChild(row);
@@ -4239,20 +4170,7 @@
         button.id = 'khayraInstallAppButton';
         button.type = 'button';
         button.innerText = 'Install App';
-        button.style.position = 'fixed';
-        button.style.right = '18px';
-        button.style.bottom = '18px';
-        button.style.zIndex = '99999';
-        button.style.border = '0';
-        button.style.borderRadius = '999px';
-        button.style.padding = '12px 16px';
-        button.style.background = '#2f7c7a';
-        button.style.color = '#ffffff';
-        button.style.fontWeight = '900';
-        button.style.fontFamily = 'Arial, sans-serif';
-        button.style.fontSize = '13px';
-        button.style.boxShadow = '0 14px 30px rgba(47,124,122,.24)';
-        button.style.cursor = 'pointer';
+        button.className = 'kx-btn kx-btn--primary kx-install-btn';
 
         button.addEventListener('click', function () {
             if (!deferredInstallPrompt) {

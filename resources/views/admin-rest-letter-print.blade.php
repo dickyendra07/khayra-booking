@@ -7,9 +7,9 @@
         * { box-sizing: border-box; }
         body { margin: 0; background: #eef2f2; font-family: "Times New Roman", serif; color: #111; }
         .toolbar { position: sticky; top: 0; z-index: 10; background: #ffffff; border-bottom: 1px solid #e5e7eb; padding: 12px 18px; display: flex; justify-content: space-between; gap: 10px; font-family: Arial, sans-serif; }
-        .btn { min-height: 40px; border: 0; cursor: pointer; padding: 0 15px; border-radius: 12px; font-size: 13px; font-weight: 900; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; font-family: Arial, sans-serif; }
-        .btn-primary { background: #2f7c7a; color: #fff; }
-        .btn-soft { background: #eef7f5; color: #2f7c7a; border: 1px solid #d8ebe7; }
+
+
+
         .page { width: 210mm; min-height: 297mm; margin: 18px auto; padding: 16mm 16mm; background: #fff; box-shadow: 0 20px 60px rgba(15,23,42,.18); }
         .invoice-header {
             background:
@@ -58,11 +58,12 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="/images/khayra-logo.png">
+    @include('partials.ui-assets')
 </head>
 <body>
 <div class="toolbar">
-    <a href="/admin/rest-letter/create" class="btn btn-soft">Kembali</a>
-    <button onclick="window.print()" class="btn btn-primary">Print / Save PDF</button>
+    <a href="/admin/rest-letter/create" class="kx-btn kx-btn--outline btn btn-soft">Kembali</a>
+    <button onclick="window.print()" class="kx-btn kx-btn--primary btn btn-primary">Print / Save PDF</button>
 </div>
 
 @php

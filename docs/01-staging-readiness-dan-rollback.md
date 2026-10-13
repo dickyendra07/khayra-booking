@@ -5,6 +5,8 @@ bawah dilakukan di lingkungan lokal (SQLite dan MySQL 8.4 uji) dan harus diulang
 
 ## 1. Strategi rilis: hotfix keamanan terpisah dari fitur
 
+> **DIGANTIKAN (13 Okt 2026):** PR #1 sudah di-merge ke `main`, sehingga hotfix tidak lagi dapat dirilis terpisah dari `main`. Lihat `docs/04-rencana-rilis-dan-verifikasi.md` bagian 1 untuk opsi rilis yang berlaku. Isi di bawah dipertahankan sebagai riwayat.
+
 | Rilis | Isi | Migration | Risiko |
 |---|---|---|---|
 | **Rilis 1: Hotfix keamanan** | Commit `aff9a45` (middleware `RequireAreaLogin`, login hardening, throttle). Tersedia sebagai patch yang sudah diselesaikan terhadap `main`: `docs/hotfix/security-hotfix-on-main.patch` | **Tidak ada** | Rendah, tetapi admin bisa terkunci bila env kredensial belum diisi |

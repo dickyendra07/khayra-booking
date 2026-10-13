@@ -62,44 +62,15 @@
             flex-wrap: wrap;
         }
 
-        .btn {
-            min-height: 42px;
-            border: 0;
-            cursor: pointer;
-            padding: 0 16px;
-            border-radius: 14px;
-            font-size: 13px;
-            font-weight: 900;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-family: Arial, sans-serif;
-            white-space: nowrap;
-        }
 
-        .btn-soft {
-            color: #2f7c7a;
-            background: #ffffff;
-            border: 1px solid #e6ebea;
-        }
 
-        .btn-primary {
-            background: linear-gradient(135deg, #3d8a89 0%, #2f7c7a 100%);
-            color: #ffffff;
-            box-shadow: 0 12px 24px rgba(47,124,122,.16);
-        }
 
-        .btn-blue {
-            background: #eef2ff;
-            color: #3457d5;
-            border: 1px solid #dde5ff;
-        }
 
-        .btn-wa {
-            background: #25d366;
-            color: #ffffff;
-        }
+
+
+
+
+
 
         .alert {
             padding: 14px 16px;
@@ -272,8 +243,10 @@
         .void-box h3 { margin:0 0 8px; font-size:18px; }
         .void-box p { margin:0 0 12px; font-size:13px; line-height:1.7; }
         .void-form { display:grid; grid-template-columns:1fr auto; gap:10px; align-items:end; }
+        .void-form > * { min-width: 0; }
+        @media (max-width: 700px) { .void-form { grid-template-columns: 1fr; } }
         .void-form textarea { width:100%; border:1px solid #fecaca; border-radius:14px; padding:12px; min-height:72px; font-family:Arial,sans-serif; }
-        .btn-void { background:#be123c; color:white; border:none; }
+
 
         .table-wrap {
             overflow-x: auto;
@@ -392,6 +365,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="/images/khayra-logo.png">
+    @include('partials.ui-assets')
 </head>
 <body>
 <div class="layout">
@@ -409,8 +383,8 @@
                 </div>
 
                 <div class="actions">
-                    <a href="/admin/billings" class="btn btn-soft">← Billing List</a>
-                    <a href="/admin/billings/{{ $billing->id }}/edit" class="btn btn-blue">Edit Billing</a>
+                    <a href="/admin/billings" class="kx-btn kx-btn--outline btn btn-soft">← Billing List</a>
+                    <a href="/admin/billings/{{ $billing->id }}/edit" class="kx-btn kx-btn--secondary btn btn-blue">Edit Billing</a>
                     
                     @php
                         $hasPackageItem = ($billing->items ?? collect())->contains(function ($item) {
@@ -419,13 +393,13 @@
                     @endphp
 
                     @if($hasPackageItem)
-                        <a href="/admin/package-treatments/create?billing_id={{ $billing->id }}" class="btn btn-soft">
+                        <a href="/admin/package-treatments/create?billing_id={{ $billing->id }}" class="kx-btn kx-btn--outline btn btn-soft">
                             Buat Dokumen Paket
                         </a>
                     @endif
-<a href="/admin/billings/{{ $billing->id }}/print" class="btn btn-primary" target="_blank">Print / Save PDF</a>
+<a href="/admin/billings/{{ $billing->id }}/print" class="kx-btn kx-btn--primary btn btn-primary" target="_blank">Print / Save PDF</a>
                     @if($billing->payment_status !== 'void')
-                        <a href="/admin/billings/{{ $billing->id }}/whatsapp" class="btn btn-wa"
+                        <a href="/admin/billings/{{ $billing->id }}/whatsapp" class="kx-btn kx-btn--secondary btn btn-wa"
                            title="Tampilkan nomor tujuan dan pratinjau pesan. PDF tidak terlampir otomatis.">Kirim via WhatsApp</a>
                     @endif
                 </div>
@@ -435,6 +409,9 @@
                 <div class="alert alert-success">{{ session('success') }}</div>
             @endif
 
+            @if($errors->any())
+                <div class="alert alert-error">@foreach($errors->all() as $validationError)<div>{{ $validationError }}</div>@endforeach</div>
+            @endif
             @if(session('error'))
                 <div class="alert alert-error">{{ session('error') }}</div>
             @endif
@@ -540,20 +517,21 @@
                         <div style="background:#fffbeb;border:1px solid #fde68a;color:#92400e;border-radius:14px;padding:12px 14px;margin:0 0 12px;font-size:13px;">
                             <strong>Kredit tertahan: Rp {{ number_format($heldMoney, 0, ',', '.') }}</strong> (uang sudah diterima, belum direfund atau dipindahkan).
                             Akan dipindahkan otomatis ke invoice pengganti, atau direfund di bawah.
-                            <form method="POST" action="/admin/billings/{{ $billing->id }}/refunds" style="margin-top:10px;display:grid;gap:8px;">
+                            <form method="POST" action="/admin/billings/{{ $billing->id }}/refunds" style="margin-top:10px;display:grid;gap:8px;" onsubmit="if (this.dataset.submitted) { return false; } this.dataset.submitted = '1'; this.querySelector('button[type=submit]').disabled = true;" data-once-form>
                                 @csrf
+                                <input type="hidden" name="idempotency_key" value="{{ \Illuminate\Support\Str::uuid() }}">
                                 <input type="number" name="amount" step="1" min="1" max="{{ $heldMoney }}" value="{{ $heldMoney }}" required>
                                 <select name="method" required>
                                     <option value="cash">Cash</option><option value="qr">QR</option><option value="debit">Debit</option>
                                     <option value="bank_bca">Bank BCA</option><option value="bank_bni">Bank BNI</option><option value="bank_mandiri">Bank Mandiri</option>
                                 </select>
                                 <input type="text" name="reason" minlength="5" placeholder="Alasan refund (wajib)" required>
-                                <button type="submit" class="btn btn-void">Catat Refund</button>
+                                <button type="submit" class="kx-btn kx-btn--danger btn btn-void">Catat Refund</button>
                             </form>
                         </div>
                     @endif
                     @if($replacedBy->where('payment_status', '!=', 'void')->isEmpty() && !$lock['closed'])
-                        <a href="/admin/cashier?replaces={{ $billing->id }}" class="btn btn-primary">Terbitkan Ulang (Koreksi)</a>
+                        <a href="/admin/cashier?replaces={{ $billing->id }}" class="kx-btn kx-btn--primary btn btn-primary">Terbitkan Ulang (Koreksi)</a>
                     @elseif($lock['closed'])
                         <p style="margin:0;">Periode invoice ini sudah tutup buku; invoice pengganti tidak dapat diterbitkan pada periode tertutup.</p>
                     @endif
@@ -586,7 +564,7 @@
                             </div>
                         @endif
 
-                        <button type="submit" class="btn btn-void">VOID Billing</button>
+                        <button type="submit" class="kx-btn kx-btn--danger btn btn-void">VOID Billing</button>
                     </form>
                 </div>
             @endif
@@ -750,8 +728,9 @@
                     @endif
 
                     @if(!$lock['void'] && $outstanding > 0)
-                        <form method="POST" action="/admin/billings/{{ $billing->id }}/payments" style="display:grid;gap:10px;max-width:480px;margin-top:10px;">
+                        <form method="POST" action="/admin/billings/{{ $billing->id }}/payments" style="display:grid;gap:10px;max-width:480px;margin-top:10px;" onsubmit="if (this.dataset.submitted) { return false; } this.dataset.submitted = '1'; this.querySelector('button[type=submit]').disabled = true;" data-once-form>
                             @csrf
+                            <input type="hidden" name="idempotency_key" value="{{ \Illuminate\Support\Str::uuid() }}">
                             <label style="font-weight:800;font-size:13px;">Catat Pembayaran (uang yang diserahkan pasien)</label>
                             <input type="number" name="tendered_amount" min="1" step="1" required placeholder="Jumlah diserahkan, mis. {{ (int) $outstanding }}">
                             <select name="method" required>
@@ -760,7 +739,7 @@
                                 <option value="bank_mandiri">Bank Mandiri</option><option value="insurance">Insurance</option>
                             </select>
                             <input type="text" name="reference" maxlength="255" placeholder="No. referensi (opsional)">
-                            <button type="submit" class="btn btn-primary">Catat Pembayaran</button>
+                            <button type="submit" class="kx-btn kx-btn--primary btn btn-primary">Catat Pembayaran</button>
                         </form>
                     @endif
                 </section>
@@ -829,20 +808,7 @@
         button.id = 'khayraInstallAppButton';
         button.type = 'button';
         button.innerText = 'Install App';
-        button.style.position = 'fixed';
-        button.style.right = '18px';
-        button.style.bottom = '18px';
-        button.style.zIndex = '99999';
-        button.style.border = '0';
-        button.style.borderRadius = '999px';
-        button.style.padding = '12px 16px';
-        button.style.background = '#2f7c7a';
-        button.style.color = '#ffffff';
-        button.style.fontWeight = '900';
-        button.style.fontFamily = 'Arial, sans-serif';
-        button.style.fontSize = '13px';
-        button.style.boxShadow = '0 14px 30px rgba(47,124,122,.24)';
-        button.style.cursor = 'pointer';
+        button.className = 'kx-btn kx-btn--primary kx-install-btn';
 
         button.addEventListener('click', function () {
             if (!deferredInstallPrompt) {
@@ -861,5 +827,16 @@
 })();
 </script>
 
+<script>
+    // Tombol Simpan dikunci sesudah submit (anti klik-ganda). Bila halaman dipulihkan dari tombol Back,
+    // buka kunci; token yang sama tetap dijaga server sehingga tidak tercatat dua kali.
+    window.addEventListener('pageshow', function () {
+        document.querySelectorAll('form[data-once-form]').forEach(function (form) {
+            delete form.dataset.submitted;
+            var button = form.querySelector('button[type=submit]');
+            if (button) { button.disabled = false; }
+        });
+    });
+</script>
 </body>
 </html>

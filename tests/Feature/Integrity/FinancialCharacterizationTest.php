@@ -85,7 +85,7 @@ it('[LEGACY] pembayaran sebagian invoice lama dihitung sebesar paid_amount', fun
 it('invoice lama tidak dapat menerima pembayaran lewat buku pembayaran (tidak diubah semantiknya)', function () {
     $billing = legacyInvoice(['amount' => 500000, 'paid_amount' => 200000, 'remaining_amount' => 300000, 'payment_status' => 'partial']);
 
-    $this->post("/admin/billings/{$billing->id}/payments", ['tendered_amount' => 300000, 'method' => 'cash'])->assertSessionHas('error');
+    $this->post("/admin/billings/{$billing->id}/payments", idem() + ['tendered_amount' => 300000, 'method' => 'cash'])->assertSessionHas('error');
 
     expect((float) $billing->fresh()->paid_amount)->toBe(200000.0)->and($billing->payments()->count())->toBe(0);
 });

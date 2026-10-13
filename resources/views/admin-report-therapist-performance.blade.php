@@ -82,16 +82,7 @@
             justify-content: flex-end;
         }
 
-        .soft-btn {
-            border: 1px solid #dbecea;
-            background: rgba(255,255,255,.88);
-            color: #2f7c7a;
-            font-weight: 900;
-            font-size: 13px;
-            padding: 12px 16px;
-            border-radius: 16px;
-            box-shadow: 0 10px 28px rgba(31,79,77,.06);
-        }
+
 
         .hero {
             border: 1px solid rgba(219, 236, 234, .95);
@@ -717,6 +708,7 @@
         }
 
     </style>
+    @include('partials.ui-assets')
 </head>
 <body class="therapist-performance-report-page">
 <div class="layout">
@@ -733,8 +725,8 @@
             </div>
 
             <div class="top-actions">
-                <a href="/admin/reports" class="soft-btn">← Back to Reports</a>
-                <button type="button" class="soft-btn" onclick="window.print()">Print / Save PDF</button>
+                <a href="/admin/reports" class="kx-btn kx-btn--outline soft-btn">← Back to Reports</a>
+                <button type="button" class="kx-btn kx-btn--outline soft-btn" onclick="window.print()">Print / Save PDF</button>
             </div>
         </div>
 

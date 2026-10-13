@@ -47,33 +47,10 @@
             max-width: 860px;
         }
 
-        .btn {
-            min-height: 42px;
-            border: 0;
-            cursor: pointer;
-            padding: 0 16px;
-            border-radius: 14px;
-            font-size: 13px;
-            font-weight: 900;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-family: Arial, sans-serif;
-            white-space: nowrap;
-            transition: .18s ease;
-        }
-        .btn:hover { transform: translateY(-1px); }
-        .btn-primary {
-            background: linear-gradient(135deg, #3d8a89 0%, #2f7c7a 100%);
-            color: #fff;
-            box-shadow: 0 12px 24px rgba(47,124,122,.16);
-        }
-        .btn-soft {
-            color: #2f7c7a;
-            background: #fff;
-            border: 1px solid #d8ebe7;
-        }
+
+
+
+
 
         .toolbar, .stats, .calendar-card {
             background: #fff;
@@ -475,6 +452,7 @@
         }
 
     </style>
+    @include('partials.ui-assets')
 </head>
 <body>
 <div class="layout">
@@ -489,18 +467,18 @@
                     <p class="subtitle">Tampilan jadwal harian per fisioterapis agar admin mudah melihat slot kosong, jadwal pasien, dan status appointment.</p>
                 </div>
                 <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                    <a href="/admin/bookings" class="btn btn-soft">List View</a>
-                    <a href="/admin/bookings/create?date={{ $selectedDate }}" class="btn btn-primary">+ Buat Appointment</a>
+                    <a href="/admin/bookings" class="kx-btn kx-btn--outline btn btn-soft">List View</a>
+                    <a href="/admin/bookings/create?date={{ $selectedDate }}" class="kx-btn kx-btn--primary btn btn-primary">+ Buat Appointment</a>
                 </div>
             </div>
 
             <section class="toolbar">
                 <form method="GET" action="/admin/bookings/calendar">
-                    <a class="btn btn-soft" href="/admin/bookings/calendar?date={{ $date->copy()->subDay()->toDateString() }}">← Previous</a>
+                    <a class="kx-btn kx-btn--outline btn btn-soft" href="/admin/bookings/calendar?date={{ $date->copy()->subDay()->toDateString() }}">← Previous</a>
                     <input type="date" name="date" value="{{ $selectedDate }}">
-                    <button class="btn btn-primary" type="submit">Select Date</button>
-                    <a class="btn btn-soft" href="/admin/bookings/calendar?date={{ \App\Support\ClinicTime::today() }}">Today</a>
-                    <a class="btn btn-soft" href="/admin/bookings/calendar?date={{ $date->copy()->addDay()->toDateString() }}">Next →</a>
+                    <button class="kx-btn kx-btn--primary btn btn-primary" type="submit">Select Date</button>
+                    <a class="kx-btn kx-btn--outline btn btn-soft" href="/admin/bookings/calendar?date={{ \App\Support\ClinicTime::today() }}">Today</a>
+                    <a class="kx-btn kx-btn--outline btn btn-soft" href="/admin/bookings/calendar?date={{ $date->copy()->addDay()->toDateString() }}">Next →</a>
                 </form>
                 <div class="date-title">
                     <strong>{{ $date->translatedFormat('l, d F Y') }}</strong>
@@ -529,6 +507,7 @@
                                     <span class="therapist-avatar">{{ strtoupper(substr($therapist->full_name ?? $therapist->name ?? 'T', 0, 1)) }}</span>
                                     <span>{{ $therapist->full_name ?? $therapist->name ?? ('Therapist #' . $therapist->id) }}</span>
                                 </div>
+                                <div class="kx-help" style="margin-top:4px;">PIC · Fisioterapis</div>
                             </div>
                         @endforeach
 

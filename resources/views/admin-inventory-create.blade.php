@@ -15,10 +15,10 @@
         .page-title { margin: 0; font-size: 40px; line-height: 1.04; color: #22343a; font-weight: 900; letter-spacing: -.8px; }
         .page-subtitle { margin: 12px 0 0; max-width: 840px; color: #6b7280; font-size: 14px; line-height: 1.9; }
         .top-actions { display: flex; gap: 10px; flex-wrap: wrap; }
-        .btn { min-height: 42px; border: 0; cursor: pointer; padding: 0 16px; border-radius: 14px; font-size: 13px; font-weight: 900; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; }
-        .btn-primary { background: linear-gradient(135deg, #3d8a89 0%, #2f7c7a 100%); color: #fff; }
-        .btn-dark { background: linear-gradient(135deg, #22343a 0%, #17232b 100%); color: #fff; }
-        .btn-soft { color: #2f7c7a; background: #ffffff; border: 1px solid #e6ebea; }
+
+
+
+
         .grid { display: grid; grid-template-columns: 1.05fr .95fr; gap: 18px; align-items: start; }
         .card { background: #ffffff; border: 1px solid #ecefef; border-radius: 28px; padding: 24px; box-shadow: 0 14px 34px rgba(15,23,42,.05); }
         .card-title { margin: 0; font-size: 28px; color: #22343a; font-weight: 900; }
@@ -40,7 +40,7 @@
         .info-card .card-subtitle { color: rgba(255,255,255,.92); }
         .format-box { background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.16); border-radius: 18px; padding: 16px; color: #fff; font-size: 13px; line-height: 1.8; margin-bottom: 18px; }
         .quick-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
-        .quick-btn { border: 1px solid #dfe8e6; background: #fbfdfd; color: #2f7c7a; border-radius: 14px; padding: 12px; text-align: left; font-weight: 900; cursor: pointer; }
+        .quick-btn { text-align: left; }
         @media (max-width: 1100px) { .grid { grid-template-columns: 1fr; } }
         @media (max-width: 760px) {
             .layout { display: block; }
@@ -59,6 +59,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="/images/khayra-logo.png">
+    @include('partials.ui-assets')
 </head>
 <body>
 <div class="layout">
@@ -76,9 +77,9 @@
                 </div>
 
                 <div class="top-actions">
-                    <a href="/admin/inventory" class="btn btn-soft">← Inventory Control</a>
-                    <a href="/admin/inventory/import" class="btn btn-dark">Import CSV</a>
-                    <a href="/admin/inventory/export/csv" class="btn btn-primary">Export CSV</a>
+                    <a href="/admin/inventory" class="kx-btn kx-btn--outline btn btn-soft">← Inventory Control</a>
+                    <a href="/admin/inventory/import" class="kx-btn kx-btn--primary btn btn-dark">Import CSV</a>
+                    <a href="/admin/inventory/export/csv" class="kx-btn kx-btn--primary btn btn-primary">Export CSV</a>
                 </div>
             </div>
 
@@ -96,12 +97,12 @@
                     <p class="card-subtitle">Untuk tambah satu barang klinik, alat terapi, consumable, atau produk jual.</p>
 
                     <div class="quick-grid">
-                        <button type="button" class="quick-btn" onclick="fillExample('tape')">Template Kinesio Tape</button>
-                        <button type="button" class="quick-btn" onclick="fillExample('gel')">Template Gel Terapi</button>
-                        <button type="button" class="quick-btn" onclick="fillExample('band')">Template Resistance Band</button>
+                        <button type="button" class="kx-btn kx-btn--secondary kx-btn--sm quick-btn" onclick="fillExample('tape')">Template Kinesio Tape</button>
+                        <button type="button" class="kx-btn kx-btn--secondary kx-btn--sm quick-btn" onclick="fillExample('gel')">Template Gel Terapi</button>
+                        <button type="button" class="kx-btn kx-btn--secondary kx-btn--sm quick-btn" onclick="fillExample('band')">Template Resistance Band</button>
 
-                            <button type="button" class="quick-btn" onclick="fillExample('dry_needling')">Template Dry Needling Needle</button>
-                        <button type="button" class="quick-btn" onclick="fillExample('ice')">Template Ice Pack</button>
+                            <button type="button" class="kx-btn kx-btn--secondary kx-btn--sm quick-btn" onclick="fillExample('dry_needling')">Template Dry Needling Needle</button>
+                        <button type="button" class="kx-btn kx-btn--secondary kx-btn--sm quick-btn" onclick="fillExample('ice')">Template Ice Pack</button>
                     </div>
 
                     <form method="POST" action="/admin/inventory">
@@ -174,7 +175,7 @@
                         </div>
 
                         <div class="actions">
-                            <button type="submit" class="btn btn-primary">Simpan Barang</button>
+                            <button type="submit" class="kx-btn kx-btn--primary btn btn-primary">Simpan Barang</button>
                         </div>
                     </form>
                 </section>
@@ -200,8 +201,8 @@ PHY-002 | Gel Terapi | Consumable | tube | 12 | 3 | 25000 | 45000 | Supplier B |
                         </div>
 
                         <div class="actions">
-                            <button type="submit" class="btn btn-primary">Import dari Text</button>
-                            <a href="/admin/inventory/import/template" class="btn btn-soft">Download CSV Template</a>
+                            <button type="submit" class="kx-btn kx-btn--primary btn btn-primary">Import dari Text</button>
+                            <a href="/admin/inventory/import/template" class="kx-btn kx-btn--outline btn btn-soft">Download CSV Template</a>
                         </div>
                     </form>
                 </section>
@@ -307,20 +308,7 @@ function fillExample(type) {
         button.id = 'khayraInstallAppButton';
         button.type = 'button';
         button.innerText = 'Install App';
-        button.style.position = 'fixed';
-        button.style.right = '18px';
-        button.style.bottom = '18px';
-        button.style.zIndex = '99999';
-        button.style.border = '0';
-        button.style.borderRadius = '999px';
-        button.style.padding = '12px 16px';
-        button.style.background = '#2f7c7a';
-        button.style.color = '#ffffff';
-        button.style.fontWeight = '900';
-        button.style.fontFamily = 'Arial, sans-serif';
-        button.style.fontSize = '13px';
-        button.style.boxShadow = '0 14px 30px rgba(47,124,122,.24)';
-        button.style.cursor = 'pointer';
+        button.className = 'kx-btn kx-btn--primary kx-install-btn';
 
         button.addEventListener('click', function () {
             if (!deferredInstallPrompt) {

@@ -23,26 +23,9 @@
             margin-bottom: 18px;
             flex-wrap: wrap;
         }
-        .ghost-link, .primary-link {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            text-decoration: none;
-            padding: 11px 14px;
-            border-radius: 12px;
-            font-size: 13px;
-            font-weight: 800;
-        }
-        .ghost-link {
-            background: #ffffff;
-            border: 1px solid #e6ebea;
-            color: #2c5b5a;
-        }
-        .primary-link {
-            background: linear-gradient(135deg, #3d8a89 0%, #2f7c7a 100%);
-            color: #ffffff;
-            border: none;
-        }
+
+
+
 
         .hero {
             background: #ffffff;
@@ -260,16 +243,7 @@
             flex-wrap: wrap;
             margin-top: 10px;
         }
-        .quick-btn {
-            border: 1px solid #dce7e4;
-            background: #f9fbfb;
-            color: #2c5b5a;
-            border-radius: 999px;
-            padding: 8px 11px;
-            font-size: 11px;
-            font-weight: 900;
-            cursor: pointer;
-        }
+
         .checkbox-line {
             display: flex;
             align-items: flex-start;
@@ -289,19 +263,8 @@
             margin-top: 1px;
             flex: 0 0 auto;
         }
-        .submit-btn,
-        .filter-btn {
-            height: 50px;
-            border: none;
-            border-radius: 14px;
-            background: linear-gradient(135deg, #3d8a89 0%, #2f7c7a 100%);
-            color: #ffffff;
-            font-size: 14px;
-            font-weight: 900;
-            cursor: pointer;
-            padding: 0 18px;
-        }
-        .submit-btn { width: 100%; height: 54px; }
+
+        .submit-btn { width: 100%; }
 
         .preview-grid {
             display: grid;
@@ -371,16 +334,7 @@
             flex-wrap: wrap;
             justify-content: flex-end;
         }
-        .delete-btn {
-            border: none;
-            background: #fee2e2;
-            color: #b91c1c;
-            border-radius: 12px;
-            padding: 10px 12px;
-            font-size: 12px;
-            font-weight: 900;
-            cursor: pointer;
-        }
+
         .empty-state {
             padding: 28px;
             border-radius: 18px;
@@ -415,6 +369,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="/images/khayra-logo.png">
+    @include('partials.ui-assets')
 </head>
 <body>
 @php
@@ -432,8 +387,8 @@
     <main class="main">
         <div class="container">
             <div class="top-actions">
-                <a href="/admin/therapists" class="ghost-link">← Tim Fisioterapis</a>
-                <a href="/admin/bookings" class="primary-link">Booking Scheduler</a>
+                <a href="/admin/therapists" class="kx-btn kx-btn--outline ghost-link">← Tim Fisioterapis</a>
+                <a href="/admin/bookings" class="kx-btn kx-btn--primary primary-link">Booking Scheduler</a>
             </div>
 
             <section class="hero">
@@ -487,7 +442,7 @@
                         <label>Preview Month</label>
                         <input type="month" name="month" value="{{ $selectedMonth }}">
                     </div>
-                    <button type="submit" class="filter-btn">Lihat Bulan</button>
+                    <button type="submit" class="kx-btn kx-btn--primary kx-btn--lg filter-btn">Lihat Bulan</button>
                 </form>
             </section>
 
@@ -546,10 +501,10 @@
                                 </div>
 
                                 <div class="quick-select-row">
-                                    <button type="button" class="quick-btn" onclick="selectDays([1,2,3,4,5])">Weekdays</button>
-                                    <button type="button" class="quick-btn" onclick="selectDays([6,7])">Weekend</button>
-                                    <button type="button" class="quick-btn" onclick="selectDays([1,2,3,4,5,6,7])">Everyday</button>
-                                    <button type="button" class="quick-btn" onclick="selectDays([])">Clear</button>
+                                    <button type="button" class="kx-btn kx-btn--secondary kx-btn--sm quick-btn" onclick="selectDays([1,2,3,4,5])">Weekdays</button>
+                                    <button type="button" class="kx-btn kx-btn--secondary kx-btn--sm quick-btn" onclick="selectDays([6,7])">Weekend</button>
+                                    <button type="button" class="kx-btn kx-btn--secondary kx-btn--sm quick-btn" onclick="selectDays([1,2,3,4,5,6,7])">Everyday</button>
+                                    <button type="button" class="kx-btn kx-btn--secondary kx-btn--sm quick-btn" onclick="selectDays([])">Clear</button>
                                 </div>
                             </div>
 
@@ -603,7 +558,7 @@
                             </div>
                         </div>
 
-                        <button type="submit" class="submit-btn">Simpan Availability Bulanan</button>
+                        <button type="submit" class="kx-btn kx-btn--primary submit-btn">Simpan Availability Bulanan</button>
                     </form>
                 </section>
 
@@ -623,6 +578,7 @@
                             <div class="availability-group-card">
                                 <div class="group-head">
                                     <div>
+                                        <div class="group-meta">PIC Fisioterapis</div>
                                         <div class="group-title">
                                             {{ optional($first->therapist)->full_name ?: 'Therapist' }}
                                         </div>
@@ -633,7 +589,7 @@
                                             {{ $first->valid_until ? $first->valid_until->format('Y-m-d') : 'Open' }}
                                         </div>
                                         <div class="group-meta">
-                                            Time: {{ substr($first->start_time, 0, 5) }} - {{ substr($first->end_time, 0, 5) }}
+                                            Jam kerja: {{ substr($first->start_time, 0, 5) }} - {{ substr($first->end_time, 0, 5) }}
                                             · {{ $first->slot_duration_minutes }} menit / slot
                                             · Capacity {{ $first->capacity }}
                                         </div>
@@ -658,7 +614,7 @@
                                     @foreach($group as $availability)
                                         <form method="POST" action="/admin/therapist-availabilities/{{ $availability->id }}/delete" onsubmit="return confirm('Hapus availability {{ optional($availability->therapist)->full_name }} {{ $availability->day_name }}?')">
                                             @csrf
-                                            <button type="submit" class="delete-btn">Delete {{ substr($availability->day_name, 0, 3) }}</button>
+                                            <button type="submit" class="kx-btn kx-btn--danger kx-btn--sm delete-btn">Delete {{ substr($availability->day_name, 0, 3) }}</button>
                                         </form>
                                     @endforeach
                                 </div>
@@ -705,20 +661,7 @@
         button.id = 'khayraInstallAppButton';
         button.type = 'button';
         button.innerText = 'Install App';
-        button.style.position = 'fixed';
-        button.style.right = '18px';
-        button.style.bottom = '18px';
-        button.style.zIndex = '99999';
-        button.style.border = '0';
-        button.style.borderRadius = '999px';
-        button.style.padding = '12px 16px';
-        button.style.background = '#2f7c7a';
-        button.style.color = '#ffffff';
-        button.style.fontWeight = '900';
-        button.style.fontFamily = 'Arial, sans-serif';
-        button.style.fontSize = '13px';
-        button.style.boxShadow = '0 14px 30px rgba(47,124,122,.24)';
-        button.style.cursor = 'pointer';
+        button.className = 'kx-btn kx-btn--primary kx-install-btn';
 
         button.addEventListener('click', function () {
             if (!deferredInstallPrompt) {

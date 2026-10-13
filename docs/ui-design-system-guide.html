@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Khayra UI — Button Design System</title>
+<link rel="stylesheet" href="../public/css/khayra-ui.css">
+<style>body{margin:0;padding:32px;font-family:Arial,sans-serif;background:#f6f8f8;color:#17232b}section{background:#fff;border:1px solid #ecefef;border-radius:18px;padding:18px 20px;margin:0 0 14px}h1{margin:0 0 6px}h3{margin:0 0 4px}p{margin:0 0 12px;color:#6b7280;font-size:13px}.on-dark{background:#2f7c7a;padding:16px;border-radius:14px;max-width:320px}</style></head>
+<body><h1>Button Design System</h1><p>Sumber gaya: <code>public/css/khayra-ui.css</code>. Token: tinggi 34/42/48px (40/44/48px di layar &le;768px), radius 10/12/14px, font 12/13/14px, bobot 800, ikon 16px, gap 8px, fokus 3px ring brand, disabled opacity .55.</p>
+<section><h3>Primary</h3><p>Aksi utama satu konteks: Simpan, Kirim, Checkout, Terapkan Filter, + Tambah</p>
+<div class="kx-btn-group">
+<button class="kx-btn kx-btn--primary kx-btn--sm">Small</button>
+<button class="kx-btn kx-btn--primary">Medium</button>
+<button class="kx-btn kx-btn--primary kx-btn--lg">Large</button>
+<button class="kx-btn kx-btn--primary" disabled>Disabled</button>
+<button class="kx-btn kx-btn--primary is-loading">Loading</button>
+<button class="kx-btn kx-btn--primary kx-btn--icon" aria-label="Edit">&#9998;</button>
+<a class="kx-btn kx-btn--primary" href="#">Link</a>
+</div></section><section><h3>Secondary</h3><p>Aksi pendukung yang menonjol: Detail, Buka, Kirim WA, Create Visit</p>
+<div class="kx-btn-group">
+<button class="kx-btn kx-btn--secondary kx-btn--sm">Small</button>
+<button class="kx-btn kx-btn--secondary">Medium</button>
+<button class="kx-btn kx-btn--secondary kx-btn--lg">Large</button>
+<button class="kx-btn kx-btn--secondary" disabled>Disabled</button>
+<button class="kx-btn kx-btn--secondary is-loading">Loading</button>
+<button class="kx-btn kx-btn--secondary kx-btn--icon" aria-label="Edit">&#9998;</button>
+<a class="kx-btn kx-btn--secondary" href="#">Link</a>
+</div></section><section><h3>Outline</h3><p>Aksi netral: Batal, Kembali, Edit, Print, Reset</p>
+<div class="kx-btn-group">
+<button class="kx-btn kx-btn--outline kx-btn--sm">Small</button>
+<button class="kx-btn kx-btn--outline">Medium</button>
+<button class="kx-btn kx-btn--outline kx-btn--lg">Large</button>
+<button class="kx-btn kx-btn--outline" disabled>Disabled</button>
+<button class="kx-btn kx-btn--outline is-loading">Loading</button>
+<button class="kx-btn kx-btn--outline kx-btn--icon" aria-label="Edit">&#9998;</button>
+<a class="kx-btn kx-btn--outline" href="#">Link</a>
+</div></section><section><h3>Danger</h3><p>Aksi destruktif: Hapus, Void, Refund, Tolak (konfirmasi tetap ada)</p>
+<div class="kx-btn-group">
+<button class="kx-btn kx-btn--danger kx-btn--sm">Small</button>
+<button class="kx-btn kx-btn--danger">Medium</button>
+<button class="kx-btn kx-btn--danger kx-btn--lg">Large</button>
+<button class="kx-btn kx-btn--danger" disabled>Disabled</button>
+<button class="kx-btn kx-btn--danger is-loading">Loading</button>
+<button class="kx-btn kx-btn--danger kx-btn--icon" aria-label="Edit">&#9998;</button>
+<a class="kx-btn kx-btn--danger" href="#">Link</a>
+</div></section>
+<section><h3>On-dark (sidebar)</h3><p>Tombol di atas latar teal gelap.</p><div class="on-dark"><button class="kx-btn kx-btn--on-dark kx-btn--lg kx-btn--block">Logout Admin</button></div></section>
+<section><h3>Grup aksi</h3><p>Wrap otomatis; tidak overflow di mobile.</p><div class="kx-btn-group"><a class="kx-btn kx-btn--outline" href="#">Batal</a><button class="kx-btn kx-btn--primary">Simpan</button></div></section>
+</body></html>

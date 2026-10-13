@@ -3,16 +3,53 @@
 Dokumen ini melengkapi `01-staging-readiness-dan-rollback.md`. **Belum ada deployment dan belum ada akses ke production.**
 Semua langkah di production menunggu persetujuan eksplisit Kara Digital.
 
-## 1. Dua rilis terpisah
+## 1. Strategi rilis — DIPERBARUI setelah PR #1 di-merge ke `main` (13 Okt 2026)
 
-| | Rilis 1: Hotfix keamanan | Rilis 2: Fitur + integritas + buku pembayaran |
-|---|---|---|
-| Isi | `docs/hotfix/security-hotfix-on-main.patch` (login, throttle, middleware rute) | Seluruh branch kerja: Req 2/4/5, P1, buku pembayaran, ClinicTime, ruangan, consent versioning, dsb. |
-| Migration | **Tidak ada** | 10 migration additive (+1 bersyarat) |
-| Diterapkan di | `main` | `main` setelah Rilis 1 stabil |
-| Terverifikasi | patch bersih di atas `main` (`git apply --check`), 39 test keamanan lulus di atas `main` | 227 test lulus di SQLite dan di MySQL 8.4 |
+> **Strategi lama (Rilis 1 hotfix keamanan terpisah di atas `main`, lalu Rilis 2) TIDAK BERLAKU LAGI untuk `main`.**
+> PR #1 sudah di-merge: `origin/main` (`0803214`) kini memuat hotfix keamanan (`aff9a45`) *bersama* integritas finansial P1 dan seluruh
+> fitur. `docs/hotfix/security-hotfix-on-main.patch` **tidak dapat lagi diterapkan** ke `main` (`git apply --check` gagal: berkas
+> sudah ada); patch itu hanya valid terhadap basis lama `5eae3f8` (main sebelum PR #1).
+> Catatan: branch lokal `main` di mesin ini masih tertinggal di `5eae3f8`; selalu pakai `origin/main`.
 
-Rilis 1 dilakukan lebih dulu. Rilis 2 tidak boleh naik sebelum Rilis 1 stabil minimal beberapa hari kerja.
+**Fakta yang menentukan opsi:** `origin/main` (`0803214`) memuat dua release blocker yang sudah diperbaiki di branch
+`feat/khayra-client-revisions-final` (closing race dan invoice pengganti ganda). **Jangan merilis `0803214` ke production.**
+Yang boleh dirilis hanya commit akhir branch ini (atau hasil merge-nya) setelah lulus staging.
+
+### Opsi A (direkomendasikan): satu rilis bertahap dari commit akhir
+
+Syarat: production belum menjalankan kode PR #1 (belum ada deployment ke production yang tercatat) atau akan dimigrasi sekaligus.
+
+1. Review dan merge branch ini ke `main` lewat PR (keputusan manusia; tidak dilakukan otomatis). Rilis dari hash merge tersebut.
+2. **Staging dulu**: restore dump production ke staging, `migrate --pretend`, `migrate`, `billing:audit-integrity --strict`, bandingkan checksum
+   baseline (bagian 4), jalankan `php tests/Concurrency/run.php` terhadap MySQL staging, uji manual bagian 7.
+3. **Prasyarat konfigurasi production sebelum kode naik** (karena keamanan P0 ikut naik di rilis yang sama): `ADMIN_EMAIL` dan
+   `ADMIN_PASSWORD_HASH` terisi, cache driver bukan `array`/`null`, tabel `cache` dan `sessions` ada. Tanpa ini admin terkunci.
+4. **Fitur uang baru tetap MATI saat naik:** `NEW_PATIENT_ADMIN_FEE_ENABLED` tidak diisi / `false` (default mati). Ruangan tetap non-billable, consent tetap v1.
+5. Setelah stabil beberapa hari kerja dan staf dilatih memakai menu *Biaya Admin Tertunda*, aktifkan biaya admin di environment production
+   (`NEW_PATIENT_ADMIN_FEE_ENABLED=true`, lalu `config:cache` bila dipakai) sebagai langkah terpisah dengan persetujuan tertulis.
+6. Migration (15 additive) dijalankan satu kali pada jendela sepi setelah backup penuh; rollback kode tidak membutuhkan rollback database.
+
+### Opsi B: bila production SUDAH menjalankan kode lama dan celah keamanan harus ditutup lebih dulu
+
+Syarat: ada kebutuhan mendesak menutup celah login/rute admin tanpa menunggu fitur lain. Dilakukan dari **basis yang benar-benar berjalan di production**, bukan dari `main`.
+
+1. Pastikan commit yang berjalan di production (baca-saja, oleh orang berwenang: `git rev-parse HEAD` di server atau catatan deployment).
+2. Bila commit itu = `5eae3f8` (main sebelum PR #1): buat branch hotfix dari commit tersebut, `git apply --check docs/hotfix/security-hotfix-on-main.patch`
+   (diverifikasi bersih terhadap `5eae3f8`), terapkan, jalankan `php artisan test --filter=Security`, `php artisan khayra:preflight`, staging, lalu production.
+   Hotfix tanpa migration; prasyarat konfigurasi kredensial sama seperti Opsi A butir 3.
+3. Bila basisnya berbeda: cherry-pick `aff9a45` ke branch hotfix dari basis itu dan selesaikan konflik secara manual, ulangi test keamanan.
+4. Rilis penuh (Opsi A) menyusul setelah hotfix stabil. Hotfix **tidak** boleh dibuat dari `main` dan **tidak** boleh melewati staging.
+
+### Opsi yang TIDAK aman
+- Merilis `origin/main` (`0803214`) apa adanya: memuat dua release blocker (closing race, invoice pengganti ganda).
+- Menerapkan patch hotfix ke `main`: sudah tidak valid dan akan konflik/dobel.
+- Mengaktifkan biaya admin bersamaan dengan rilis pertama kode ini ke production.
+- Menjalankan `tests/Concurrency/run.php` atau suite pada database production (skrip hanya untuk server uji/staging; ia membuat database sementara sendiri).
+
+Persiapan staging (infrastruktur, env, gerbang `khayra:preflight --release-gate`, QA, data sintetis, rollback): lihat `docs/09-staging-readiness.md`.
+
+Pada bagian-bagian di bawah, istilah **Rilis 1** = hotfix keamanan Opsi B (bila dipakai) dan **Rilis 2** = rilis penuh (Opsi A). Bila Opsi A dipilih,
+lewati langkah khusus Rilis 1.
 
 ## 2. Status fitur saat rilis (apa yang AKTIF dan yang MASIH MATI)
 
@@ -24,7 +61,7 @@ Rilis 1 dilakukan lebih dulu. Rilis 2 tidak boleh naik sebelum Rilis 1 stabil mi
 | Anti klik-ganda checkout, nomor invoice berurutan, penguncian invoice, audit | Aktif |
 | Diskon hanya Program; Specialist tidak didiskon | Aktif |
 | Master ruangan | Aktif; **semua ruangan non-billable**, tidak ada tarif; tidak ada penagihan otomatis |
-| Biaya admin pasien baru Rp35.000 | **MATI** (`clinic.new_patient_admin_fee.enabled = false`) |
+| Biaya admin pasien baru Rp35.000 | **MATI secara default**; aktif hanya bila `NEW_PATIENT_ADMIN_FEE_ENABLED=true` diisi eksplisit di environment (aturan final: sekali saat registrasi pertama; tagihan unpaid otomatis; periode tutup → kewajiban tertunda di menu Biaya Admin Tertunda; pasien lama tidak ditagih) |
 | Informed consent tanpa TTD fisioterapis | **MATI** (`clinic.consent.active_template_version = 1`) |
 | PIC / shift (Req 1) | Belum ada implementasi (menunggu definisi klien) |
 
@@ -45,12 +82,16 @@ Urutan dijalankan otomatis oleh `php artisan migrate`. Semua additive, idempoten
 | 9 | `2026_10_13_100200` rooms | tabel baru + 10 ruangan bawaan (non-billable) | n/a |
 | 10 | `2026_10_13_100300` billing_items.reference_*, rate_unit | 3 kolom nullable + index | NULL |
 | 11 | `2026_10_13_100400` informed_consents.template_version, recorded_by | `template_version` default 1, `recorded_by` nullable | semua consent lama = versi 1 |
+| 12 | `2026_10_14_100000` billing_payments.idempotency_key | 1 kolom nullable + unique index (2 DDL) | NULL; baris lama tidak diubah |
+| 13 | `2026_10_14_110000` patients.registration_token | 1 kolom nullable + unique index (2 DDL) | NULL untuk semua pasien lama; tidak ada tagihan retroaktif |
+| 14 | `2026_10_14_120000` pending_registration_fees | tabel baru (unique patient_id) | n/a; tidak ada baris untuk data lama |
+| 15 | `2026_10_15_100000` finance_period_locks | tabel baru (primary key month), baris dibuat on-demand | n/a; tidak memuat data keuangan |
 
 Dua migration historis (`2026_03_23_224421_*`) diberi guard agar database kosong MySQL berhasil dibangun. Database yang sudah menjalankannya
 tidak terpengaruh dan skemanya identik (diverifikasi).
 
 Langkah:
-1. `php artisan migrate --pretend` di staging dan production, tinjau DDL (sekitar 30 pernyataan; tanpa `DROP`/`UPDATE`/`DELETE` terhadap data).
+1. `php artisan migrate --pretend` di staging dan production, tinjau DDL (sekitar 39 pernyataan; tanpa `DROP`/`UPDATE`/`DELETE` terhadap data).
 2. Jalankan migrate di luar jam sibuk. Tabel besar tidak ada (ALTER hanya menambah kolom pada billings/billing_items/informed_consents).
 3. Setelah migrate: `php artisan billing:audit-integrity` dan baca bagian "Unique index invoice_number". Jika belum terpasang karena duplikat,
    putuskan penyelesaian duplikat lalu `php artisan billing:ensure-invoice-unique-index`.
@@ -81,7 +122,7 @@ Kembalikan kode ke rilis sebelumnya; `php artisan config:clear` (dan `config:cac
 
 ### Rilis 2
 1. Kembalikan kode ke Rilis 1 / rilis sebelumnya. Tabel/kolom baru diabaikan kode lama. Data tidak hilang.
-2. **Jangan** `migrate:rollback` kecuali kerusakan struktur. `migrate:rollback --step=11` akan menghapus `billing_payments`, `billing_audit_logs`,
+2. **Jangan** `migrate:rollback` kecuali kerusakan struktur. `migrate:rollback --step=15` akan menghapus `billing_payments`, `billing_audit_logs`,
    `invoice_sequences`, `rooms`, dan kolom baru. **Backup tabel-tabel itu lebih dulu** karena berisi histori yang tidak ada di tempat lain.
 3. Akibat memakai kode lama setelah Rilis 2 berjalan:
    - Invoice baru (`ledger`) tetap punya `paid_amount`, `remaining_amount`, dan status yang sinkron (net), jadi angka per invoice tetap tampil.
@@ -156,7 +197,7 @@ Tidak boleh: login ke production, mengubah env/konfigurasi, menjalankan migrate,
 | Uang kembalian bukan pendapatan; invoice baru memakai buku pembayaran | sudah diimplementasikan (disetujui) | selesai |
 | Kebijakan refund (siapa/alasan) | refund kini ada di UI | semua admin, alasan wajib (sudah demikian) |
 | Zona waktu operasional WIB | sudah diimplementasikan | konfirmasi |
-| Aturan biaya admin (eligibility) | fitur mati sampai aturan jelas | tetap mati |
+| Aturan biaya admin | sudah final (sekali per pasien saat registrasi pertama, tanpa retroaktif) | diterapkan; lihat `docs/07-aturan-final-biaya-administrasi.md` |
 | Tarif/satuan ruangan | semua non-billable sampai disetujui | tetap non-billable |
 | Persetujuan template consent baru | versi 2 mati | tetap versi 1 |
 | Specialist eligible diskon? | saat ini tidak | tetap tidak sampai ada keputusan |

@@ -74,50 +74,17 @@
             flex-wrap: wrap;
         }
 
-        .btn {
-            min-height: 42px;
-            border: 0;
-            cursor: pointer;
-            padding: 0 15px;
-            border-radius: 14px;
-            font-size: 13px;
-            font-weight: 900;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-family: Arial, sans-serif;
-            white-space: nowrap;
-        }
 
-        .btn-primary {
-            background: linear-gradient(135deg, #3d8a89 0%, #2f7c7a 100%);
-            color: #ffffff;
-            box-shadow: 0 12px 24px rgba(47,124,122,.16);
-        }
 
-        .btn-dark {
-            background: linear-gradient(135deg, #0f172a 0%, #1f2d3d 100%);
-            color: #ffffff;
-        }
 
-        .btn-soft {
-            color: #2f7c7a;
-            background: #ffffff;
-            border: 1px solid #e6ebea;
-        }
 
-        .btn-blue {
-            background: #eef2ff;
-            color: #3457d5;
-            border: 1px solid #dde5ff;
-        }
 
-        .btn-danger {
-            background: #fff1f2;
-            color: #be123c;
-            border: 1px solid #ffe0e6;
-        }
+
+
+
+
+
+
 
         .alert {
             padding: 14px 16px;
@@ -426,27 +393,13 @@
             margin: 0;
         }
 
-        .mini-btn {
-            min-height: 34px;
-            padding: 0 11px;
-            border-radius: 11px;
-            font-size: 12px;
-            font-weight: 900;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            border: 1px solid transparent;
-            cursor: pointer;
-            font-family: Arial, sans-serif;
-            white-space: nowrap;
-        }
 
-        .mini-detail { background: #eef7f5; color: #2f7c7a; border-color: #d8ebe7; }
-        .mini-print { background: #eef2ff; color: #3457d5; border-color: #dde5ff; }
-        .mini-wa { background: #e9fbef; color: #15803d; border-color: #bbf0cf; }
-        .mini-edit { background: #fff7ed; color: #c2410c; border-color: #fed7aa; }
-        .mini-void { background: #fff1f2; color: #be123c; border-color: #ffe0e6; }
+
+
+
+
+
+
 
         .empty-state {
             padding: 28px;
@@ -486,6 +439,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="/images/khayra-logo.png">
+    @include('partials.ui-assets')
 </head>
 <body>
 <div class="layout">
@@ -503,9 +457,9 @@
                 </div>
 
                 <div class="actions">
-                    <a href="/admin/cashier" class="btn btn-primary">+ Kasir Checkout</a>
-                    <a href="/admin/billings/create" class="btn btn-soft">Create Manual Billing</a>
-                    <a href="/admin/promos" class="btn btn-soft">Promo Setting</a>
+                    <a href="/admin/cashier" class="kx-btn kx-btn--primary btn btn-primary">+ Kasir Checkout</a>
+                    <a href="/admin/billings/create" class="kx-btn kx-btn--outline btn btn-soft">Create Manual Billing</a>
+                    <a href="/admin/promos" class="kx-btn kx-btn--outline btn btn-soft">Promo Setting</a>
                 </div>
             </div>
 
@@ -645,8 +599,8 @@
                             <input type="date" name="date_to" value="{{ $dateTo }}">
                         </div>
 
-                        <button type="submit" class="btn btn-dark">Apply Filter</button>
-                        <a href="/admin/billings" class="btn btn-soft">Reset</a>
+                        <button type="submit" class="kx-btn kx-btn--primary btn btn-dark">Apply Filter</button>
+                        <a href="/admin/billings" class="kx-btn kx-btn--outline btn btn-soft">Reset</a>
                     </div>
                 </form>
             </section>
@@ -660,7 +614,7 @@
                         </p>
                     </div>
 
-                    <a href="/admin/cashier" class="btn btn-primary">+ New Checkout</a>
+                    <a href="/admin/cashier" class="kx-btn kx-btn--primary btn btn-primary">+ New Checkout</a>
                 </div>
 
                 <div class="table-wrap">
@@ -679,7 +633,7 @@
                                 <th>Status</th>
                                 <th>Promo</th>
                                 <th>Items</th>
-                                <th>Actions</th>
+                                <th class="kx-col-actions">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -758,19 +712,19 @@
                                         </div>
                                     </td>
 
-                                    <td>
+                                    <td class="kx-col-actions">
                                         <div class="action-stack">
-                                            <a href="/admin/billings/{{ $billing->id }}" class="mini-btn mini-detail">Detail</a>
-                                            <a href="/admin/billings/{{ $billing->id }}/print" target="_blank" class="mini-btn mini-print">Print</a>
+                                            <a href="/admin/billings/{{ $billing->id }}" class="kx-btn kx-btn--secondary kx-btn--sm mini-btn mini-detail">Detail</a>
+                                            <a href="/admin/billings/{{ $billing->id }}/print" target="_blank" class="kx-btn kx-btn--outline kx-btn--sm mini-btn mini-print">Print</a>
                                             @if($billing->payment_status !== 'void')
-                                                <a href="/admin/billings/{{ $billing->id }}/whatsapp" class="mini-btn mini-wa" title="Periksa nomor tujuan & pesan sebelum membuka WhatsApp (PDF tidak terlampir otomatis)">WA</a>
+                                                <a href="/admin/billings/{{ $billing->id }}/whatsapp" class="kx-btn kx-btn--secondary kx-btn--sm mini-btn mini-wa" title="Periksa nomor tujuan & pesan sebelum membuka WhatsApp (PDF tidak terlampir otomatis)">WA</a>
                                             @endif
 
                                             @if($billing->payment_status !== 'void')
-                                                <a href="/admin/billings/{{ $billing->id }}/edit" class="mini-btn mini-edit">Edit</a>
-                                                <a href="/admin/billings/{{ $billing->id }}" class="mini-btn mini-void">Void</a>
+                                                <a href="/admin/billings/{{ $billing->id }}/edit" class="kx-btn kx-btn--outline kx-btn--sm mini-btn mini-edit">Edit</a>
+                                                <a href="/admin/billings/{{ $billing->id }}" class="kx-btn kx-btn--danger kx-btn--sm mini-btn mini-void">Void</a>
                                             @else
-                                                <span class="mini-btn mini-void">Voided</span>
+                                                <span class="kx-btn kx-btn--danger kx-btn--sm mini-btn mini-void" aria-disabled="true">Voided</span>
                                             @endif
                                         </div>
                                     </td>
@@ -814,20 +768,7 @@
         button.id = 'khayraInstallAppButton';
         button.type = 'button';
         button.innerText = 'Install App';
-        button.style.position = 'fixed';
-        button.style.right = '18px';
-        button.style.bottom = '18px';
-        button.style.zIndex = '99999';
-        button.style.border = '0';
-        button.style.borderRadius = '999px';
-        button.style.padding = '12px 16px';
-        button.style.background = '#2f7c7a';
-        button.style.color = '#ffffff';
-        button.style.fontWeight = '900';
-        button.style.fontFamily = 'Arial, sans-serif';
-        button.style.fontSize = '13px';
-        button.style.boxShadow = '0 14px 30px rgba(47,124,122,.24)';
-        button.style.cursor = 'pointer';
+        button.className = 'kx-btn kx-btn--primary kx-install-btn';
 
         button.addEventListener('click', function () {
             if (!deferredInstallPrompt) {

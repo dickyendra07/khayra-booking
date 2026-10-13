@@ -17,10 +17,10 @@
         .subtitle { margin: 12px 0 0; max-width: 850px; color: #6b7280; font-size: 14px; line-height: 1.9; }
 
         .actions { display:flex; gap:10px; flex-wrap:wrap; }
-        .btn { min-height: 42px; border: 0; cursor: pointer; padding: 0 16px; border-radius: 14px; font-size: 13px; font-weight: 900; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; font-family: Arial, sans-serif; white-space: nowrap; }
-        .btn-primary { background: linear-gradient(135deg, #3d8a89 0%, #2f7c7a 100%); color: #ffffff; box-shadow: 0 12px 24px rgba(47,124,122,.16); }
-        .btn-soft { color: #2f7c7a; background: #ffffff; border: 1px solid #e6ebea; }
-        .btn-danger { background: #fff1f2; color: #be123c; border: 1px solid #ffe0e6; }
+
+
+
+
 
         .hero { background: #ffffff; border: 1px solid #ecefef; border-radius: 28px; padding: 28px; box-shadow: 0 14px 34px rgba(15,23,42,.05); margin-bottom: 18px; }
         .hero-grid { display:grid; grid-template-columns: 1.05fr .95fr; gap:18px; align-items:stretch; }
@@ -86,6 +86,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="/images/khayra-logo.png">
+    @include('partials.ui-assets')
 </head>
 <body>
 <div class="layout">
@@ -101,8 +102,8 @@
                 </div>
 
                 <div class="actions">
-                    <a href="/admin/cashier" class="btn btn-soft">Kasir Checkout</a>
-                    <a href="/admin/promos/create" class="btn btn-primary">+ Tambah Promo</a>
+                    <a href="/admin/cashier" class="kx-btn kx-btn--outline btn btn-soft">Kasir Checkout</a>
+                    <a href="/admin/promos/create" class="kx-btn kx-btn--primary btn btn-primary">+ Tambah Promo</a>
                 </div>
             </div>
 
@@ -166,7 +167,7 @@
                                 <th>Periode</th>
                                 <th>Availability</th>
                                 <th>Status Setting</th>
-                                <th>Action</th>
+                                <th class="kx-col-actions">Action</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -197,12 +198,12 @@
                                     </td>
                                     <td><span class="pill {{ $promo->availability_class }}">{{ $promo->availability_label }}</span></td>
                                     <td><span class="pill {{ $promo->status }}">{{ $promo->status }}</span></td>
-                                    <td>
+                                    <td class="kx-col-actions">
                                         <div class="action-stack">
-                                            <a href="/admin/promos/{{ $promo->id }}/edit" class="btn btn-soft">Edit</a>
+                                            <a href="/admin/promos/{{ $promo->id }}/edit" class="kx-btn kx-btn--outline btn btn-soft">Edit</a>
                                             <form method="POST" action="/admin/promos/{{ $promo->id }}/delete" onsubmit="return confirm('Hapus promo ini?')">
                                                 @csrf
-                                                <button type="submit" class="btn btn-danger">Delete</button>
+                                                <button type="submit" class="kx-btn kx-btn--danger btn btn-danger">Delete</button>
                                             </form>
                                         </div>
                                     </td>
@@ -241,20 +242,7 @@
         button.id = 'khayraInstallAppButton';
         button.type = 'button';
         button.innerText = 'Install App';
-        button.style.position = 'fixed';
-        button.style.right = '18px';
-        button.style.bottom = '18px';
-        button.style.zIndex = '99999';
-        button.style.border = '0';
-        button.style.borderRadius = '999px';
-        button.style.padding = '12px 16px';
-        button.style.background = '#2f7c7a';
-        button.style.color = '#ffffff';
-        button.style.fontWeight = '900';
-        button.style.fontFamily = 'Arial, sans-serif';
-        button.style.fontSize = '13px';
-        button.style.boxShadow = '0 14px 30px rgba(47,124,122,.24)';
-        button.style.cursor = 'pointer';
+        button.className = 'kx-btn kx-btn--primary kx-install-btn';
 
         button.addEventListener('click', function () {
             if (!deferredInstallPrompt) {
