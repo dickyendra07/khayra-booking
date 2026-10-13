@@ -46,6 +46,8 @@ Syarat: ada kebutuhan mendesak menutup celah login/rute admin tanpa menunggu fit
 - Mengaktifkan biaya admin bersamaan dengan rilis pertama kode ini ke production.
 - Menjalankan `tests/Concurrency/run.php` atau suite pada database production (skrip hanya untuk server uji/staging; ia membuat database sementara sendiri).
 
+Persiapan staging (infrastruktur, env, gerbang `khayra:preflight --release-gate`, QA, data sintetis, rollback): lihat `docs/09-staging-readiness.md`.
+
 Pada bagian-bagian di bawah, istilah **Rilis 1** = hotfix keamanan Opsi B (bila dipakai) dan **Rilis 2** = rilis penuh (Opsi A). Bila Opsi A dipilih,
 lewati langkah khusus Rilis 1.
 

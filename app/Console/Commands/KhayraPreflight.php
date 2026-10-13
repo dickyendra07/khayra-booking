@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Support\AdminCredentials;
 use App\Support\InvoiceNumberIndex;
+use App\Support\SchemaGate;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -16,15 +17,17 @@ use Throwable;
  */
 class KhayraPreflight extends Command
 {
-    protected $signature = 'khayra:preflight {--json : Keluaran JSON}';
+    protected $signature = 'khayra:preflight {--json : Keluaran JSON} {--release-gate : Mode gerbang rilis: database WAJIB sudah dimigrasi penuh dan memakai MySQL/MariaDB (belum dimigrasi = FAIL)}';
 
-    protected $description = 'Periksa kesiapan lingkungan: kredensial admin, cache throttle, sesi, database, migration, zona waktu (read-only).';
+    protected $description = 'Periksa kesiapan lingkungan: kredensial admin, cache throttle, sesi, database, skema/index rilis, zona waktu (read-only; tidak memperbaiki apa pun).';
 
     /** @var array<int, array{status: string, check: string, detail: string}> */
     private array $results = [];
 
     public function handle(): int
     {
+        $this->results = [];       // instance command dapat dipakai ulang dalam satu proses (tes): jangan menumpuk hasil
+
         $this->checkApplication();
         $this->checkAuthentication();
         $this->checkCacheForThrottling();
@@ -164,12 +167,18 @@ class KhayraPreflight extends Command
             return;
         }
 
+        $release = (bool) $this->option('release-gate');
         $pending = $this->pendingMigrations();
-        $this->add($pending === 0 ? 'PASS' : 'WARN', 'Migration', $pending === 0 ? 'semua sudah dijalankan' : "{$pending} migration belum dijalankan (jalankan migrate --pretend dulu)");
 
-        foreach (['billing_audit_logs', 'invoice_sequences', 'billing_payments', 'rooms'] as $table) {
-            $this->add(Schema::hasTable($table) ? 'PASS' : 'WARN', "Tabel {$table}", Schema::hasTable($table) ? 'ada' : 'belum ada (migration P1 belum dijalankan)');
+        if ($pending === 0) {
+            $this->add('PASS', 'Migration', 'semua sudah dijalankan');
+        } elseif ($pending < 0) {
+            $this->add($release ? 'FAIL' : 'WARN', 'Migration', 'status migration tidak dapat ditentukan');
+        } else {
+            $this->add($release ? 'FAIL' : 'WARN', 'Migration', "{$pending} migration BELUM dijalankan (jalankan migrate --pretend dulu)".($release ? '; gerbang rilis mensyaratkan database sudah dimigrasi penuh' : ''));
         }
+
+        $this->checkSchemaGate($release);
 
         if (Schema::hasTable('billings') && Schema::hasColumn('billings', 'payment_model')) {
             $legacy = DB::table('billings')->where('payment_model', 'legacy')->count();
@@ -177,24 +186,68 @@ class KhayraPreflight extends Command
             $this->add('PASS', 'Model pembayaran invoice', "legacy: {$legacy} (tidak dihitung ulang), ledger: {$ledger}");
         }
 
-        if (Schema::hasTable('billings')) {
-            if (InvoiceNumberIndex::exists()) {
-                $this->add('PASS', 'Unique index invoice_number', 'terpasang');
-            } else {
-                $duplicates = count(InvoiceNumberIndex::duplicates());
-                $this->add('WARN', 'Unique index invoice_number', $duplicates > 0
-                    ? "belum terpasang; {$duplicates} nomor duplikat harus diselesaikan dulu (billing:audit-integrity)"
-                    : 'belum terpasang; jalankan billing:ensure-invoice-unique-index');
-            }
-        }
-
         if (DB::connection()->getDriverName() === 'mysql') {
             $database = DB::connection()->getDatabaseName();
             $nonInnoDb = DB::select('select table_name as t, engine as e from information_schema.tables where table_schema = ? and engine <> ? and table_type = ?', [$database, 'InnoDB', 'BASE TABLE']);
             $this->add($nonInnoDb === [] ? 'PASS' : 'FAIL', 'Engine tabel', $nonInnoDb === [] ? 'semua InnoDB (transaction & row lock berfungsi)' : 'bukan InnoDB: '.implode(', ', array_map(fn ($r) => $r->t.'='.$r->e, $nonInnoDb)));
         } else {
-            $this->add('WARN', 'Row locking', 'driver '.DB::connection()->getDriverName().' tidak mendukung lockForUpdate seperti MySQL; uji konkurensi hanya valid di MySQL/MariaDB');
+            $this->add($release ? 'FAIL' : 'WARN', 'Row locking', 'driver '.DB::connection()->getDriverName().' tidak mendukung kunci baris seperti MySQL; kunci periode dan kunci invoice hanya berlaku di MySQL/MariaDB'.($release ? ' (gerbang rilis mensyaratkan MySQL/MariaDB)' : ''));
         }
+    }
+
+    /**
+     * Gerbang skema rilis: tabel, kolom, dan index/constraint penting. Hanya membaca. Dibedakan antara
+     * "belum dimigrasi" (WARN; FAIL pada --release-gate) dan "sudah dimigrasi tetapi tidak lengkap" (selalu FAIL).
+     */
+    private function checkSchemaGate(bool $release): void
+    {
+        $counts = [SchemaGate::OK => 0, SchemaGate::NOT_MIGRATED => 0, SchemaGate::INCOMPLETE => 0];
+
+        foreach (SchemaGate::evaluate() as $row) {
+            $counts[$row['state']]++;
+            $check = 'Skema: '.$row['label'];
+
+            if ($row['state'] === SchemaGate::OK) {
+                $this->add('PASS', $check, 'lengkap');
+
+                continue;
+            }
+
+            if ($row['state'] === SchemaGate::INCOMPLETE) {
+                $detail = 'TIDAK LENGKAP: migration sudah dijalankan tetapi tidak ada: '.implode('; ', $row['missing']);
+
+                if ($row['special'] === 'invoice_number') {
+                    $detail .= '. '.$this->invoiceNumberHint();
+                }
+
+                $this->add('FAIL', $check, $detail);
+
+                continue;
+            }
+
+            $this->add($release ? 'FAIL' : 'WARN', $check, 'BELUM DIMIGRASI (migration '.substr($row['migration'], 0, 17).'... belum dijalankan): '.implode('; ', $row['missing']));
+        }
+
+        $state = $counts[SchemaGate::INCOMPLETE] > 0
+            ? ['FAIL', "GERBANG RILIS TIDAK TERPENUHI: {$counts[SchemaGate::INCOMPLETE]} persyaratan skema tidak lengkap pada database yang sudah dimigrasi"]
+            : ($counts[SchemaGate::NOT_MIGRATED] > 0
+                ? [$release ? 'FAIL' : 'WARN', "database BELUM dimigrasi penuh ({$counts[SchemaGate::NOT_MIGRATED]} persyaratan menunggu migration); gerbang rilis belum dapat dinyatakan lulus"]
+                : ['PASS', 'seluruh persyaratan skema terpenuhi ('.$counts[SchemaGate::OK].' kelompok)']);
+
+        $this->add($state[0], 'Gerbang skema rilis', $state[1]);
+    }
+
+    private function invoiceNumberHint(): string
+    {
+        try {
+            $duplicates = count(InvoiceNumberIndex::duplicates());
+        } catch (Throwable) {
+            return 'Periksa duplikat dengan billing:audit-integrity.';
+        }
+
+        return $duplicates > 0
+            ? "{$duplicates} nomor invoice duplikat menghalangi pemasangan; putuskan penyelesaiannya (tidak ada renumber otomatis) lalu jalankan billing:ensure-invoice-unique-index"
+            : 'Tidak ada duplikat; jalankan billing:ensure-invoice-unique-index (persetujuan diperlukan, preflight tidak memasang apa pun)';
     }
 
     private function checkAdminFee(): void
