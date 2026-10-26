@@ -121,7 +121,8 @@ Route::post('/admin/login', function (Request $request) {
 
     session([
         'admin_logged_in' => true,
-        'admin_email' => $request->email,
+        'admin_email' => AdminCredentials::email(),
+        'admin_credential_fp' => AdminCredentials::fingerprint(),
     ]);
 
     return redirect('/admin/dashboard');
@@ -186,7 +187,9 @@ Route::get('/admin/dashboard', function () {
         ->where('payment_status', '!=', 'void')
         ->sum('discount_amount');
 
-    $monthlyNetRevenue = max($monthlyPaidAmount - $monthlyDiscount, 0);
+    // Kartu "Net Revenue" = total invoice non-void bulan ini (omzet). Invoice.amount sudah NET diskon, jadi diskon
+    // tidak boleh dikurangkan lagi dari arus kas (sebelumnya: kas - diskon → omzet terlalu kecil).
+    $monthlyNetRevenue = FinanceReport::invoiceRevenue($monthStart, $monthEnd);
 
     $monthRevenue = $monthlyPaidAmount;
     $discountMonth = $monthlyDiscount;
@@ -1063,8 +1066,9 @@ Route::get('/admin/patients/{id}', function ($id) {
         ->sortByDesc('date')
         ->values();
 
-    $paidTotal = $patient->billings->where('payment_status', '!=', 'void')->sum('paid_amount');
-    $outstandingTotal = $patient->billings->where('payment_status', '!=', 'void')->sum('remaining_amount');
+    // Invoice lama berstatus paid dengan paid_amount 0 tetap dihitung terbayar penuh (fallback yang sama dengan laporan).
+    $paidTotal = $patient->billings->where('payment_status', '!=', 'void')->sum(fn ($billing) => BillingMoney::displayPaid($billing));
+    $outstandingTotal = $patient->billings->where('payment_status', '!=', 'void')->sum(fn ($billing) => BillingMoney::displayRemaining($billing));
     $revenueTotal = $patient->billings->where('payment_status', '!=', 'void')->sum('amount');
     $voidTotal = $patient->billings->where('payment_status', 'void')->count();
 
@@ -3104,6 +3108,23 @@ Route::get('/therapist/dashboard', function () {
     ));
 });
 
+// Lampiran data pendukung rekam medis: hanya untuk sesi admin / terapis yang sedang login.
+Route::get('/admin/medical-record-files/{id}', function ($id) {
+    if (!session('admin_logged_in')) {
+        return redirect('/admin/login');
+    }
+
+    return \App\Support\SupportingFile::response(MedicalRecordSupportingData::findOrFail($id));
+})->whereNumber('id');
+
+Route::get('/therapist/medical-record-files/{id}', function ($id) {
+    if (!session('therapist_logged_in')) {
+        return redirect('/therapist/login');
+    }
+
+    return \App\Support\SupportingFile::response(MedicalRecordSupportingData::findOrFail($id));
+})->whereNumber('id');
+
 Route::get('/therapist/visits/{id}/medical-record', function ($id) {
     if (!session('therapist_logged_in')) {
         return redirect('/therapist/login');
@@ -3402,7 +3423,8 @@ $medicalRecord = MedicalRecord::updateOrCreate(
 
             if ($request->hasFile("supporting_data_file.$index")) {
                 $file = $request->file("supporting_data_file.$index");
-                $storedPath = $file->store('medical-record-supporting-data', 'public');
+                // Disk privat: lampiran kesehatan tidak boleh terbuka tanpa login lewat /storage (disajikan oleh rute medical-record-files).
+                $storedPath = $file->store(\App\Support\SupportingFile::DIRECTORY, 'local');
 
                 $filePath = $storedPath;
                 $fileName = $file->getClientOriginalName();
@@ -4738,8 +4760,8 @@ Route::get('/admin/reports/revenue', function (Request $request) {
                     $billing->subtotal_amount,
                     $billing->discount_amount,
                     $billing->amount,
-                    $billing->paid_amount,
-                    $billing->remaining_amount,
+                    BillingMoney::displayPaid($billing),
+                    BillingMoney::displayRemaining($billing),
                     $billing->promo_code,
                 ]);
             }
@@ -6951,7 +6973,10 @@ Route::post('/admin/rooms', function (Request $request) {
     }
 
     $data = Room::validated($request, null);
-    Room::create($data);
+    $room = Room::create($data);
+
+    // Jejak audit perubahan master ruangan (tarif/billable memengaruhi penagihan di masa depan).
+    BillingAudit::record('room_created', null, null, Room::auditSnapshot($room), null, null);
 
     return redirect('/admin/rooms')->with('success', 'Ruangan ditambahkan (default non-billable).');
 });
@@ -6964,7 +6989,13 @@ Route::post('/admin/rooms/{id}/update', function (Request $request, $id) {
     $room = Room::findOrFail($id);
     $data = Room::validated($request, $room);
     unset($data['name']); // nama tidak diubah agar booking/visit lama tetap cocok
+    $before = Room::auditSnapshot($room);
     $room->update($data);
+    [$changedBefore, $changedAfter] = BillingAudit::diff($before, Room::auditSnapshot($room->fresh()));
+
+    if ($changedAfter !== []) {
+        BillingAudit::record('room_updated', null, ['room' => $room->name] + $changedBefore, ['room' => $room->name] + $changedAfter, null, null);
+    }
 
     return redirect('/admin/rooms')->with('success', 'Ruangan ' . $room->name . ' diperbarui.');
 });

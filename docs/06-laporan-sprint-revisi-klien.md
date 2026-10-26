@@ -1,5 +1,8 @@
 # Laporan Sprint Revisi Klien — Khayra Physio
 
+> **Pembaruan 26 Okt 2026:** status Req 1 (PIC tampil sebagai terapis) dan risiko pendaftaran ganda sudah diperbarui di `docs/11-finalisasi-produksi-dan-kesiapan-rilis.md` (detektor kandidat duplikat read-only tersedia; UI peringatan menunggu persetujuan).
+
+
 Kara Digital · 12 Oktober 2026 · Branch `feat/khayra-client-revisions-final` (dari `origin/main` = `0803214`, PR #1 sudah merged).
 **Belum ada commit, push, merge, deploy, maupun migration production.** Menunggu review.
 

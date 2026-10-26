@@ -6,7 +6,7 @@ use Illuminate\Support\Str;
 
 uses(RefreshDatabase::class);
 
-beforeEach(fn () => $this->withSession(['admin_logged_in' => true]));
+beforeEach(fn () => $this->withSession(adminSession()));
 
 function patientPayload(array $overrides = []): array
 {

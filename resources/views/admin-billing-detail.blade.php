@@ -637,7 +637,7 @@
                             </div>
                             <div style="display:flex; justify-content:space-between; gap:14px; font-size:13px; color:rgba(255,255,255,.84);">
                                 <span>Paid Amount</span>
-                                <strong>Rp {{ number_format($billing->paid_amount ?: 0, 0, ',', '.') }}</strong>
+                                <strong>Rp {{ number_format(\App\Services\BillingMoney::displayPaid($billing), 0, ',', '.') }}</strong>
                             </div>
                             <div style="display:flex; justify-content:space-between; gap:14px; font-size:13px; color:rgba(255,255,255,.84);">
                                 <span>Change</span>
@@ -645,7 +645,7 @@
                             </div>
                             <div style="display:flex; justify-content:space-between; gap:14px; font-size:13px; color:rgba(255,255,255,.84);">
                                 <span>Remaining</span>
-                                <strong>Rp {{ number_format($billing->remaining_amount ?: 0, 0, ',', '.') }}</strong>
+                                <strong>Rp {{ number_format(\App\Services\BillingMoney::displayRemaining($billing), 0, ',', '.') }}</strong>
                             </div>
                             <div class="total-row" style="border-top:1px solid rgba(255,255,255,.18); padding-top:14px;">
                                 <div>

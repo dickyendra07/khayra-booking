@@ -16,7 +16,7 @@ uses(RefreshDatabase::class);
  * memakai buku pembayaran dan perilakunya diuji di PaymentLedgerTest.
  */
 beforeEach(function () {
-    $this->withSession(['admin_logged_in' => true, 'admin_email' => 'admin@uji.test']);
+    $this->withSession(adminSession(['admin_email' => 'admin@uji.test']));
     $this->patient = Patient::create(['full_name' => 'Pasien Karakter', 'whatsapp' => '081234567890']);
 });
 

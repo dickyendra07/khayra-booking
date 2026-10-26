@@ -11,7 +11,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    $this->withSession(['admin_logged_in' => true, 'admin_email' => 'admin@uji.test']);
+    $this->withSession(adminSession(['admin_email' => 'admin@uji.test']));
     $this->patient = Patient::create(['full_name' => 'Pasien Diskon', 'whatsapp' => '081234567890']);
     $this->program = ClinicService::create(['name' => 'Prog', 'price_per_visit' => 500000, 'package_3x_price' => 1400000, 'category' => 'Program', 'status' => 'active']);
     $this->addOn = ClinicService::create(['name' => '+ Add', 'price_per_visit' => 100000, 'category' => 'Add-on', 'status' => 'active']);

@@ -3089,7 +3089,7 @@
                                             <div class="file-upload-box">
                                                 <input type="file" name="supporting_data_file[]" accept=".jpg,.jpeg,.png,.webp,.pdf,.doc,.docx,.xls,.xlsx">
                                                 @if(!empty($supportingFilePath))
-                                                    <a class="current-file-pill" href="{{ asset('storage/' . $supportingFilePath) }}" target="_blank">
+                                                    <a class="current-file-pill" href="{{ url('/therapist/medical-record-files/' . $supportingId) }}" target="_blank" rel="noopener">
                                                         📎 {{ $supportingFileName ?: 'Lihat file' }}
                                                     </a>
                                                     <div class="file-upload-hint">Upload file baru hanya jika ingin mengganti attachment.</div>

@@ -686,7 +686,7 @@
                         </div>
                         <div class="summary-row">
                             <span>Paid Amount</span>
-                            <strong>Rp {{ number_format($billing->paid_amount ?: 0, 0, ',', '.') }}</strong>
+                            <strong>Rp {{ number_format(\App\Services\BillingMoney::displayPaid($billing), 0, ',', '.') }}</strong>
                         </div>
                         <div class="summary-row">
                             <span>Change</span>
@@ -694,7 +694,7 @@
                         </div>
                         <div class="summary-row">
                             <span>Remaining</span>
-                            <strong>Rp {{ number_format($billing->remaining_amount ?: 0, 0, ',', '.') }}</strong>
+                            <strong>Rp {{ number_format(\App\Services\BillingMoney::displayRemaining($billing), 0, ',', '.') }}</strong>
                         </div>
                         <div class="summary-row total">
                             <span>Grand Total</span>

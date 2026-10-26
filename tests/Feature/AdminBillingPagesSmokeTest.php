@@ -7,7 +7,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 uses(RefreshDatabase::class);
 
 it('keeps existing billing, patient and finance pages working with legacy and new invoices', function () {
-    $this->withSession(['admin_logged_in' => true]);
+    $this->withSession(adminSession());
 
     $patient = Patient::create(['full_name' => 'Smoke', 'whatsapp' => '08123456789', 'religion' => 'islam']);
 

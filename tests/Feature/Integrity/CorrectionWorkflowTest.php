@@ -12,7 +12,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    $this->withSession(['admin_logged_in' => true, 'admin_email' => 'admin@uji.test']);
+    $this->withSession(adminSession(['admin_email' => 'admin@uji.test']));
     $this->patient = Patient::create(['full_name' => 'Pasien Koreksi', 'whatsapp' => '081234567890']);
     $this->program = ClinicService::create(['name' => 'Prog', 'price_per_visit' => 500000, 'category' => 'Program', 'status' => 'active']);
     $this->product = InventoryItem::create(['sku' => 'K-1', 'name' => 'Tape', 'stock' => 10, 'selling_price' => 40000, 'status' => 'active']);

@@ -21,7 +21,7 @@ beforeEach(function () {
 });
 
 it('admin login: membuka booking, kalender, pasien, visit, billing, kasir, finance', function () {
-    $this->withSession(['admin_logged_in' => true]);
+    $this->withSession(adminSession());
 
     $booking = Booking::create(['patient_id' => $this->patient->id, 'full_name' => 'Pasien Regresi', 'whatsapp' => '081234567890', 'service' => 'Uji', 'booking_date' => now()->toDateString(), 'booking_time' => '09:00', 'status' => 'confirmed']);
     $visit = Visit::create(['patient_id' => $this->patient->id, 'therapist_id' => $this->therapist->id, 'therapist' => 'Terapis Regresi', 'visit_date' => now()->toDateString(), 'status' => 'scheduled']);
@@ -38,7 +38,7 @@ it('admin login: membuka booking, kalender, pasien, visit, billing, kasir, finan
 });
 
 it('admin login: membuat booking dan visit lewat form seperti biasa', function () {
-    $this->withSession(['admin_logged_in' => true]);
+    $this->withSession(adminSession());
 
     $this->post('/admin/bookings/create', [
         'patient_id' => $this->patient->id, 'therapist_id' => $this->therapist->id, 'full_name' => 'Pasien Regresi',
@@ -55,7 +55,7 @@ it('admin login: membuat booking dan visit lewat form seperti biasa', function (
 });
 
 it('admin login: tutup buku bulanan tetap berjalan dan memakai angka invoice', function () {
-    $this->withSession(['admin_logged_in' => true]);
+    $this->withSession(adminSession());
 
     Billing::create(['patient_id' => $this->patient->id, 'invoice_number' => 'INV-REG', 'invoice_date' => now()->toDateString(), 'amount' => 250000, 'paid_amount' => 250000, 'payment_status' => 'paid']);
     $month = now()->format('Y-m');

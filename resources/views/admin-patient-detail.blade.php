@@ -1196,7 +1196,7 @@
                                             </td>
                                             <td>{{ $billing->invoice_date ? $billing->invoice_date->format('Y-m-d') : '-' }}</td>
                                             <td class="money">Rp {{ number_format($billing->amount, 0, ',', '.') }}</td>
-                                            <td class="money">Rp {{ number_format($billing->paid_amount ?: 0, 0, ',', '.') }}</td>
+                                            <td class="money">Rp {{ number_format(\App\Services\BillingMoney::displayPaid($billing), 0, ',', '.') }}</td>
                                             <td>
                                                 <span class="status-pill status-{{ $billing->payment_status }}">{{ $billing->payment_status }}</span>
                                             </td>

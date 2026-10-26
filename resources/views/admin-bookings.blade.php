@@ -325,6 +325,7 @@
             gap: 18px;
             margin-top: 18px;
         }
+        .preview-grid > * { min-width: 0; } /* kartu pratinjau tidak boleh melebihi lebar layar kecil */
 
         .preview-card {
             background: #fbfcfc;
@@ -810,6 +811,11 @@
 
             .hero-title { font-size: 32px; }
             .stats-grid { grid-template-columns: 1fr; }
+
+            /* Kalender bulanan 7 kolom harus muat di 375px tanpa overflow horizontal halaman. */
+            .month-head,
+            .month-grid { grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+            .month-day { min-width: 0; min-height: 64px; padding: 6px 4px; border-radius: 12px; }
         }
     
         .scheduler-action-row {

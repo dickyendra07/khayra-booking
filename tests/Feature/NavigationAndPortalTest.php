@@ -7,7 +7,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 uses(RefreshDatabase::class);
 
 it('semua tautan navigasi sidebar admin tetap terbuka (tidak 404/500)', function () {
-    $this->withSession(['admin_logged_in' => true]);
+    $this->withSession(adminSession());
 
     $html = $this->get('/admin/dashboard')->assertOk()->getContent();
     preg_match_all('/href="(\/admin\/[^"#?]*)"/', $html, $matches);
@@ -47,7 +47,7 @@ it('portal pasien: invoice hanya terbuka untuk pasien yang login dan pemilik inv
 });
 
 it('halaman konfirmasi WhatsApp tidak memuat tautan ke invoice pasien', function () {
-    $this->withSession(['admin_logged_in' => true]);
+    $this->withSession(adminSession());
     $patient = Patient::create(['full_name' => 'Pasien WA', 'whatsapp' => '081234567890']);
     $billing = Billing::create(['patient_id' => $patient->id, 'invoice_number' => 'INV-WA', 'invoice_date' => now()->toDateString(), 'amount' => 100000, 'payment_status' => 'unpaid']);
 

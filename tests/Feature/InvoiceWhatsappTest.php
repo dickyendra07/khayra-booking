@@ -43,7 +43,7 @@ it('requires an admin session', function () {
 });
 
 it('menampilkan nomor tujuan dan pratinjau pesan sebelum WhatsApp dibuka (tanpa redirect otomatis)', function () {
-    $this->withSession(['admin_logged_in' => true]);
+    $this->withSession(adminSession());
     $billing = makeBilling();
 
     $response = $this->get("/admin/billings/{$billing->id}/whatsapp");
@@ -59,7 +59,7 @@ it('menampilkan nomor tujuan dan pratinjau pesan sebelum WhatsApp dibuka (tanpa 
 });
 
 it('pesan WhatsApp minimal: tanpa nama layanan, rincian item, diskon, atau tautan invoice', function () {
-    $this->withSession(['admin_logged_in' => true]);
+    $this->withSession(adminSession());
     $billing = makeBilling();
 
     $html = $this->get("/admin/billings/{$billing->id}/whatsapp")->getContent();
@@ -83,7 +83,7 @@ it('pesan WhatsApp minimal: tanpa nama layanan, rincian item, diskon, atau tauta
 });
 
 it('pesan tidak pernah memuat data klinis atau identitas sensitif pasien', function () {
-    $this->withSession(['admin_logged_in' => true]);
+    $this->withSession(adminSession());
     $billing = makeBilling(['full_name' => 'Siti Aminah', 'nik' => '3273010101010001', 'address' => 'Jl. Rahasia 1', 'medical_record_number' => 'KP-B-01-00099', 'birth_date' => '1990-05-17']);
 
     $text = (new InvoiceWhatsappMessage)->build($billing);
@@ -92,7 +92,7 @@ it('pesan tidak pernah memuat data klinis atau identitas sensitif pasien', funct
 });
 
 it('melaporkan sisa tagihan untuk pembayaran sebagian', function () {
-    $this->withSession(['admin_logged_in' => true]);
+    $this->withSession(adminSession());
     $billing = makeBilling([], ['payment_status' => 'partial', 'paid_amount' => 200000, 'remaining_amount' => 350000]);
 
     $text = (new InvoiceWhatsappMessage)->build($billing->fresh());
@@ -101,7 +101,7 @@ it('melaporkan sisa tagihan untuk pembayaran sebagian', function () {
 });
 
 it('refuses to send a voided invoice', function () {
-    $this->withSession(['admin_logged_in' => true]);
+    $this->withSession(adminSession());
     $billing = makeBilling([], ['payment_status' => 'void', 'voided_at' => now()]);
 
     $this->get("/admin/billings/{$billing->id}/whatsapp")
@@ -110,7 +110,7 @@ it('refuses to send a voided invoice', function () {
 });
 
 it('explains when the patient has no usable WhatsApp number', function () {
-    $this->withSession(['admin_logged_in' => true]);
+    $this->withSession(adminSession());
     $billing = makeBilling(['whatsapp' => '-']);
 
     $this->get("/admin/billings/{$billing->id}/whatsapp")
@@ -119,7 +119,7 @@ it('explains when the patient has no usable WhatsApp number', function () {
 });
 
 it('shows the send action on the detail page and the list, but not for void invoices', function () {
-    $this->withSession(['admin_logged_in' => true]);
+    $this->withSession(adminSession());
     $billing = makeBilling();
 
     $this->get("/admin/billings/{$billing->id}")->assertOk()->assertSee('Kirim via WhatsApp');

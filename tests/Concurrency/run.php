@@ -33,6 +33,7 @@ $env = [
     'APP_ENV' => 'testing', 'DB_CONNECTION' => 'mysql', 'DB_HOST' => $host, 'DB_PORT' => $port, 'DB_DATABASE' => $database,
     'DB_USERNAME' => $user, 'DB_PASSWORD' => $pass, 'SESSION_DRIVER' => 'array', 'CACHE_STORE' => 'array', 'QUEUE_CONNECTION' => 'sync',
     'NEW_PATIENT_ADMIN_FEE_ENABLED' => 'true', 'APP_MAINTENANCE_DRIVER' => 'file', 'BCRYPT_ROUNDS' => '4',
+    'ADMIN_EMAIL' => 'race@uji.test', 'ADMIN_PASSWORD' => 'kata-sandi-uji-lokal', 'ADMIN_PASSWORD_HASH' => '',
 ];
 
 foreach ($env as $key => $value) {

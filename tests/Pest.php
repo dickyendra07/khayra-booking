@@ -63,6 +63,18 @@ function sessionError(string $key): ?string
     return $errors['default']['messages'][$key][0] ?? null;
 }
 
+/**
+ * Sesi admin yang valid untuk test: flag login + sidik jari kredensial yang sedang berlaku (middleware fail-closed).
+ * Hitung ulang bila konfigurasi kredensial diubah di dalam test.
+ */
+function adminSession(array $extra = []): array
+{
+    return array_merge([
+        'admin_logged_in' => true,
+        'admin_credential_fp' => \App\Support\AdminCredentials::fingerprint(),
+    ], $extra);
+}
+
 /** Token satu-kali-pakai yang dikirim formulir pembayaran/refund (idempotensi). */
 function idem(?string $key = null): array
 {

@@ -683,7 +683,7 @@
                                 <div class="item-top">
                                     <div>
                                         <div class="item-title">Outstanding: {{ optional($billing->patient)->full_name ?: 'Patient' }}</div>
-                                        <div class="item-meta">{{ $billing->invoice_number ?: 'Billing #' . $billing->id }} · Remaining Rp {{ number_format($billing->remaining_amount ?: 0, 0, ',', '.') }}</div>
+                                        <div class="item-meta">{{ $billing->invoice_number ?: 'Billing #' . $billing->id }} · Remaining Rp {{ number_format(\App\Services\BillingMoney::displayRemaining($billing), 0, ',', '.') }}</div>
                                     </div>
                                     <span class="status-pill {{ $billing->payment_status }}">{{ $billing->payment_status }}</span>
                                 </div>
@@ -772,7 +772,7 @@
                                         <div class="item-meta">
                                             {{ optional($billing->patient)->full_name ?: 'Patient' }} ·
                                             <span class="money">Rp {{ number_format($billing->amount, 0, ',', '.') }}</span>
-                                            · Paid Rp {{ number_format($billing->paid_amount ?: 0, 0, ',', '.') }}
+                                            · Paid Rp {{ number_format(\App\Services\BillingMoney::displayPaid($billing), 0, ',', '.') }}
                                         </div>
                                     </div>
                                     <span class="status-pill {{ $billing->payment_status }}">{{ $billing->payment_status }}</span>

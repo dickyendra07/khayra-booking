@@ -23,7 +23,7 @@ function simpleCheckout($test, int $price = 100000)
 }
 
 beforeEach(function () {
-    $this->withSession(['admin_logged_in' => true]);
+    $this->withSession(adminSession());
     Patient::create(['full_name' => 'Pasien No', 'whatsapp' => '081234567890']);
     Carbon::setTestNow('2026-10-11 10:00:00');
 });

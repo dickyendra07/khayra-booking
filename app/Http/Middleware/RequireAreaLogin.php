@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Support\AdminCredentials;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -48,7 +49,19 @@ class RequireAreaLogin
 
         $config = self::AREAS[$area];
 
-        if (in_array($path, $config['public'], true) || $request->session()->get($config['session'])) {
+        if (in_array($path, $config['public'], true)) {
+            return $next($request);
+        }
+
+        if ($request->session()->get($config['session'])) {
+            // Fail-closed: sesi admin harus membawa sidik jari kredensial yang cocok dengan kredensial berlaku. Sesi tanpa sidik jari
+            // (versi lama) atau dengan kredensial lama ditolak; hanya kunci admin yang dihapus, sesi pasien/terapis tidak disentuh.
+            if ($area === 'admin' && ! AdminCredentials::sessionStillValid($request->session()->get('admin_credential_fp'))) {
+                $request->session()->forget(['admin_logged_in', 'admin_email', 'admin_credential_fp']);
+
+                return redirect($config['login']);
+            }
+
             return $next($request);
         }
 

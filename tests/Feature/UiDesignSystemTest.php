@@ -53,7 +53,7 @@ function uiAdminPages($test): array
 }
 
 it('semua halaman admin utama tetap dirender dan memuat stylesheet design system bersama', function () {
-    $this->withSession(['admin_logged_in' => true, 'admin_email' => 'admin@uji.test']);
+    $this->withSession(adminSession(['admin_email' => 'admin@uji.test']));
 
     $problems = [];
 
@@ -146,7 +146,7 @@ it('lint: tidak ada lagi definisi visual tombol legacy (warna/padding/radius) di
 });
 
 it('PIC fisioterapis tampil di daftar booking, detail booking, daftar visit, dan jadwal terapis', function () {
-    $this->withSession(['admin_logged_in' => true, 'admin_email' => 'admin@uji.test']);
+    $this->withSession(adminSession(['admin_email' => 'admin@uji.test']));
 
     $this->get('/admin/bookings')->assertOk()->assertSee('PIC Fisioterapis')->assertSee('Fisio PIC Uji');
     $this->get("/admin/bookings/{$this->booking->id}")->assertOk()->assertSee('PIC (Fisioterapis)')->assertSee('Fisio PIC Uji');
@@ -158,7 +158,7 @@ it('PIC fisioterapis tampil di daftar booking, detail booking, daftar visit, dan
 });
 
 it('master ruangan: satuan tarif standar Per sesi; satuan lama tetap tampil bila sudah tersimpan', function () {
-    $this->withSession(['admin_logged_in' => true, 'admin_email' => 'admin@uji.test']);
+    $this->withSession(adminSession(['admin_email' => 'admin@uji.test']));
 
     $legacy = Room::findByName('VIP 2');
     $legacy->update(['is_billable' => true, 'rate' => 80000, 'rate_unit' => 'per_hour']);
@@ -176,7 +176,7 @@ it('master ruangan: satuan tarif standar Per sesi; satuan lama tetap tampil bila
 });
 
 it('form consent: petunjuk wali/perwakilan dan identitas fisioterapis tampil, field tidak berubah', function () {
-    $this->withSession(['admin_logged_in' => true, 'admin_email' => 'admin@uji.test']);
+    $this->withSession(adminSession(['admin_email' => 'admin@uji.test']));
 
     $this->get("/admin/patients/{$this->patient->id}/informed-consent")->assertOk()
         ->assertSee('name="representative_name"', false)->assertSee('name="relationship_to_patient"', false)
@@ -185,7 +185,7 @@ it('form consent: petunjuk wali/perwakilan dan identitas fisioterapis tampil, fi
 });
 
 it('PIC mengikuti therapist_id masing-masing booking (bukan terapis lain) dan jadwal existing tidak berubah', function () {
-    $this->withSession(['admin_logged_in' => true, 'admin_email' => 'admin@uji.test']);
+    $this->withSession(adminSession(['admin_email' => 'admin@uji.test']));
 
     $other = Therapist::create(['full_name' => 'Fisio Lain Uji', 'email' => 'lain@uji.test', 'password' => Hash::make('x-uji-pass'), 'status' => 'active']);
     $second = Booking::create([
@@ -205,7 +205,7 @@ it('PIC mengikuti therapist_id masing-masing booking (bukan terapis lain) dan ja
 });
 
 it('master ruangan: tidak ada tarif/satuan yang dikarang; seed tetap non-billable dan form tidak memilih satuan sendiri', function () {
-    $this->withSession(['admin_logged_in' => true, 'admin_email' => 'admin@uji.test']);
+    $this->withSession(adminSession(['admin_email' => 'admin@uji.test']));
 
     expect(Room::where('is_billable', true)->count())->toBe(0)
         ->and(Room::whereNotNull('rate')->count())->toBe(0)
@@ -220,4 +220,14 @@ it('master ruangan: tidak ada tarif/satuan yang dikarang; seed tetap non-billabl
     $room = Room::findByName('VIP 1');
     $this->post("/admin/rooms/{$room->id}/update", ['status' => 'active', 'is_billable' => 0, 'notes' => 'cek'])->assertRedirect('/admin/rooms');
     expect($room->fresh()->rate)->toBeNull()->and($room->fresh()->rate_unit)->toBeNull()->and($room->fresh()->is_billable)->toBeFalse();
+});
+
+it('layout mobile: grid kalender bulanan dan laporan revenue tidak melebarkan halaman (min-width:0 / minmax)', function () {
+    $this->withSession(adminSession());
+
+    $bookings = $this->get('/admin/bookings')->assertOk()->getContent();
+    expect($bookings)->toContain('.preview-grid > * { min-width: 0; }')
+        ->and($bookings)->toContain('.month-grid { grid-template-columns: repeat(7, minmax(0, 1fr))');
+
+    expect($this->get('/admin/reports/revenue')->assertOk()->getContent())->toContain('.two-grid > * { min-width:0; }');
 });

@@ -17,7 +17,7 @@ beforeEach(function () {
     config([
         'khayra_auth.admin.email' => 'admin@uji.test', 'khayra_auth.admin.password' => 'sandi-uji-lokal', 'khayra_auth.admin.password_hash' => null,
     ]);
-    $this->withSession(['admin_logged_in' => true, 'admin_email' => 'admin@uji.test']);
+    $this->withSession(adminSession(['admin_email' => 'admin@uji.test']));
     $this->patient = Patient::create(['full_name' => 'Pasien Ledger', 'whatsapp' => '081234567890']);
 });
 
