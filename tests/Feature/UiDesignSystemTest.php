@@ -221,3 +221,13 @@ it('master ruangan: tidak ada tarif/satuan yang dikarang; seed tetap non-billabl
     $this->post("/admin/rooms/{$room->id}/update", ['status' => 'active', 'is_billable' => 0, 'notes' => 'cek'])->assertRedirect('/admin/rooms');
     expect($room->fresh()->rate)->toBeNull()->and($room->fresh()->rate_unit)->toBeNull()->and($room->fresh()->is_billable)->toBeFalse();
 });
+
+it('layout mobile: grid kalender bulanan dan laporan revenue tidak melebarkan halaman (min-width:0 / minmax)', function () {
+    $this->withSession(['admin_logged_in' => true]);
+
+    $bookings = $this->get('/admin/bookings')->assertOk()->getContent();
+    expect($bookings)->toContain('.preview-grid > * { min-width: 0; }')
+        ->and($bookings)->toContain('.month-grid { grid-template-columns: repeat(7, minmax(0, 1fr))');
+
+    expect($this->get('/admin/reports/revenue')->assertOk()->getContent())->toContain('.two-grid > * { min-width:0; }');
+});

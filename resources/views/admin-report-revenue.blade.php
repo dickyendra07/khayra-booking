@@ -59,6 +59,7 @@
     .pill-red { background:#fee2e2; color:#b91c1c; }
     .pill-gray { background:#f1f5f9; color:#475569; }
     .two-grid { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+    .two-grid > * { min-width:0; } /* tabel lebar tidak boleh melebarkan kolom grid di layar kecil */
     .empty-state { padding:18px; background:#fff7ed; color:#9a3412; border-radius:16px; border:1px solid #fed7aa; font-weight:800; line-height:1.7; }
     @media (max-width:1180px) {
         .nav-grid, .stats-grid, .stats-grid.five, .hero-grid, .two-grid { grid-template-columns:1fr 1fr; }
