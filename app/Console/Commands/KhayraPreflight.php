@@ -90,8 +90,14 @@ class KhayraPreflight extends Command
 
         if (blank(config('khayra_auth.admin.password_hash'))) {
             $this->add('WARN', 'Format password admin', 'memakai ADMIN_PASSWORD (teks biasa); disarankan ADMIN_PASSWORD_HASH (bcrypt)');
+        } elseif (! AdminCredentials::hashIsValid()) {
+            $this->add('FAIL', 'Format password admin', 'ADMIN_PASSWORD_HASH bukan hash bcrypt yang valid (kutip tunggal di .env?). Login admin akan SELALU ditolak; ADMIN_PASSWORD tidak dipakai sebagai cadangan.');
         } else {
             $this->add('PASS', 'Format password admin', 'ADMIN_PASSWORD_HASH (bcrypt)');
+        }
+
+        if (filled(config('khayra_auth.admin.password_hash')) && filled(config('khayra_auth.admin.password'))) {
+            $this->add('WARN', 'ADMIN_PASSWORD sisa', 'ADMIN_PASSWORD teks biasa masih ada di environment walau hash terisi (diabaikan oleh login, tetapi hapus agar tidak bocor lewat backup/.env)');
         }
 
         if (mb_strtolower((string) config('khayra_auth.admin.email')) === 'admin@khayraphysio.com') {

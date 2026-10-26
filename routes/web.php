@@ -121,7 +121,8 @@ Route::post('/admin/login', function (Request $request) {
 
     session([
         'admin_logged_in' => true,
-        'admin_email' => $request->email,
+        'admin_email' => AdminCredentials::email(),
+        'admin_credential_fp' => AdminCredentials::fingerprint(),
     ]);
 
     return redirect('/admin/dashboard');
