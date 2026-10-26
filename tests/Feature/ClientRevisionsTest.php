@@ -514,3 +514,23 @@ it('WhatsApp invoice tidak membocorkan baris biaya ruangan/admin dan tetap minim
     $this->get("/admin/patients/{$this->patient->id}/edit")->assertOk()->assertSee('Aliran Lama Teks Bebas');
     $this->get("/admin/billings/{$billing->id}/whatsapp")->assertOk();
 });
+
+it('perubahan master ruangan (tarif, satuan, billable, status) tercatat di jejak audit dan tidak menagih apa pun', function () {
+    $this->post('/admin/rooms', ['name' => 'R. Audit', 'status' => 'active'])->assertRedirect('/admin/rooms');
+    $room = Room::where('name', 'R. Audit')->firstOrFail();
+
+    expect(\App\Models\BillingAuditLog::where('action', 'room_created')->count())->toBe(1);
+
+    // Simpan tanpa perubahan nilai: tidak ada audit baru.
+    $this->post("/admin/rooms/{$room->id}/update", ['status' => 'active'])->assertRedirect('/admin/rooms');
+    expect(\App\Models\BillingAuditLog::where('action', 'room_updated')->count())->toBe(0);
+
+    $this->post("/admin/rooms/{$room->id}/update", ['status' => 'active', 'is_billable' => 1, 'rate' => 75000, 'rate_unit' => 'per_session'])->assertRedirect('/admin/rooms');
+
+    $log = \App\Models\BillingAuditLog::where('action', 'room_updated')->firstOrFail();
+
+    expect($log->billing_id)->toBeNull()
+        ->and($log->before)->toMatchArray(['room' => 'R. Audit', 'is_billable' => '0', 'rate' => ''])
+        ->and($log->after)->toMatchArray(['room' => 'R. Audit', 'is_billable' => '1', 'rate' => '75000.00', 'rate_unit' => 'per_session'])
+        ->and(\App\Models\Billing::count())->toBe(0);
+});

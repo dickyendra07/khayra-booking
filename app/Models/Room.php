@@ -32,6 +32,18 @@ class Room extends Model
         return $this->status === 'active' && $this->is_billable && (float) $this->rate > 0 && ! empty($this->rate_unit);
     }
 
+    /** Potret field master yang memengaruhi penagihan, untuk jejak audit. */
+    public static function auditSnapshot(self $room): array
+    {
+        return [
+            'name' => $room->name,
+            'status' => $room->status,
+            'is_billable' => $room->is_billable ? '1' : '0',
+            'rate' => $room->rate === null ? '' : number_format((float) $room->rate, 2, '.', ''),
+            'rate_unit' => (string) $room->rate_unit,
+        ];
+    }
+
     public static function findByName(?string $name): ?self
     {
         $name = trim((string) $name);

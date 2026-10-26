@@ -6955,7 +6955,10 @@ Route::post('/admin/rooms', function (Request $request) {
     }
 
     $data = Room::validated($request, null);
-    Room::create($data);
+    $room = Room::create($data);
+
+    // Jejak audit perubahan master ruangan (tarif/billable memengaruhi penagihan di masa depan).
+    BillingAudit::record('room_created', null, null, Room::auditSnapshot($room), null, null);
 
     return redirect('/admin/rooms')->with('success', 'Ruangan ditambahkan (default non-billable).');
 });
@@ -6968,7 +6971,13 @@ Route::post('/admin/rooms/{id}/update', function (Request $request, $id) {
     $room = Room::findOrFail($id);
     $data = Room::validated($request, $room);
     unset($data['name']); // nama tidak diubah agar booking/visit lama tetap cocok
+    $before = Room::auditSnapshot($room);
     $room->update($data);
+    [$changedBefore, $changedAfter] = BillingAudit::diff($before, Room::auditSnapshot($room->fresh()));
+
+    if ($changedAfter !== []) {
+        BillingAudit::record('room_updated', null, ['room' => $room->name] + $changedBefore, ['room' => $room->name] + $changedAfter, null, null);
+    }
 
     return redirect('/admin/rooms')->with('success', 'Ruangan ' . $room->name . ' diperbarui.');
 });
