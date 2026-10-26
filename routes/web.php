@@ -3108,6 +3108,23 @@ Route::get('/therapist/dashboard', function () {
     ));
 });
 
+// Lampiran data pendukung rekam medis: hanya untuk sesi admin / terapis yang sedang login.
+Route::get('/admin/medical-record-files/{id}', function ($id) {
+    if (!session('admin_logged_in')) {
+        return redirect('/admin/login');
+    }
+
+    return \App\Support\SupportingFile::response(MedicalRecordSupportingData::findOrFail($id));
+})->whereNumber('id');
+
+Route::get('/therapist/medical-record-files/{id}', function ($id) {
+    if (!session('therapist_logged_in')) {
+        return redirect('/therapist/login');
+    }
+
+    return \App\Support\SupportingFile::response(MedicalRecordSupportingData::findOrFail($id));
+})->whereNumber('id');
+
 Route::get('/therapist/visits/{id}/medical-record', function ($id) {
     if (!session('therapist_logged_in')) {
         return redirect('/therapist/login');
@@ -3406,7 +3423,8 @@ $medicalRecord = MedicalRecord::updateOrCreate(
 
             if ($request->hasFile("supporting_data_file.$index")) {
                 $file = $request->file("supporting_data_file.$index");
-                $storedPath = $file->store('medical-record-supporting-data', 'public');
+                // Disk privat: lampiran kesehatan tidak boleh terbuka tanpa login lewat /storage (disajikan oleh rute medical-record-files).
+                $storedPath = $file->store(\App\Support\SupportingFile::DIRECTORY, 'local');
 
                 $filePath = $storedPath;
                 $fileName = $file->getClientOriginalName();
