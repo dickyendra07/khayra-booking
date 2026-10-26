@@ -211,8 +211,8 @@
                                     <td class="money">Rp {{ number_format($billing->subtotal_amount ?: $billing->amount, 0, ',', '.') }}</td>
                                     <td class="money">Rp {{ number_format($billing->discount_amount ?: 0, 0, ',', '.') }}</td>
                                     <td class="money">Rp {{ number_format($billing->amount, 0, ',', '.') }}</td>
-                                    <td class="money">Rp {{ number_format($billing->paid_amount ?: 0, 0, ',', '.') }}</td>
-                                    <td class="money">Rp {{ number_format($billing->remaining_amount ?: 0, 0, ',', '.') }}</td>
+                                    <td class="money">Rp {{ number_format(\App\Services\BillingMoney::displayPaid($billing), 0, ',', '.') }}</td>
+                                    <td class="money">Rp {{ number_format(\App\Services\BillingMoney::displayRemaining($billing), 0, ',', '.') }}</td>
                                     <td>{{ $billing->promo_code ?: '-' }}</td>
                                 </tr>
                             @empty

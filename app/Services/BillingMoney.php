@@ -47,4 +47,30 @@ class BillingMoney
 
         return max($total - $paid, 0);
     }
+
+    /**
+     * Nilai "Dibayar" untuk TAMPILAN (detail, cetak, daftar, ekspor). Hanya menambal invoice lama berstatus paid yang
+     * paid_amount-nya 0 (fallback sama dengan laporan); invoice void dan status lain menampilkan nilai tersimpan apa adanya.
+     * Tidak mengubah data.
+     */
+    public static function displayPaid($billing): float
+    {
+        $paid = (float) ($billing->paid_amount ?? 0);
+
+        if (($billing->payment_status ?? null) === 'paid' && $paid <= 0) {
+            return (float) ($billing->amount ?? 0);
+        }
+
+        return $paid;
+    }
+
+    /** Nilai "Sisa" untuk tampilan: invoice paid selalu 0 (konsisten dengan laporan); lainnya nilai tersimpan. */
+    public static function displayRemaining($billing): float
+    {
+        if (($billing->payment_status ?? null) === 'paid') {
+            return 0.0;
+        }
+
+        return (float) ($billing->remaining_amount ?? 0);
+    }
 }

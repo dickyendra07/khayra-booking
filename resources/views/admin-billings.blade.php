@@ -675,14 +675,14 @@
                                     </td>
 
                                     <td class="money">
-                                        Rp {{ number_format($billing->paid_amount ?: 0, 0, ',', '.') }}
+                                        Rp {{ number_format(\App\Services\BillingMoney::displayPaid($billing), 0, ',', '.') }}
                                         @if(($billing->change_amount ?: 0) > 0)
                                             <div class="secondary-text">Change: Rp {{ number_format($billing->change_amount, 0, ',', '.') }}</div>
                                         @endif
                                     </td>
 
                                     <td class="money">
-                                        Rp {{ number_format($billing->remaining_amount ?: 0, 0, ',', '.') }}
+                                        Rp {{ number_format(\App\Services\BillingMoney::displayRemaining($billing), 0, ',', '.') }}
                                     </td>
 
                                     <td>

@@ -187,7 +187,9 @@ Route::get('/admin/dashboard', function () {
         ->where('payment_status', '!=', 'void')
         ->sum('discount_amount');
 
-    $monthlyNetRevenue = max($monthlyPaidAmount - $monthlyDiscount, 0);
+    // Kartu "Net Revenue" = total invoice non-void bulan ini (omzet). Invoice.amount sudah NET diskon, jadi diskon
+    // tidak boleh dikurangkan lagi dari arus kas (sebelumnya: kas - diskon → omzet terlalu kecil).
+    $monthlyNetRevenue = FinanceReport::invoiceRevenue($monthStart, $monthEnd);
 
     $monthRevenue = $monthlyPaidAmount;
     $discountMonth = $monthlyDiscount;
@@ -1064,8 +1066,9 @@ Route::get('/admin/patients/{id}', function ($id) {
         ->sortByDesc('date')
         ->values();
 
-    $paidTotal = $patient->billings->where('payment_status', '!=', 'void')->sum('paid_amount');
-    $outstandingTotal = $patient->billings->where('payment_status', '!=', 'void')->sum('remaining_amount');
+    // Invoice lama berstatus paid dengan paid_amount 0 tetap dihitung terbayar penuh (fallback yang sama dengan laporan).
+    $paidTotal = $patient->billings->where('payment_status', '!=', 'void')->sum(fn ($billing) => BillingMoney::displayPaid($billing));
+    $outstandingTotal = $patient->billings->where('payment_status', '!=', 'void')->sum(fn ($billing) => BillingMoney::displayRemaining($billing));
     $revenueTotal = $patient->billings->where('payment_status', '!=', 'void')->sum('amount');
     $voidTotal = $patient->billings->where('payment_status', 'void')->count();
 
@@ -4739,8 +4742,8 @@ Route::get('/admin/reports/revenue', function (Request $request) {
                     $billing->subtotal_amount,
                     $billing->discount_amount,
                     $billing->amount,
-                    $billing->paid_amount,
-                    $billing->remaining_amount,
+                    BillingMoney::displayPaid($billing),
+                    BillingMoney::displayRemaining($billing),
                     $billing->promo_code,
                 ]);
             }
