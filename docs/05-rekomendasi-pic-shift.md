@@ -1,5 +1,8 @@
 # Rekomendasi PIC / Shift (Req 1) — Khayra Physio
 
+> **Pembaruan 26 Okt 2026:** bagian "PIC = terapis penangan booking/jadwal" (tafsiran A/D) sudah ditampilkan di UI sejak commit `7c70079` (tanpa skema baru). Yang tetap BLOCKED adalah "kolom shift"/petugas per shift. Lihat `docs/11-finalisasi-produksi-dan-kesiapan-rilis.md`.
+
+
 **Status: BLOCKED BY CLIENT DECISION. Tidak ada kode, migration, atau perilaku yang diimplementasikan.**
 Catatan klien hanya berbunyi "PIC (kolom shift)". Definisi PIC dan lokasi kolomnya belum final, sehingga setiap
 implementasi saat ini adalah asumsi. Dokumen ini berisi hasil audit, titik integrasi paling sederhana, rancangan UI minimal,
