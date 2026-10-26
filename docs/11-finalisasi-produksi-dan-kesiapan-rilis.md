@@ -1,7 +1,7 @@
 # Finalisasi Khayra Physio & Kesiapan Rilis (audit 26 Okt 2026)
 
 Basis: `e3b91e8` (= `origin/main`, baseline historis rilis 13 Okt 2026). Branch kerja: `claude/khayra-physio-finalization-46778d`
-(6 commit kode + 1 commit dokumen, lokal, di atas baseline). **Belum ada push, merge, atau deployment. Tidak ada akses ke VPS/production; tidak ada migration baru.**
+(6 commit kode + 1 commit dokumen, lokal, di atas baseline). **Belum ada merge atau deployment (branch sudah di-push untuk PR #3). Tidak ada akses ke VPS/production; tidak ada migration baru.**
 Dokumen ini menggantikan status usang pada `docs/05` (PIC), `docs/06` (risiko "dua pendaftaran = dua tagihan") dan `docs/09` (belum ada deployment).
 
 ## 1. Matriks status
@@ -40,20 +40,19 @@ Dokumen ini menggantikan status usang pada `docs/05` (PIC), `docs/06` (risiko "d
 Audit: hash bcrypt selalu menang atas `ADMIN_PASSWORD`; hash rusak = login ditolak (tidak jatuh ke plaintext); email dibandingkan `hash_equals`
 dan kedua cek selalu dijalankan; sesi diregenerasi saat login; logout `invalidate` + ganti token (GET logout 405); throttle 5/pasangan, 20/IP.
 Tambahan:
-- Sidik jari kredensial (HMAC-SHA256 dengan `APP_KEY`, bukan password/hash) disimpan di sesi server. **Rotasi kredensial otomatis membatalkan semua sesi admin lama.** Sesi tanpa sidik jari (dibuat sebelum rilis ini) tetap diterima sampai kedaluwarsa normal (`SESSION_LIFETIME` 120 menit), jadi deploy tidak mengeluarkan admin.
+- Sidik jari kredensial (HMAC-SHA256 dengan `APP_KEY`, bukan password/hash) disimpan di sesi server. **Rotasi kredensial otomatis membatalkan semua sesi admin lama.** **Validasi FAIL-CLOSED (revisi review):** sesi admin tanpa sidik jari, dengan sidik jari kosong/bukan string/salah, atau saat kredensial tidak terkonfigurasi **ditolak**; hanya kunci `admin_logged_in`, `admin_email`, `admin_credential_fp` yang dihapus dari sesi (sesi terapis/pasien tidak disentuh) dan pengguna diarahkan ke login. Tidak ada jalur khusus untuk sesi legacy. **Konsekuensi deploy yang diterima: semua admin yang masih memakai sesi dari versi sebelumnya harus login ulang sekali setelah deployment** (beri tahu staf).
 - Aktor audit memakai email kanonik dari config (bukan teks yang diketik).
 - `php artisan khayra:admin-hash` (prompt tersembunyi, min. 12 karakter) dan `php artisan khayra:admin-verify` (uji email+password terhadap config aktif, tanpa sesi/throttle, tanpa mencetak rahasia).
 - Preflight: **FAIL** bila hash bukan bcrypt valid; **WARN** bila `ADMIN_PASSWORD` plaintext masih tersisa walau hash terisi.
 - Temuan yang **tidak** diubah (butuh keputusan/operator): throttle admin tidak punya lapis per-identitas lintas IP (sengaja: satu akun admin bersama, lapis itu memungkinkan pihak luar mengunci admin); `SESSION_SECURE_COOKIE` default `null` → wajib `true` di production (preflight WARN); IP throttle bergantung pada IP klien yang benar (§6).
 - **Riwayat Git memuat kredensial default lama** (email dan password bawaan sebelum commit `aff9a45`). Anggap kredensial production mana pun yang pernah sama dengan default itu **sudah bocor**: ganti email dan password.
 
-**Prosedur rotasi (dijalankan operator berwenang, bukan Claude):**
-1. Biarkan satu sesi admin yang sedang login tetap terbuka (jalan keluar bila rotasi salah). Cadangkan `.env` ke lokasi aman di luar web root (izin 600).
-2. Di server: `php artisan khayra:admin-hash` → salin baris `ADMIN_PASSWORD_HASH='...'` (kutip tunggal wajib) ke `.env`; **hapus** baris `ADMIN_PASSWORD`; ganti `ADMIN_EMAIL` bila masih default.
-3. `php artisan config:cache` (bila dipakai), lalu `php artisan khayra:preflight` (tidak boleh FAIL pada "Format password admin") dan `php artisan khayra:admin-verify` (harus OK).
-4. Buka jendela browser baru (privat), login dengan kredensial baru. Sesi lama otomatis tertutup pada klik berikutnya.
-5. Bila gagal: pulihkan `.env` dari cadangan, `config:cache`; sesi lama yang masih terbuka sudah tertutup oleh rotasi, jadi pulihkan kredensial lama lalu login ulang.
-6. Jangan menempel password/hash ke chat, tiket, atau log. Hash di terminal boleh langsung ditempel ke `.env`, lalu bersihkan riwayat shell (`history -c`).
+**Prosedur rotasi (dijalankan operator berwenang, bukan Claude).** Diuji end-to-end lokal (test + server nyata dengan CSRF): rotasi menutup semua sesi admin lama, password lama ditolak, password baru masuk.
+1. Cadangkan `.env` ke lokasi aman di luar web root (izin 600). Cadangan ini adalah jalan keluar: memulihkan kredensial lama juga memulihkan sidik jari lama sehingga sesi lama berlaku lagi.
+2. `php artisan khayra:admin-hash` (prompt tersembunyi, tidak ada password di argumen/riwayat/log) → tempel baris `ADMIN_PASSWORD_HASH='...'` ke `.env` (kutip tunggal), **hapus** `ADMIN_PASSWORD`, ganti `ADMIN_EMAIL` bila masih default.
+3. `php artisan config:cache`, lalu `php artisan khayra:preflight` ("Format password admin" harus PASS; "ADMIN_PASSWORD sisa" tidak boleh muncul) dan `php artisan khayra:admin-verify` (harus OK). Bila **gagal: segera pulihkan `.env` dari cadangan + `config:cache`** sebelum menutup apa pun.
+4. Login di jendela privat dengan kredensial baru. Sesi admin lama gugur pada permintaan berikutnya (ini disengaja). Throttle (5 gagal/15 menit per email+IP) tidak permanen; lockout permanen hanya mungkin bila `.env` salah, yang dicegah langkah 3 dan dipulihkan dengan cadangan.
+5. Jangan menempel password/hash ke chat, tiket, atau log; bersihkan riwayat shell. Karena kredensial default lama ada di riwayat Git (repo tidak ditulis ulang), **rotasi email DAN password wajib**, dan setiap password lama dianggap bocor.
 
 ### 2.2 P0.2 — Invoice legacy (#2, #3, #7: `paid`, `paid_amount=0`, `payment_model=legacy`)
 Hasil audit (kode, bukan data production — data tidak diakses):
@@ -97,7 +96,7 @@ Hasil audit (kode, bukan data production — data tidak diakses):
 Ikuti `docs/04` §3–§7 dan `docs/09` §F–§K (backup penuh, checksum baseline, `migrate --pretend`, `khayra:preflight --release-gate`, `billing:audit-integrity --strict`). Rilis ini **tidak menambah migration** (tetap 15 migration additive dari baseline bila production belum memilikinya; status deployment `e3b91e8` mencatat 15 sudah berhasil).
 ### 5.2 Konfigurasi `.env` yang wajib ditinjau (nilai tidak ditulis di sini)
 `APP_ENV=production`, `APP_DEBUG=false`, `SESSION_DRIVER=database`, `CACHE_STORE=database`, `SESSION_SECURE_COOKIE=true`, `APP_URL=https://app.khayraphysio.com`, `CLINIC_TIMEZONE=Asia/Jakarta` (`app.timezone` tetap UTC), `LOG_STACK=daily`, `LOG_DAILY_DAYS=14`, `LOG_LEVEL=warning`, `NEW_PATIENT_ADMIN_FEE_ENABLED` **tidak diubah**, `ADMIN_*` sesuai §2.1.
-### 5.3 Lampiran rekam medis lama (S1)
+### 5.3 Lampiran rekam medis lama (S1) — ringkas; prosedur lengkap di `docs/12-runbook-lampiran-medis-legacy.md`
 Setelah kode ini live (rute `/admin|therapist/medical-record-files/{id}` bekerja untuk file di disk publik maupun privat):
 1. Verifikasi tautan lampiran lama terbuka dari halaman rekam medis (login terapis).
 2. Pindahkan: `storage/app/public/medical-record-supporting-data/` → `storage/app/private/medical-record-supporting-data/` (path di database tidak berubah; rute mencari disk privat dulu). Pertahankan pemilik/izin `www-data`/user CloudPanel dan mode 640/750. **Jangan hapus tanpa salinan.**
@@ -131,8 +130,8 @@ Laravel mencatat exception beserta SQL dan binding. Karena data pasien bisa munc
 | Lingkungan | Hasil |
 |---|---|
 | SQLite (`:memory:`) — baseline sebelum perubahan | 321 lulus, 2 skip |
-| SQLite — akhir | **366 lulus**, 2 skip (2.463 assertion) |
-| MySQL 8.4.11 lokal (database sementara, sudah dihapus) — suite penuh, akhir | **360 lulus**, 8 skip (test khusus SQLite dilewati) |
+| SQLite — akhir (setelah review PR #3) | **383 lulus**, 2 skip (2.547 assertion; skip = test MySQL-only) |
+| MySQL 8.4.11 lokal (database sementara, sudah dihapus) — suite penuh, akhir | **377 lulus**, 8 skip (test khusus SQLite dilewati) |
 | Harness konkurensi paralel `tests/Concurrency/run.php` (MySQL 8.4.11 lokal) | **39/39 lulus**, database sementara dihapus otomatis |
 | Mutation check P0.2 | tanpa perbaikan, 4 dari 10 test baru gagal (pembuktian cacat) |
 | Browser QA | sweep 27 halaman pada 375px; 2 cacat overflow ditemukan, diperbaiki, diverifikasi ulang; login admin lewat browser nyata (CSRF) OK. **Tidak diuji:** wa.me nyata, cetak ke printer, browser selain Chromium, staging/production |
@@ -140,8 +139,29 @@ Semua data sintetis; database sementara SQLite di scratchpad dan MySQL `khayra_q
 
 ## 10. Dampak migration dan rollback
 - **Migration baru: tidak ada.** Rollback kode = deploy ulang commit sebelumnya; tidak perlu rollback database.
-- Yang perlu diketahui saat rollback ke `e3b91e8`: lampiran baru (disk privat) tidak terlihat oleh tautan `/storage/...` lama; pindahkan file balik ke disk publik bila perlu. Sidik jari sesi diabaikan kode lama. Audit `room_*` di `billing_audit_logs` diabaikan kode lama (tidak ada skema baru).
-- Dampak deploy: kartu "Net Revenue" dashboard berubah definisi (omzet invoice); sesi admin yang ada tetap berlaku sampai kedaluwarsa; rotasi kredensial berikutnya menutup semua sesi.
+- Yang perlu diketahui saat rollback ke `e3b91e8`: lampiran baru (disk privat) tidak terlihat oleh tautan `/storage/...` lama; pindahkan file balik ke disk publik bila perlu. Sidik jari sesi diabaikan kode lama, dan lampiran yang diunggah sejak rilis ini ada di `storage/app/private`. Audit `room_*` di `billing_audit_logs` diabaikan kode lama (tidak ada skema baru).
+- Dampak deploy: kartu "Net Revenue" dashboard berubah definisi (omzet invoice); **semua admin harus login ulang sekali** (sesi lama tanpa sidik jari ditolak); rotasi kredensial berikutnya menutup semua sesi admin.
 
-## 11. Verdict kesiapan rilis
-**Kode: SIAP untuk staging.** **Production: BELUM direkomendasikan** sebelum: (1) staging lulus QA `docs/09` §I dengan data sintetis, (2) kredensial admin dirotasi (§2.1), (3) lampiran lama dipindah/diblokir (§5.3), (4) evidence backup offsite terenkripsi dan izin/HTTPS diterima (§5.4), (5) keputusan owner untuk rekonsiliasi legacy dan perubahan angka Net Revenue. Fitur finansial pending (biaya admin, ruangan berbayar, consent v2) tetap **tidak** diaktifkan.
+## 11. Review keamanan PR #3 (revisi)
+### 11.1 Revocation sesi admin (fail-closed)
+Cacat: `sessionStillValid(null)` mengembalikan `true`, sehingga sesi admin versi lama (tanpa `admin_credential_fp`) tetap lolos setelah kredensial dirotasi. Perbaikan: `AdminCredentials::sessionStillValid(mixed)` menolak apa pun selain string non-kosong yang `hash_equals` dengan sidik jari kredensial berlaku, dan menolak bila kredensial tidak terkonfigurasi. Test baru: login menyimpan sidik jari; tanpa sidik jari ditolak (flag admin dihapus; permintaan berikutnya juga ditolak); kosong/null/array/angka/palsu/huruf-besar ditolak; cocok diterima; rotasi password **dan** email membatalkan sesi; sesi terapis/pasien utuh; rotasi end-to-end; password tidak masuk log. Mutation check: mengembalikan `null => true` menggagalkan 2 test baru. Test lama yang memakai `['admin_logged_in' => true]` dipindah ke helper `adminSession()` (membawa sidik jari); harness konkurensi ikut diperbarui.
+Tidak berubah: regenerasi sesi saat login, CSRF (curl nyata tanpa token → 419), cookie HttpOnly, throttling, hash invalid tanpa fallback plaintext.
+### 11.2 Review lampiran rekam medis
+| Jalur | Hasil |
+|---|---|
+| Upload | validasi `file|max:10240|mimes:jpg,jpeg,png,webp,pdf,doc,docx,xls,xlsx`; nama file acak (`hashName`), disimpan di disk `local` (`storage/app/private`); nama asli hanya metadata (disanitasi saat dikirim) |
+| Akses staf | `/admin|therapist/medical-record-files/{id}` (`whereNumber`), sesi admin/terapis wajib (dijaga juga oleh `RequireAreaLogin`); tamu dan sesi pasien → redirect login |
+| File lama (disk publik) | tetap terbaca lewat rute yang sama (disk privat dicari dulu) — URL lama `/storage/...` **tetap terbuka tanpa login sampai operator bertindak** (runbook `docs/12`) |
+| Path traversal / ID | path wajib berawalan `medical-record-supporting-data/`, tanpa `..`/NUL; ID non-numerik 404; ID tidak ada 404; file hilang 404 |
+| Header | `X-Content-Type-Options: nosniff`, `Cache-Control: private, no-store`, CSP `sandbox`; **hanya gambar inline, PDF/dokumen selalu `attachment`**; nama file di header disanitasi (CR/LF tidak lolos) |
+| Rute bawaan Laravel | disk `local` punya `serve=true` → rute `GET/PUT /storage/{path}` (bertanda tangan). **Dinonaktifkan** (`serve=false`); test memastikan `/storage/...` privat 404 dan PUT 404 |
+| Symlink | `public/storage` → `storage/app/public` saja; disk privat tidak ditautkan |
+| Antar-record | `supporting_data_id` hanya dicocokkan dengan lampiran record yang sama (test manipulasi ID lain) |
+| Akses antar-pasien/antar-terapis | **Tidak ada pembatasan**: staf mana pun yang login dapat membuka lampiran mana pun (setara hak membuka rekam medisnya). Lihat 11.3 |
+Catatan: ID lampiran berubah tiap rekam medis disimpan (baris dibuat ulang; file tetap). File tidak pernah dihapus saat item dibuang dari form (retensi; perlu kebijakan).
+**Status: kode SELESAI; risiko S1 BELUM selesai sampai file legacy ditangani dan akses tanpa login diverifikasi dari luar (`docs/12`).**
+### 11.3 Akses antar-terapis (keputusan klien, tidak diubah)
+Sekarang terapis mana pun dapat membuka rekam medis & lampiran semua pasien (`$therapistId` tidak dipakai). Opsi: **A** tetap (operasional fleksibel, risiko akses tidak perlu, tidak ada jejak); **B** hanya visit sendiri (+admin) — paling ketat, mengganggu cover/pengganti dan terapis yang lanjut dari terapis lain; **C** visit sendiri + pasien yang pernah ditangani/penugasan cover tercatat — butuh data penugasan; **D** tetap terbuka tetapi mencatat log akses (siapa, kapan, record) dan ditinjau berkala — kompromi tercepat. Rekomendasi: D sekarang, B/C setelah klien menjawab alur cover. Dampak B/C: perlu migration/aturan dan uji alur kerja klinis.
+
+## 12. Verdict kesiapan rilis
+**Kode PR #3: siap merge (teknis).** **Production: BELUM aman/direkomendasikan** — merge tidak sama dengan aman dipakai. Syarat sebelum production: (1) staging lulus QA `docs/09` §I dengan data sintetis, (2) kredensial admin dirotasi (§2.1), (3) lampiran lama dipindah/diblokir dan akses tanpa login diverifikasi dari luar (§5.3, `docs/12`), (4) evidence backup offsite terenkripsi dan izin/HTTPS diterima (§5.4), (5) keputusan owner untuk rekonsiliasi legacy dan perubahan angka Net Revenue. Fitur finansial pending (biaya admin, ruangan berbayar, consent v2) tetap **tidak** diaktifkan.

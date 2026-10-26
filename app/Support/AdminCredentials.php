@@ -74,17 +74,17 @@ class AdminCredentials
     }
 
     /**
-     * Sesi admin masih berlaku terhadap kredensial saat ini?
-     * Sesi tanpa sidik jari (dibuat sebelum fitur ini ada) tetap diterima sampai kedaluwarsa normal; sesi dengan
-     * sidik jari berbeda (kredensial sudah dirotasi atau dihapus) ditolak.
+     * Sesi admin masih berlaku terhadap kredensial saat ini? FAIL-CLOSED: sesi tanpa sidik jari (mis. dibuat oleh versi aplikasi
+     * sebelum fitur ini), sidik jari kosong/bukan string, atau sidik jari yang tidak cocok dengan kredensial yang berlaku
+     * SELALU ditolak. Tidak ada jalur khusus untuk sesi legacy: admin dari versi lama harus login ulang.
      */
-    public static function sessionStillValid(?string $sessionFingerprint): bool
+    public static function sessionStillValid(mixed $sessionFingerprint): bool
     {
-        if ($sessionFingerprint === null) {
-            return true;
+        if (! is_string($sessionFingerprint) || $sessionFingerprint === '' || ! self::isConfigured()) {
+            return false;
         }
 
-        return self::isConfigured() && hash_equals(self::fingerprint(), $sessionFingerprint);
+        return hash_equals(self::fingerprint(), $sessionFingerprint);
     }
 
     private static function passwordMatches(string $password): bool

@@ -54,7 +54,8 @@ class RequireAreaLogin
         }
 
         if ($request->session()->get($config['session'])) {
-            // Rotasi kredensial admin membatalkan sesi admin yang dibuat dengan kredensial lama.
+            // Fail-closed: sesi admin harus membawa sidik jari kredensial yang cocok dengan kredensial berlaku. Sesi tanpa sidik jari
+            // (versi lama) atau dengan kredensial lama ditolak; hanya kunci admin yang dihapus, sesi pasien/terapis tidak disentuh.
             if ($area === 'admin' && ! AdminCredentials::sessionStillValid($request->session()->get('admin_credential_fp'))) {
                 $request->session()->forget(['admin_logged_in', 'admin_email', 'admin_credential_fp']);
 

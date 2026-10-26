@@ -45,6 +45,7 @@ try {
             $session = $app['session']->driver();
             $session->put('admin_logged_in', true);
             $session->put('admin_email', 'race@uji.test');
+            $session->put('admin_credential_fp', \App\Support\AdminCredentials::fingerprint());
             $request = Request::create($p['uri'], $p['method'] ?? 'POST', $p['params'] ?? []);
             $response = $app->make(\Illuminate\Contracts\Http\Kernel::class)->handle($request);
             $errors = $session->get('errors');

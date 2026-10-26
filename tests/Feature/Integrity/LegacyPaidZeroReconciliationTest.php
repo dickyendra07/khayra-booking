@@ -19,7 +19,7 @@ uses(RefreshDatabase::class);
  * Data sintetis yang meniru pola invoice produksi #2, #3, #7. Semua test juga membuktikan data TIDAK diubah.
  */
 beforeEach(function () {
-    $this->withSession(['admin_logged_in' => true, 'admin_email' => 'admin@uji.test']);
+    $this->withSession(adminSession(['admin_email' => 'admin@uji.test']));
     $this->patient = Patient::create(['full_name' => 'Pasien Legacy Uji', 'whatsapp' => '081200000001']);
 });
 

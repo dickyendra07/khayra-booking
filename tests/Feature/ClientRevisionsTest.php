@@ -20,7 +20,7 @@ use Illuminate\Support\Str;
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    $this->withSession(['admin_logged_in' => true, 'admin_email' => 'admin@uji.test']);
+    $this->withSession(adminSession(['admin_email' => 'admin@uji.test']));
     $this->patient = Patient::create(['full_name' => 'Pasien Revisi', 'whatsapp' => '081234567890', 'birth_date' => '1990-01-01']);
     $this->therapist = Therapist::create(['full_name' => 'Terapis', 'email' => 't@uji.test', 'password' => Hash::make('x-uji'), 'status' => 'active']);
 });

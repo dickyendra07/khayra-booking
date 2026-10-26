@@ -52,7 +52,7 @@ it('sesi pasien tidak dapat membuka lampiran', function () {
 it('admin dan terapis yang login dapat membuka lampiran dengan header yang aman', function () {
     $item = attachment('medical-record-supporting-data/a.pdf', 'local');
 
-    $this->withSession(['admin_logged_in' => true]);
+    $this->withSession(adminSession());
     $response = $this->get("/admin/medical-record-files/{$item->id}")->assertOk();
 
     expect($response->headers->get('X-Content-Type-Options'))->toBe('nosniff')
@@ -66,12 +66,12 @@ it('admin dan terapis yang login dapat membuka lampiran dengan header yang aman'
 it('lampiran lama di disk publik tetap dapat dibuka lewat rute terautentikasi', function () {
     $item = attachment('medical-record-supporting-data/lama.pdf', 'public');
 
-    $this->withSession(['admin_logged_in' => true])->get("/admin/medical-record-files/{$item->id}")->assertOk();
+    $this->withSession(adminSession())->get("/admin/medical-record-files/{$item->id}")->assertOk();
 });
 
 it('path tidak sah, traversal, atau file hilang menghasilkan 404 (tidak membaca file lain)', function () {
     Storage::disk('local')->put('rahasia.txt', 'bukan lampiran');
-    $this->withSession(['admin_logged_in' => true]);
+    $this->withSession(adminSession());
 
     foreach (['../rahasia.txt', 'medical-record-supporting-data/../rahasia.txt', 'rahasia.txt', '', 'medical-record-supporting-data/tidak-ada.pdf'] as $path) {
         $item = MedicalRecordSupportingData::create(['medical_record_id' => $this->record->id, 'data_type' => 'X', 'file_path' => $path, 'file_name' => 'x.pdf']);
@@ -102,4 +102,49 @@ it('unggahan baru disimpan di disk privat, bukan di /storage publik', function (
         ->assertDontSee('/storage/medical-record-supporting-data', false);
 
     $this->get("/therapist/medical-record-files/{$item->id}")->assertOk();
+});
+
+it('gambar tampil inline sedangkan PDF/dokumen selalu diunduh (attachment) dengan nama aman', function () {
+    Storage::disk('local')->put('medical-record-supporting-data/foto.png', base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=='));
+    $image = MedicalRecordSupportingData::create(['medical_record_id' => $this->record->id, 'data_type' => 'X-ray', 'file_path' => 'medical-record-supporting-data/foto.png', 'file_name' => "foto\r\nSet-Cookie: x=1.png"]);
+    $pdf = attachment('medical-record-supporting-data/b.pdf', 'local');
+
+    $this->withSession(adminSession());
+
+    $imageResponse = $this->get("/admin/medical-record-files/{$image->id}")->assertOk();
+    expect($imageResponse->headers->get('Content-Disposition'))->toStartWith('inline')
+        ->and($imageResponse->headers->get('Content-Disposition'))->not->toContain("\n")
+        ->and($imageResponse->headers->get('Content-Disposition'))->not->toContain("\r")
+        ->and($imageResponse->headers->get('Content-Disposition'))->toContain('filename="foto_');
+
+    expect($this->get("/admin/medical-record-files/{$pdf->id}")->assertOk()->headers->get('Content-Disposition'))->toStartWith('attachment');
+});
+
+it('tidak ada rute /storage bawaan Laravel untuk disk privat (tanpa jalur akses publik tambahan)', function () {
+    Storage::disk('local')->put('medical-record-supporting-data/privat.pdf', 'rahasia');
+
+    expect(config('filesystems.disks.local.serve'))->toBeFalse();
+
+    foreach (['/storage/medical-record-supporting-data/privat.pdf', '/storage/medical-record-supporting-data/privat.pdf?signature=palsu'] as $url) {
+        $this->get($url)->assertNotFound();
+    }
+
+    $this->put('/storage/medical-record-supporting-data/baru.pdf', [])->assertNotFound();
+});
+
+it('lampiran milik rekam medis lain tidak dapat disisipkan lewat supporting_data_id manipulasi', function () {
+    $otherPatient = Patient::create(['full_name' => 'Pasien Lain', 'whatsapp' => '081200000777']);
+    $otherVisit = Visit::create(['patient_id' => $otherPatient->id, 'therapist_id' => $this->therapist->id, 'visit_date' => ClinicTime::today(), 'status' => 'in_progress']);
+    $otherRecord = MedicalRecord::create(['visit_id' => $otherVisit->id, 'patient_id' => $otherPatient->id, 'subjective' => '', 'objective' => '', 'assessment' => '', 'plan' => '']);
+    Storage::disk('local')->put('medical-record-supporting-data/milik-lain.pdf', 'rahasia');
+    $foreign = MedicalRecordSupportingData::create(['medical_record_id' => $otherRecord->id, 'data_type' => 'Lab', 'file_path' => 'medical-record-supporting-data/milik-lain.pdf', 'file_name' => 'lain.pdf']);
+
+    $this->withSession(['therapist_logged_in' => true, 'therapist_id' => $this->therapist->id, 'therapist_name' => 'T']);
+
+    $this->post("/therapist/visits/{$this->visit->id}/medical-record", [
+        'subjective' => 'S', 'objective' => 'O', 'assessment' => 'A', 'plan' => 'P',
+        'supporting_data_id' => [$foreign->id], 'supporting_data_type' => ['Lab'], 'supporting_data_date' => [ClinicTime::today()], 'supporting_data_interpretation' => ['x'],
+    ])->assertSessionHasNoErrors();
+
+    expect(MedicalRecordSupportingData::where('medical_record_id', $this->record->id)->whereNotNull('file_path')->count())->toBe(0);
 });

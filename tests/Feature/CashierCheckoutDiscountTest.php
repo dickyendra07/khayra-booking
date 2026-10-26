@@ -10,7 +10,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    $this->withSession(['admin_logged_in' => true]);
+    $this->withSession(adminSession());
 
     $this->patient = Patient::create(['full_name' => 'Pasien Uji', 'whatsapp' => '081234567890']);
 

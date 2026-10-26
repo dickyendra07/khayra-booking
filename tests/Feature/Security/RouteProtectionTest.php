@@ -65,7 +65,7 @@ it('menutup laporan therapist-performance dari pengguna tanpa login dan tidak me
 });
 
 it('tetap mengizinkan admin yang sudah login membuka laporan therapist-performance', function () {
-    $this->withSession(['admin_logged_in' => true])
+    $this->withSession(adminSession())
         ->get('/admin/reports/therapist-performance')
         ->assertOk();
 });
@@ -79,7 +79,7 @@ it('tidak membiarkan sesi pasien atau therapist membuka halaman admin', function
 });
 
 it('tidak membiarkan sesi admin menggantikan sesi pasien di portal pasien', function () {
-    $this->withSession(['admin_logged_in' => true])
+    $this->withSession(adminSession())
         ->get('/patient/dashboard')->assertRedirect('/patient');
 });
 

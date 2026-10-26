@@ -16,7 +16,7 @@ beforeEach(function () {
         'khayra_auth.admin.password_hash' => null,
     ]);
 
-    $this->withSession(['admin_logged_in' => true, 'admin_email' => 'admin@uji.test']);
+    $this->withSession(adminSession(['admin_email' => 'admin@uji.test']));
     $this->patient = Patient::create(['full_name' => 'Pasien Closing', 'whatsapp' => '081234567890']);
     $this->month = now()->format('Y-m');
 

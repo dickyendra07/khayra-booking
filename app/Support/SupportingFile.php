@@ -40,10 +40,14 @@ class SupportingFile
 
         $name = preg_replace('/[^A-Za-z0-9._ -]+/', '_', (string) ($item->file_name ?: basename($item->file_path)));
 
+        // Hanya gambar yang ditampilkan inline; PDF/dokumen selalu diunduh (tidak dirender di origin aplikasi).
+        $inline = str_starts_with((string) Storage::disk($disk)->mimeType($item->file_path), 'image/')
+            && in_array(strtolower(pathinfo($item->file_path, PATHINFO_EXTENSION)), ['jpg', 'jpeg', 'png', 'webp'], true);
+
         return Storage::disk($disk)->response($item->file_path, $name, [
             'X-Content-Type-Options' => 'nosniff',
             'Cache-Control' => 'private, no-store',
             'Content-Security-Policy' => "default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'; sandbox",
-        ]);
+        ], $inline ? 'inline' : 'attachment');
     }
 }
