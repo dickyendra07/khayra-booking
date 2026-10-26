@@ -116,6 +116,8 @@ nomor duplikat (total identik, index tertahan), seluruh suite 227 test.
 
 Prinsip: skema additive, jadi **rollback kode tidak membutuhkan rollback database**.
 
+> **Pengecualian lampiran medis (PR #3):** rollback kode tidak boleh membuka kembali akses publik ke lampiran rekam medis. Jangan memindahkan file ke disk publik atau melepas blokir nginx; gunakan roll-forward/compatibility hotfix atau nyatakan lampiran sementara tidak tersedia. Lihat `docs/12-runbook-lampiran-medis-legacy.md` §7.
+
 ### Rilis 1 (hotfix keamanan), tanpa database
 Kembalikan kode ke rilis sebelumnya; `php artisan config:clear` (dan `config:cache` bila dipakai). Bila penyebabnya admin terkunci, lebih cepat isi
 `ADMIN_EMAIL` dan password di environment lalu `config:cache`.

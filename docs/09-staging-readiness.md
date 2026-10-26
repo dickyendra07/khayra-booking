@@ -125,6 +125,8 @@ Tiap baris butuh tanda tangan/persetujuan tertulis dari pihak yang disebut.
 - [ ] Production (di luar cakupan dokumen ini): hanya setelah semua di atas, backup penuh, dan persetujuan tertulis; fee tetap mati saat naik pertama.
 
 ## K. Strategi rollback
+> **Lampiran medis (PR #3):** rollback tidak boleh membuka kembali akses tanpa login ke lampiran; lihat `docs/12-runbook-lampiran-medis-legacy.md` §7.
+
 - Skema additive: **rollback kode tidak membutuhkan rollback database**; kode lama mengabaikan tabel/kolom baru. Jangan `migrate:rollback` kecuali kerusakan struktur, dan sebelumnya backup tabel baru (`billing_payments`, `billing_audit_logs`, `invoice_sequences`, `rooms`, `pending_registration_fees`, `finance_period_locks`).
 - Rollback kode staging: deploy ulang commit sebelumnya; `config:clear`/`config:cache`.
 - Konsekuensi memakai kode lama setelah kode baru berjalan: invoice ledger tetap konsisten per invoice, tetapi laporan lama tidak melihat refund/kredit; invoice ber-`registration_token` dan kewajiban tertunda diabaikan; unique index menolak nomor invoice kembar (error, bukan data ganda). Jangan aktifkan biaya admin lagi sebelum kembali ke kode baru.

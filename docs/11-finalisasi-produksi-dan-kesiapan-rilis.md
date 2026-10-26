@@ -99,8 +99,8 @@ Ikuti `docs/04` §3–§7 dan `docs/09` §F–§K (backup penuh, checksum baseli
 ### 5.3 Lampiran rekam medis lama (S1) — ringkas; prosedur lengkap di `docs/12-runbook-lampiran-medis-legacy.md`
 Setelah kode ini live (rute `/admin|therapist/medical-record-files/{id}` bekerja untuk file di disk publik maupun privat):
 1. Verifikasi tautan lampiran lama terbuka dari halaman rekam medis (login terapis).
-2. Pindahkan: `storage/app/public/medical-record-supporting-data/` → `storage/app/private/medical-record-supporting-data/` (path di database tidak berubah; rute mencari disk privat dulu). Pertahankan pemilik/izin `www-data`/user CloudPanel dan mode 640/750. **Jangan hapus tanpa salinan.**
-3. Alternatif/tambahan: blokir `location ^~ /storage/medical-record-supporting-data/ { deny all; }` di vhost nginx CloudPanel.
+2. Salin lalu karantina (bukan hapus): `storage/app/public/medical-record-supporting-data/` → `storage/app/private/medical-record-supporting-data/` (path di database tidak berubah; rute mencari disk privat dulu). Pertahankan pemilik/izin `www-data`/user CloudPanel dan mode 640/750. **Jangan hapus tanpa salinan.**
+3. Blokir **wajib dan permanen**: `location ^~ /storage/medical-record-supporting-data/ { deny all; return 404; }` di vhost nginx CloudPanel (tidak dilepas, bahkan saat rollback; lihat `docs/12` §7).
 4. Uji dari jendela tanpa login: `https://app.khayraphysio.com/storage/medical-record-supporting-data/<nama>` harus 403/404.
 5. Pertimbangkan apakah URL lama pernah dibagikan di luar klinik; bila ya, anggap file itu terpapar.
 ### 5.4 Evidence yang diminta dari operator (tidak dianggap terverifikasi dari teks historis)
@@ -139,7 +139,8 @@ Semua data sintetis; database sementara SQLite di scratchpad dan MySQL `khayra_q
 
 ## 10. Dampak migration dan rollback
 - **Migration baru: tidak ada.** Rollback kode = deploy ulang commit sebelumnya; tidak perlu rollback database.
-- Yang perlu diketahui saat rollback ke `e3b91e8`: lampiran baru (disk privat) tidak terlihat oleh tautan `/storage/...` lama; pindahkan file balik ke disk publik bila perlu. Sidik jari sesi diabaikan kode lama, dan lampiran yang diunggah sejak rilis ini ada di `storage/app/private`. Audit `room_*` di `billing_audit_logs` diabaikan kode lama (tidak ada skema baru).
+- **Lampiran medis: rollback TIDAK PERNAH boleh membuka kembali akses tanpa login.** Kode `e3b91e8` tidak dapat melayani file di disk privat. Jangan memindahkan file balik ke disk publik dan jangan melepas blokir nginx `/storage/medical-record-supporting-data/`. Pilihan: (1) roll-forward / *compatibility hotfix* yang menyertakan rute lampiran berautentikasi (diuji di staging), atau (2) bila rollback penuh tak terhindarkan, **lampiran sementara tidak tersedia** sampai hotfix diterapkan, dengan jalur akses darurat berpersetujuan dan jejak audit. Unggahan yang dibuat kode lama selama rollback jatuh ke direktori publik yang tetap diblokir; wajib disalin ke disk privat dan dikarantina setelah kode baru kembali. Prosedur lengkap: `docs/12` §7.
+- Sidik jari sesi diabaikan kode lama, dan lampiran yang diunggah sejak rilis ini ada di `storage/app/private`. Audit `room_*` di `billing_audit_logs` diabaikan kode lama (tidak ada skema baru).
 - Dampak deploy: kartu "Net Revenue" dashboard berubah definisi (omzet invoice); **semua admin harus login ulang sekali** (sesi lama tanpa sidik jari ditolak); rotasi kredensial berikutnya menutup semua sesi admin.
 
 ## 11. Review keamanan PR #3 (revisi)

@@ -79,11 +79,29 @@ find "$DST" -type f ! -perm 640 -exec chmod 640 {} + ; find "$DST" -type d -exec
 Periksa log akses nginx untuk permintaan `/storage/medical-record-supporting-data/` dari IP di luar klinik (hitung saja, jangan menyalin baris log ke tiket).
 Bila ada akses dari IP asing/bot, laporkan ke owner untuk penilaian insiden data pribadi.
 
-## 7. Rollback
-- Sebelum karantina dihapus: `mv ~/lampiran-migrasi/karantina-<tanggal> "$SRC"` mengembalikan keadaan semula; hapus aturan `location ^~` di vhost bila URL publik lama harus dipulihkan (tidak disarankan).
-- Aplikasi tidak bergantung pada lokasi publik (rute mencari disk privat lalu publik); tidak ada perubahan database sehingga tidak ada rollback database.
-- Salinan privat boleh dibiarkan; tidak mengganggu.
-- Bila rute baru bermasalah dan kode harus di-rollback ke `e3b91e8`: kembalikan file ke `storage/app/public` (dari karantina/backup) dan hapus aturan nginx, karena kode lama hanya membaca `/storage/...`.
+## 7. Rollback — tidak pernah membuka kembali akses tanpa login
+
+**Aturan tetap (tidak ada pengecualian operasional):**
+- Aturan nginx `location ^~ /storage/medical-record-supporting-data/ { deny all; return 404; }` **tidak pernah dihapus** sebagai bagian dari rollback, perbaikan, atau pemecahan masalah. Menghapusnya hanya boleh lewat persetujuan tertulis owner **dan** penutupan insiden/penilaian data pribadi — dan bukan untuk memulihkan layanan.
+- Tidak ada file medis yang dikembalikan ke `storage/app/public` atau ke direktori yang dilayani web (`public/`, symlink `public/storage`). Salinan privat (`storage/app/private/medical-record-supporting-data/`) adalah sumber utama selamanya.
+- Tidak ada perubahan database pada runbook ini, jadi tidak ada rollback database.
+
+**Skenario A — masalah pada salinan/prosedur (kode PR #3 tetap berjalan):**
+1. Hentikan di langkah yang bermasalah; jangan melepas blokir nginx.
+2. Bila ada berkas privat yang rusak/hilang (checksum tidak cocok dengan `manifest-sebelum.sha256`): pulihkan **hanya file itu, ke direktori privat**, dari karantina (`~/lampiran-migrasi/karantina-<tanggal>`) atau dari backup terenkripsi (ekstrak di direktori sementara privat mode 700 di luar docroot, salin file terkait ke `$DST`, hapus direktori sementara secara aman).
+3. Ulangi verifikasi: `sha256sum -c` terhadap manifest, izin 640/750, buka lampiran lewat aplikasi, uji URL publik → 404/403.
+
+**Skenario B — kode harus di-rollback ke versi yang tidak punya rute lampiran (`e3b91e8` atau lebih lama):**
+Kode lama hanya membangun tautan `/storage/...` dan tidak dapat melayani file privat. Pilihan yang diizinkan, berurutan:
+1. **Roll-forward (disarankan):** perbaiki masalah pada kode baru, atau terapkan *compatibility hotfix* pada basis lama. Cakupan hotfix minimum: `app/Support/SupportingFile.php`, dua rute `*/medical-record-files/{id}`, tautan di `therapist-medical-record.blade.php`, dan `serve=false` pada `config/filesystems.php` (commit `8603dd0` dan bagian lampiran dari `fbd6dbf`), diuji di staging dengan data sintetis (`SupportingFileAccessTest`) sebelum diterapkan.
+2. **Bila rollback penuh tidak dapat dihindari sebelum hotfix siap:** **lampiran dinyatakan sementara TIDAK TERSEDIA** di aplikasi (tautan lama menghasilkan 404 karena blokir nginx; ini disengaja). Rekam medis lain tetap berfungsi. Blokir nginx tetap terpasang, file privat tetap di tempatnya.
+   - Unggahan baru oleh kode lama jatuh ke `storage/app/public/medical-record-supporting-data/` (tetap diblokir nginx, sehingga tidak publik tetapi juga tidak tampil). Instruksikan klinisi **tidak mengunggah lampiran** selama rollback; catat setiap unggahan yang terlanjur dibuat.
+   - Setelah kode baru/hotfix kembali: salin file baru dari direktori publik itu ke direktori privat dengan prosedur langkah 3–4 (dry-run, `rsync --checksum`, manifest, izin), verifikasi, lalu karantina direktori publik sesuai langkah 5.3. Jangan membiarkan file medis di direktori publik.
+3. **Kebutuhan klinis mendesak saat lampiran tidak tersedia (akses darurat):** operator mengambil **satu file spesifik** dari salinan privat setelah permintaan tertulis dari klinisi yang berwenang dan persetujuan owner/penanggung jawab klinik. Kirim lewat kanal terenkripsi/terautentikasi yang disetujui klinik (bukan tautan publik, bukan chat umum). Verifikasi `sha256sum` file terhadap manifest sebelum dan sesudah pengambilan (integritas); jangan mengubah file asli.
+
+**Jejak audit untuk setiap tindakan rollback/akses darurat** (dicatat oleh operator dan disimpan owner, tanpa isi file/nama pasien di catatan umum): tanggal-jam, pelaksana, pemberi persetujuan, alasan, ID lampiran (bukan nama pasien), checksum file, penerima, kanal pengiriman, dan konfirmasi bahwa blokir nginx tetap aktif. Simpan juga keluaran `diff` manifest dan hasil uji URL publik (404/403) setelah setiap perubahan.
+
+**Verifikasi akhir setiap rollback (wajib sebelum dinyatakan selesai):** (1) blokir nginx masih ada (`sudo nginx -T | grep medical-record-supporting-data`); (2) tiga URL sampel tanpa login dari luar → 404/403; (3) `find storage/app/public -path '*medical-record-supporting-data*' -type f` kosong atau hanya berisi unggahan yang menunggu dipindahkan (dicatat); (4) manifest privat identik; (5) backup terenkripsi offsite tetap utuh.
 
 ## 8. Selesai bila
 - [ ] Backup offsite terenkripsi terverifikasi
@@ -92,3 +110,4 @@ Bila ada akses dari IP asing/bot, laporkan ke owner untuk penilaian insiden data
 - [ ] URL `/storage/medical-record-supporting-data/...` tanpa login → 404/403 dari luar
 - [ ] Tidak ada salinan di bawah `storage/app/public`
 - [ ] Catatan pelaksana, tanggal, hasil disimpan oleh owner
+- [ ] Seluruh pelaksana memahami aturan §7: blokir nginx tidak pernah dilepas untuk rollback
