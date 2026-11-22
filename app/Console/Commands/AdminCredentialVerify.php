@@ -12,28 +12,38 @@ use Illuminate\Console\Command;
  */
 class AdminCredentialVerify extends Command
 {
-    protected $signature = 'khayra:admin-verify';
+    protected $signature = 'khayra:admin-verify {--account=admin : Akun yang diverifikasi: admin atau owner}';
 
-    protected $description = 'Verifikasi email dan password admin terhadap konfigurasi aktif (prompt tersembunyi; tidak mencetak kredensial).';
+    protected $description = 'Verifikasi email dan password admin/owner terhadap konfigurasi aktif (prompt tersembunyi; tidak mencetak kredensial).';
 
     public function handle(): int
     {
-        if (! AdminCredentials::isConfigured()) {
-            $this->error('ADMIN_EMAIL / ADMIN_PASSWORD(_HASH) belum terbaca dari config (jalankan config:cache setelah mengubah .env).');
+        $account = (string) $this->option('account');
+
+        if (! in_array($account, ['admin', 'owner'], true)) {
+            $this->error('Opsi --account harus admin atau owner.');
 
             return self::FAILURE;
         }
 
-        if (filled(config('khayra_auth.admin.password_hash')) && ! AdminCredentials::hashIsValid()) {
-            $this->error('ADMIN_PASSWORD_HASH bukan hash bcrypt yang valid. Login admin akan ditolak.');
+        $prefix = strtoupper($account);
+
+        if (! AdminCredentials::isConfigured($account)) {
+            $this->error("{$prefix}_EMAIL / {$prefix}_PASSWORD(_HASH) belum terbaca dari config (jalankan config:cache setelah mengubah .env).");
 
             return self::FAILURE;
         }
 
-        $email = (string) $this->ask('Email admin');
-        $password = (string) $this->secret('Password admin (tidak ditampilkan)');
+        if (filled(config("khayra_auth.{$account}.password_hash")) && ! AdminCredentials::hashIsValid($account)) {
+            $this->error("{$prefix}_PASSWORD_HASH bukan hash bcrypt yang valid. Login {$account} akan ditolak.");
 
-        if (! AdminCredentials::attempt($email, $password)) {
+            return self::FAILURE;
+        }
+
+        $email = (string) $this->ask("Email {$account}");
+        $password = (string) $this->secret("Password {$account} (tidak ditampilkan)");
+
+        if (! AdminCredentials::attempt($email, $password, $account)) {
             $this->error('GAGAL: kombinasi email dan password tidak cocok dengan konfigurasi aktif.');
 
             return self::FAILURE;

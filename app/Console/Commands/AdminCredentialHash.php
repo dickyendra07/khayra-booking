@@ -11,13 +11,21 @@ use Illuminate\Support\Facades\Hash;
  */
 class AdminCredentialHash extends Command
 {
-    protected $signature = 'khayra:admin-hash';
+    protected $signature = 'khayra:admin-hash {--account=admin : Akun yang dibuatkan hash: admin atau owner}';
 
-    protected $description = 'Buat hash bcrypt untuk ADMIN_PASSWORD_HASH dari password yang diketik (prompt tersembunyi).';
+    protected $description = 'Buat hash bcrypt untuk ADMIN_PASSWORD_HASH / OWNER_PASSWORD_HASH dari password yang diketik (prompt tersembunyi).';
 
     public function handle(): int
     {
-        $password = (string) $this->secret('Password admin baru (tidak ditampilkan)');
+        $account = (string) $this->option('account');
+
+        if (! in_array($account, ['admin', 'owner'], true)) {
+            $this->error('Opsi --account harus admin atau owner.');
+
+            return self::FAILURE;
+        }
+
+        $password = (string) $this->secret("Password {$account} baru (tidak ditampilkan)");
         $confirmation = (string) $this->secret('Ulangi password');
 
         if ($password === '' || ! hash_equals($password, $confirmation)) {
@@ -32,8 +40,10 @@ class AdminCredentialHash extends Command
             return self::FAILURE;
         }
 
-        $this->line('Salin baris berikut ke .env (kutip tunggal wajib), lalu hapus ADMIN_PASSWORD:');
-        $this->line("ADMIN_PASSWORD_HASH='".Hash::driver('bcrypt')->make($password)."'");
+        $prefix = strtoupper($account);
+
+        $this->line("Salin baris berikut ke .env (kutip tunggal wajib), lalu hapus {$prefix}_PASSWORD:");
+        $this->line("{$prefix}_PASSWORD_HASH='".Hash::driver('bcrypt')->make($password)."'");
 
         return self::SUCCESS;
     }
