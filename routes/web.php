@@ -409,11 +409,13 @@ Route::post('/booking', function (Request $request) {
         'full_name' => 'required|string|max:255',
         'whatsapp' => 'required|string|max:50',
         'service' => 'required|string|max:255',
-        'booking_date' => 'required|date',
+        'booking_date' => 'required|date|after_or_equal:'.ClinicTime::today(),
         'booking_time' => 'required',
         'therapist_id' => 'nullable|exists:therapists,id',
         'room_name' => 'nullable|string|max:255',
         'complaint' => 'nullable|string',
+    ], [
+        'booking_date.after_or_equal' => 'Tanggal booking tidak boleh di masa lalu.',
     ]);
 
     $selectedDate = $request->booking_date;
@@ -474,7 +476,6 @@ Route::post('/booking', function (Request $request) {
     }
 
     $normalizedWhatsapp = preg_replace('/[^0-9]/', '', (string) $request->whatsapp);
-    $normalizedName = trim(strtolower((string) $request->full_name));
 
     $matchedPatient = Patient::query()
         ->where(function ($query) use ($request, $normalizedWhatsapp) {
@@ -486,9 +487,8 @@ Route::post('/booking', function (Request $request) {
         })
         ->first();
 
-    if (!$matchedPatient && $normalizedName !== '') {
-        $matchedPatient = Patient::whereRaw('LOWER(TRIM(full_name)) = ?', [$normalizedName])->first();
-    }
+    // Sengaja HANYA mencocokkan nomor WhatsApp. Kecocokan nama saja tidak dipakai: nama umum bisa menautkan booking
+    // orang asing ke pasien lain (membuka riwayatnya di sisi admin). Admin menautkan manual bila perlu.
 
     Booking::create([
         'patient_id' => $matchedPatient ? $matchedPatient->id : null,
@@ -503,7 +503,7 @@ Route::post('/booking', function (Request $request) {
 
     return redirect('/booking?date=' . $selectedDate)
         ->with('success', 'Booking berhasil dikirim. Admin akan menghubungi Anda untuk konfirmasi.');
-});
+})->middleware('throttle:10,1'); // form publik tanpa login: batasi spam / pengisian slot palsu per IP
 
 
 

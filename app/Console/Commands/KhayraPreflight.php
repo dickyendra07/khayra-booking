@@ -77,6 +77,28 @@ class KhayraPreflight extends Command
         $this->add('PASS', 'config:cache', app()->configurationIsCached() ? 'aktif (nilai env dibaca dari cache config)' : 'tidak aktif');
     }
 
+    /** Akun owner opsional: tanpa kredensial, Dashboard ERM / Owner Dashboard / Owner Finance / Reporting Center tidak bisa dibuka siapa pun. */
+    private function checkOwnerCredentials(): void
+    {
+        if (! AdminCredentials::isConfigured('owner')) {
+            $this->add('WARN', 'Kredensial owner', 'OWNER_EMAIL / OWNER_PASSWORD(_HASH) belum diisi: login owner nonaktif, sehingga Dashboard ERM, Owner Dashboard, Owner Finance, dan Reporting Center tidak dapat dibuka siapa pun (admin sengaja ditolak).');
+
+            return;
+        }
+
+        if (blank(config('khayra_auth.owner.password_hash'))) {
+            $this->add('WARN', 'Format password owner', 'memakai OWNER_PASSWORD (teks biasa); disarankan OWNER_PASSWORD_HASH (bcrypt)');
+        } elseif (! AdminCredentials::hashIsValid('owner')) {
+            $this->add('FAIL', 'Format password owner', 'OWNER_PASSWORD_HASH bukan hash bcrypt yang valid (kutip tunggal di .env?). Login owner akan SELALU ditolak; OWNER_PASSWORD tidak dipakai sebagai cadangan.');
+        } else {
+            $this->add('PASS', 'Format password owner', 'OWNER_PASSWORD_HASH (bcrypt)');
+        }
+
+        if (AdminCredentials::email('owner') === AdminCredentials::email('admin')) {
+            $this->add('WARN', 'Email owner', 'sama dengan email admin; pastikan password berbeda, bila identik login selalu menjadi admin (hak paling rendah)');
+        }
+    }
+
     private function checkAuthentication(): void
     {
         if (! AdminCredentials::isConfigured()) {
@@ -103,6 +125,8 @@ class KhayraPreflight extends Command
         if (mb_strtolower((string) config('khayra_auth.admin.email')) === 'admin@khayraphysio.com') {
             $this->add('WARN', 'Email admin', 'masih memakai email default lama; disarankan diganti');
         }
+
+        $this->checkOwnerCredentials();
 
         // Pastikan fungsi pembaca env tidak dipanggil di luar config (rusak saat config:cache).
         $offenders = [];

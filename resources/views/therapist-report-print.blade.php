@@ -544,7 +544,8 @@
 </head>
 <body>
 @php
-    $record = $visit->medicalRecord;
+    // Kunjungan yang belum punya rekam medis tetap bisa dilihat/dicetak (nilai kosong), bukan 500.
+    $record = $visit->medicalRecord ?? new \App\Models\MedicalRecord();
     $histories = $record && $record->histories ? $record->histories : collect();
     $comorbidities = $record && $record->comorbidities ? $record->comorbidities : collect();
     $supportingData = $record && $record->supportingData ? $record->supportingData : collect();
