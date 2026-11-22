@@ -33,7 +33,8 @@ return [
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app/private'),
-            'serve' => true,
+            // Nonaktif: tidak ada rute /storage/{path} bawaan Laravel untuk disk privat (lampiran medis hanya lewat rute terautentikasi).
+            'serve' => false,
             'throw' => false,
             'report' => false,
         ],

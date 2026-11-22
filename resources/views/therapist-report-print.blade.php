@@ -34,28 +34,11 @@
             flex-wrap: wrap;
         }
 
-        .action-link,
-        .print-btn {
-            display: inline-block;
-            text-decoration: none;
-            padding: 10px 14px;
-            border-radius: 10px;
-            font-size: 14px;
-            font-weight: 700;
-        }
 
-        .action-link {
-            border: 1px solid #d1d5db;
-            color: #111827;
-            background: white;
-        }
 
-        .print-btn {
-            border: none;
-            background: #111827;
-            color: white;
-            cursor: pointer;
-        }
+
+
+
 
         .report-header {
             border: 2px solid #0f766e;
@@ -557,6 +540,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="/images/khayra-logo.png">
+    @include('partials.ui-assets')
 </head>
 <body>
 @php
@@ -627,8 +611,8 @@
     <div class="printbar">
         <div class="report-brand">Khayra Physio</div>
         <div class="print-actions">
-            <a href="/therapist/visits/{{ $visit->id }}/report" class="action-link">← Kembali ke Report</a>
-            <button onclick="window.print()" class="print-btn">Print / Save PDF</button>
+            <a href="/therapist/visits/{{ $visit->id }}/report" class="kx-btn kx-btn--outline kx-btn--sm action-link">← Kembali ke Report</a>
+            <button onclick="window.print()" class="kx-btn kx-btn--outline print-btn">Print / Save PDF</button>
         </div>
     </div>
 

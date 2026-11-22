@@ -40,17 +40,7 @@
             color: #0f766e;
         }
 
-        .back-link {
-            display: inline-block;
-            text-decoration: none;
-            padding: 10px 14px;
-            border-radius: 12px;
-            background: white;
-            color: #0f766e;
-            border: 1px solid #d7ebe6;
-            font-weight: 700;
-            font-size: 14px;
-        }
+
 
         .hero-card {
             background: linear-gradient(135deg, #0f766e 0%, #2f7f74 100%);
@@ -222,13 +212,14 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="/images/khayra-logo.png">
+    @include('partials.ui-assets')
 </head>
 <body>
     <div class="page">
         <div class="container">
             <div class="topbar">
                 <div class="brand">Khayra Patient Portal</div>
-                <a href="/patient" class="back-link">← Kembali ke Portal</a>
+                <a href="/patient" class="kx-btn kx-btn--outline back-link">← Kembali ke Portal</a>
             </div>
 
             <section class="hero-card">
@@ -320,20 +311,7 @@
         button.id = 'khayraInstallAppButton';
         button.type = 'button';
         button.innerText = 'Install App';
-        button.style.position = 'fixed';
-        button.style.right = '18px';
-        button.style.bottom = '18px';
-        button.style.zIndex = '99999';
-        button.style.border = '0';
-        button.style.borderRadius = '999px';
-        button.style.padding = '12px 16px';
-        button.style.background = '#2f7c7a';
-        button.style.color = '#ffffff';
-        button.style.fontWeight = '900';
-        button.style.fontFamily = 'Arial, sans-serif';
-        button.style.fontSize = '13px';
-        button.style.boxShadow = '0 14px 30px rgba(47,124,122,.24)';
-        button.style.cursor = 'pointer';
+        button.className = 'kx-btn kx-btn--primary kx-install-btn';
 
         button.addEventListener('click', function () {
             if (!deferredInstallPrompt) {

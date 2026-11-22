@@ -1,30 +1,15 @@
 <?php
 
+use App\Support\AdminCredentials;
 use App\Support\PortalAuth;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 
 uses(RefreshDatabase::class);
 
-beforeEach(function () {
-    config([
-        'portal.admin_email' => 'admin@test.local',
-        'portal.admin_password' => 'admin-secret',
-        'portal.owner_email' => 'owner@test.local',
-        'portal.owner_password' => 'owner-secret',
-    ]);
-});
+// Kredensial uji lokal (lihat tests/TestCase.php): admin@uji.test / owner@uji.test.
 
-function asAdmin()
-{
-    return test()->withSession(['admin_logged_in' => true, 'portal_role' => PortalAuth::ROLE_ADMIN]);
-}
-
-function asOwner()
-{
-    return test()->withSession(['admin_logged_in' => true, 'portal_role' => PortalAuth::ROLE_OWNER]);
-}
-
-$ownerOnlyGets = [
+const OWNER_ONLY_GETS = [
     '/owner/erm-dashboard',
     '/owner/dashboard',
     '/owner/finance',
@@ -36,94 +21,144 @@ $ownerOnlyGets = [
     '/owner/reports/therapist-performance',
 ];
 
-$ownerOnlyPosts = [
+const OWNER_ONLY_POSTS = [
     '/owner/finance/close',
+    '/owner/finance/reopen',
     '/owner/finance/transactions',
     '/owner/finance/transactions/1/delete',
 ];
 
-it('redirects guests from every owner and admin page to login', function () use ($ownerOnlyGets) {
-    foreach (array_merge($ownerOnlyGets, ['/admin/bookings', '/admin/billings', '/admin/bookings/1/update']) as $url) {
+function portalLogin($test, string $email, string $password)
+{
+    return $test->post('/admin/login', ['email' => $email, 'password' => $password]);
+}
+
+it('mengalihkan tamu dari semua halaman owner dan admin ke login', function () {
+    foreach (array_merge(OWNER_ONLY_GETS, ['/owner', '/admin/bookings', '/admin/billings', '/admin/bookings/1/update']) as $url) {
         $this->get($url)->assertRedirect('/admin/login');
     }
 });
 
-it('blocks admin from all 4 owner areas (GET)', function () use ($ownerOnlyGets) {
-    foreach ($ownerOnlyGets as $url) {
-        asAdmin()->get($url)->assertForbidden();
+it('memblokir admin dari 4 area owner (GET)', function () {
+    foreach (OWNER_ONLY_GETS as $url) {
+        $this->withSession(adminSession())->get($url)->assertForbidden();
     }
 });
 
-it('blocks admin from owner write actions (POST)', function () use ($ownerOnlyPosts) {
-    foreach ($ownerOnlyPosts as $url) {
-        asAdmin()->post($url)->assertForbidden();
+it('memblokir admin dari aksi tulis owner (POST), termasuk tutup/buka buku dan transaksi', function () {
+    foreach (OWNER_ONLY_POSTS as $url) {
+        $this->withSession(adminSession())->post($url)->assertForbidden();
     }
 });
 
-it('sends legacy owner URLs to the new owner URLs, which stay forbidden for admin', function () {
-    asOwner()->get('/admin/owner-finance?month=2026-10')->assertRedirect('/owner/finance?month=2026-10');
-    asOwner()->get('/admin/dashboard')->assertRedirect('/owner/erm-dashboard');
-    asOwner()->get('/admin/reports/revenue?x=1')->assertRedirect('/owner/reports/revenue?x=1');
-    asOwner()->get('/admin/owner-dashboard')->assertRedirect('/owner/dashboard');
+it('mengarahkan URL lama ke URL owner dengan query dipertahankan', function () {
+    $this->withSession(ownerSession());
 
-    asAdmin()->followingRedirects()->get('/admin/owner-finance')->assertForbidden();
+    $this->get('/admin/owner-finance?month=2026-10')->assertRedirect('/owner/finance?month=2026-10');
+    $this->get('/admin/dashboard')->assertRedirect('/owner/erm-dashboard');
+    $this->get('/admin/reports/revenue?x=1')->assertRedirect('/owner/reports/revenue?x=1');
+    $this->get('/admin/owner-dashboard')->assertRedirect('/owner/dashboard');
 });
 
-it('lets owner open the owner pages', function () use ($ownerOnlyGets) {
-    foreach ($ownerOnlyGets as $url) {
-        asOwner()->get($url)->assertSuccessful();
+it('tetap menolak admin yang mengikuti URL lama sampai ke halaman owner', function () {
+    $this->withSession(adminSession())->followingRedirects()->get('/admin/owner-finance')->assertForbidden();
+});
+
+it('mengizinkan owner membuka semua halaman owner', function () {
+    foreach (OWNER_ONLY_GETS as $url) {
+        $this->withSession(ownerSession())->get($url)->assertSuccessful();
     }
 });
 
-it('lets owner drill down into admin pages and admin open its own pages', function () {
-    asOwner()->get('/admin/bookings')->assertSuccessful();
-    asAdmin()->get('/admin/bookings')->assertSuccessful();
-    asAdmin()->get('/admin/billings')->assertSuccessful();
+it('mengizinkan owner masuk ke halaman admin (drill-down)', function () {
+    $this->withSession(ownerSession());
+
+    $this->get('/admin/bookings')->assertSuccessful();
+    $this->get('/admin/billings')->assertSuccessful();
 });
 
-it('hides owner menu from admin sidebar and shows it to owner', function () {
-    asAdmin()->get('/admin/bookings')
+it('mengizinkan admin membuka halaman admin miliknya sendiri', function () {
+    $this->withSession(adminSession());
+
+    $this->get('/admin/bookings')->assertSuccessful();
+    $this->get('/admin/billings')->assertSuccessful();
+});
+
+it('menyembunyikan menu owner dari sidebar admin dan menampilkannya untuk owner', function () {
+    $this->withSession(adminSession())->get('/admin/bookings')
         ->assertDontSee('Owner Finance / Cashflow')
         ->assertDontSee('Reporting Center')
         ->assertDontSee('Dashboard ERM')
         ->assertSee('Logout Admin');
 
-    asOwner()->get('/admin/bookings')
+    $this->withSession(ownerSession())->get('/admin/bookings')
         ->assertSee('Owner Finance / Cashflow')
         ->assertSee('Reporting Center')
         ->assertSee('Logout Owner');
 });
 
-it('logs in with the right role and lands on that role home', function () {
-    $this->post('/admin/login', ['email' => 'admin@test.local', 'password' => 'admin-secret'])
-        ->assertRedirect(PortalAuth::ADMIN_HOME);
-    expect(session('portal_role'))->toBe('admin');
+it('login admin mendarat di home admin dan login owner di home owner, dengan sidik jari akun masing-masing', function () {
+    portalLogin($this, 'admin@uji.test', 'kata-sandi-uji-lokal')->assertRedirect(PortalAuth::ADMIN_HOME);
+    expect(session('portal_role'))->toBe('admin')
+        ->and(session('admin_credential_fp'))->toBe(AdminCredentials::fingerprint('admin'));
 
     $this->post('/admin/logout');
 
-    $this->post('/admin/login', ['email' => 'owner@test.local', 'password' => 'owner-secret'])
-        ->assertRedirect(PortalAuth::OWNER_HOME);
-    expect(session('portal_role'))->toBe('owner');
+    portalLogin($this, 'owner@uji.test', 'kata-sandi-owner-uji')->assertRedirect(PortalAuth::OWNER_HOME);
+    expect(session('portal_role'))->toBe('owner')
+        ->and(session('admin_credential_fp'))->toBe(AdminCredentials::fingerprint('owner'));
+
+    $this->get('/owner/finance')->assertOk();
 });
 
-it('rejects wrong credentials and a disabled owner account', function () {
-    $this->post('/admin/login', ['email' => 'admin@test.local', 'password' => 'nope'])
-        ->assertSessionHasErrors('email');
+it('login owner mendukung OWNER_PASSWORD_HASH (bcrypt) dan hash mengalahkan password teks', function () {
+    config(['khayra_auth.owner.password' => 'sisa-plaintext', 'khayra_auth.owner.password_hash' => Hash::make('sandi-owner-hash')]);
 
-    config(['portal.owner_email' => null, 'portal.owner_password' => null]);
-    expect(PortalAuth::attempt('', ''))->toBeNull();
-    expect(PortalAuth::attempt('owner@test.local', 'owner-secret'))->toBeNull();
+    portalLogin($this, 'owner@uji.test', 'sisa-plaintext')->assertSessionHasErrors('email');
+    portalLogin($this, 'owner@uji.test', 'sandi-owner-hash')->assertRedirect(PortalAuth::OWNER_HOME);
 });
 
-it('gives admin the least privilege when credentials collide', function () {
-    config(['portal.owner_email' => 'admin@test.local', 'portal.owner_password' => 'admin-secret']);
+it('menolak kredensial salah dan menonaktifkan akun owner bila belum dikonfigurasi', function () {
+    portalLogin($this, 'admin@uji.test', 'salah')->assertSessionHasErrors('email');
 
-    expect(PortalAuth::attempt('admin@test.local', 'admin-secret'))->toBe('admin');
+    config(['khayra_auth.owner.email' => null, 'khayra_auth.owner.password' => null, 'khayra_auth.owner.password_hash' => null]);
+
+    expect(AdminCredentials::isConfigured('owner'))->toBeFalse()
+        ->and(PortalAuth::attempt('', ''))->toBeNull()
+        ->and(PortalAuth::attempt('owner@uji.test', 'kata-sandi-owner-uji'))->toBeNull();
+
+    portalLogin($this, 'owner@uji.test', 'kata-sandi-owner-uji')->assertSessionHasErrors('email');
 });
 
-it('keeps legacy sessions without a role as admin and clears the role on logout', function () {
-    $this->withSession(['admin_logged_in' => true])->get('/owner/finance')->assertForbidden();
+it('memberi hak paling rendah (admin) bila kredensial owner sama persis dengan admin', function () {
+    config([
+        'khayra_auth.owner.email' => 'admin@uji.test',
+        'khayra_auth.owner.password' => 'kata-sandi-uji-lokal',
+    ]);
 
-    asOwner()->post('/admin/logout');
+    expect(PortalAuth::attempt('admin@uji.test', 'kata-sandi-uji-lokal'))->toBe('admin');
+});
+
+it('menganggap sesi tanpa portal_role sebagai admin (tidak bisa ke area owner)', function () {
+    $this->withSession(adminSession())->get('/owner/finance')->assertForbidden();
+});
+
+it('menolak sesi yang role-nya dipalsukan: sidik jari admin tidak sah untuk role owner', function () {
+    // Sesi dengan portal_role=owner tetapi sidik jari akun admin harus ditolak (fail-closed).
+    $this->withSession(adminSession(['portal_role' => 'owner']))->get('/owner/finance')->assertRedirect('/admin/login');
+});
+
+it('merotasi kredensial owner membatalkan sesi owner yang sedang login', function () {
+    $this->withSession(ownerSession())->get('/owner/finance')->assertOk();
+
+    config(['khayra_auth.owner.password' => 'kata-sandi-owner-baru']);
+
+    $this->get('/owner/finance')->assertRedirect('/admin/login');
+});
+
+it('logout menghapus sesi sehingga halaman owner tertutup lagi', function () {
+    $this->withSession(ownerSession())->get('/owner/finance')->assertOk();
+
+    $this->post('/admin/logout')->assertRedirect('/admin/login');
     $this->get('/owner/finance')->assertRedirect('/admin/login');
 });

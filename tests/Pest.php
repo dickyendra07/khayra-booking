@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\ViewErrorBag;
 use Tests\TestCase;
 
 /*
@@ -46,4 +47,49 @@ expect()->extend('toBeOne', function () {
 function something()
 {
     // ..
+}
+
+/**
+ * Pesan error validasi pertama untuk sebuah key dari sesi (format array maupun ViewErrorBag).
+ */
+function sessionError(string $key): ?string
+{
+    $errors = session('errors');
+
+    if ($errors instanceof ViewErrorBag) {
+        return $errors->first($key) ?: null;
+    }
+
+    return $errors['default']['messages'][$key][0] ?? null;
+}
+
+/**
+ * Sesi admin yang valid untuk test: flag login + sidik jari kredensial yang sedang berlaku (middleware fail-closed).
+ * Hitung ulang bila konfigurasi kredensial diubah di dalam test.
+ */
+function adminSession(array $extra = []): array
+{
+    return array_merge([
+        'admin_logged_in' => true,
+        'admin_credential_fp' => \App\Support\AdminCredentials::fingerprint(),
+    ], $extra);
+}
+
+/**
+ * Sesi owner yang valid untuk test (role owner + sidik jari kredensial owner). Owner boleh membuka halaman
+ * /owner/* sekaligus halaman admin. Gunakan adminSession() untuk menguji pembatasan akses admin.
+ */
+function ownerSession(array $extra = []): array
+{
+    return array_merge([
+        'admin_logged_in' => true,
+        'portal_role' => 'owner',
+        'admin_credential_fp' => \App\Support\AdminCredentials::fingerprint('owner'),
+    ], $extra);
+}
+
+/** Token satu-kali-pakai yang dikirim formulir pembayaran/refund (idempotensi). */
+function idem(?string $key = null): array
+{
+    return ['idempotency_key' => $key ?? (string) \Illuminate\Support\Str::uuid()];
 }

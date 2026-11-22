@@ -11,9 +11,9 @@
         .main { flex: 1; min-width: 0; padding: 28px; }
         .container { max-width: 980px; margin: 0 auto; }
         .top-actions { display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; }
-        .btn { min-height: 42px; border: 0; cursor: pointer; padding: 0 16px; border-radius: 14px; font-size: 13px; font-weight: 900; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; }
-        .btn-primary { background: linear-gradient(135deg, #3d8a89 0%, #2f7c7a 100%); color: #fff; }
-        .btn-soft { color: #2f7c7a; background: #ffffff; border: 1px solid #e6ebea; }
+
+
+
         .card { background: #fff; border: 1px solid #ecefef; border-radius: 28px; padding: 28px; box-shadow: 0 14px 34px rgba(15,23,42,.05); }
         .kicker { display: inline-flex; padding: 8px 12px; border-radius: 999px; background: #eef5f4; color: #35565d; font-size: 12px; font-weight: 900; letter-spacing: .7px; text-transform: uppercase; margin-bottom: 14px; }
         h1 { margin: 0; font-size: 40px; line-height: 1.05; color: #22343a; font-weight: 900; }
@@ -35,6 +35,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="/images/khayra-logo.png">
+    @include('partials.ui-assets')
 </head>
 <body>
 <div class="layout">
@@ -43,9 +44,9 @@
     <main class="main">
         <div class="container">
             <div class="top-actions">
-                <a href="/admin/inventory" class="btn btn-soft">← Inventory Control</a>
-                <a href="/admin/inventory/import/template" class="btn btn-soft">Download Template</a>
-                <a href="/admin/inventory/export/csv" class="btn btn-primary">Export Existing Data</a>
+                <a href="/admin/inventory" class="kx-btn kx-btn--outline btn btn-soft">← Inventory Control</a>
+                <a href="/admin/inventory/import/template" class="kx-btn kx-btn--outline btn btn-soft">Download Template</a>
+                <a href="/admin/inventory/export/csv" class="kx-btn kx-btn--primary btn btn-primary">Export Existing Data</a>
             </div>
 
             <section class="card">
@@ -80,7 +81,7 @@
                     <input type="file" name="csv_file" accept=".csv,text/csv" required>
 
                     <div class="actions">
-                        <button type="submit" class="btn btn-primary">Upload & Import</button>
+                        <button type="submit" class="kx-btn kx-btn--primary btn btn-primary">Upload & Import</button>
                     </div>
                 </form>
             </section>
@@ -109,20 +110,7 @@
         button.id = 'khayraInstallAppButton';
         button.type = 'button';
         button.innerText = 'Install App';
-        button.style.position = 'fixed';
-        button.style.right = '18px';
-        button.style.bottom = '18px';
-        button.style.zIndex = '99999';
-        button.style.border = '0';
-        button.style.borderRadius = '999px';
-        button.style.padding = '12px 16px';
-        button.style.background = '#2f7c7a';
-        button.style.color = '#ffffff';
-        button.style.fontWeight = '900';
-        button.style.fontFamily = 'Arial, sans-serif';
-        button.style.fontSize = '13px';
-        button.style.boxShadow = '0 14px 30px rgba(47,124,122,.24)';
-        button.style.cursor = 'pointer';
+        button.className = 'kx-btn kx-btn--primary kx-install-btn';
 
         button.addEventListener('click', function () {
             if (!deferredInstallPrompt) {

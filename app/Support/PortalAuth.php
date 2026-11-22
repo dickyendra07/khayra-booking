@@ -2,11 +2,13 @@
 
 namespace App\Support;
 
+use Illuminate\Http\Request;
+
 /**
- * Helper role untuk portal internal (admin & owner).
+ * Role portal internal (admin & owner), di atas AdminCredentials.
  *
- * Kedua role memakai flag session `admin_logged_in` (kompatibel dengan guard
- * lama di routes/web.php) dan dibedakan oleh session `portal_role`.
+ * Kedua role memakai flag sesi `admin_logged_in` (kompatibel dengan guard lama)
+ * dan dibedakan oleh sesi `portal_role`. Sesi tanpa `portal_role` = admin.
  */
 class PortalAuth
 {
@@ -19,30 +21,36 @@ class PortalAuth
     public const OWNER_HOME = '/owner/dashboard';
 
     /**
-     * Cocokkan kredensial ke role. Admin dicek lebih dulu (least privilege):
-     * kalau kredensial owner sama persis dengan admin, hasilnya tetap admin.
+     * Cocokkan kredensial ke role. Admin dicek lebih dulu (least privilege): kalau
+     * kredensial owner sama persis dengan admin, hasilnya tetap admin. Akun owner
+     * yang belum dikonfigurasi dilewati tanpa efek apa pun.
      */
     public static function attempt(string $email, string $password): ?string
     {
-        $accounts = [
-            self::ROLE_ADMIN => [config('portal.admin_email'), config('portal.admin_password')],
-            self::ROLE_OWNER => [config('portal.owner_email'), config('portal.owner_password')],
-        ];
+        if (AdminCredentials::attempt($email, $password, self::ROLE_ADMIN)) {
+            return self::ROLE_ADMIN;
+        }
 
-        foreach ($accounts as $role => [$accountEmail, $accountPassword]) {
-            if (! is_string($accountEmail) || $accountEmail === '' || ! is_string($accountPassword) || $accountPassword === '') {
-                continue;
-            }
-
-            if (hash_equals($accountEmail, $email) && hash_equals($accountPassword, $password)) {
-                return $role;
-            }
+        if (AdminCredentials::isConfigured(self::ROLE_OWNER)
+            && AdminCredentials::attempt($email, $password, self::ROLE_OWNER)) {
+            return self::ROLE_OWNER;
         }
 
         return null;
     }
 
-    /** Role sesi saat ini, null jika belum login. Sesi lama tanpa role = admin. */
+    /** Tulis sesi login untuk role yang sudah terverifikasi (panggil setelah session()->regenerate()). */
+    public static function login(Request $request, string $role): void
+    {
+        $request->session()->put([
+            'admin_logged_in' => true,
+            'admin_email' => AdminCredentials::email($role),
+            'admin_credential_fp' => AdminCredentials::fingerprint($role),
+            'portal_role' => $role,
+        ]);
+    }
+
+    /** Role sesi saat ini, null jika belum login. */
     public static function role(): ?string
     {
         if (! session('admin_logged_in')) {

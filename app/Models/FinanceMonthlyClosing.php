@@ -20,6 +20,9 @@ class FinanceMonthlyClosing extends Model
         'closed_at',
         'notes',
         'snapshot',
+        'reopened_at',
+        'reopened_by',
+        'reopen_reason',
     ];
 
     protected $casts = [
@@ -33,5 +36,17 @@ class FinanceMonthlyClosing extends Model
         'transaction_count' => 'integer',
         'closed_at' => 'datetime',
         'snapshot' => 'array',
+        'reopened_at' => 'datetime',
     ];
+
+    /** Closing yang masih berlaku (belum dibuka kembali). */
+    public function scopeActive($query)
+    {
+        return $query->whereNull('reopened_at');
+    }
+
+    public static function isClosed(string $month): bool
+    {
+        return static::active()->where('month', $month)->exists();
+    }
 }

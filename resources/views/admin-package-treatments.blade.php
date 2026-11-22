@@ -14,10 +14,10 @@
         .badge { display: inline-flex; padding: 8px 13px; border-radius: 999px; background: #eef5f4; color: #35565d; font-size: 12px; font-weight: 900; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 12px; }
         .title { margin: 0; font-size: 40px; line-height: 1.05; color: #22343a; font-weight: 900; letter-spacing: -1px; }
         .subtitle { margin: 10px 0 0; color: #6b7280; font-size: 14px; line-height: 1.8; max-width: 820px; }
-        .btn { min-height: 42px; border: 0; cursor: pointer; padding: 0 16px; border-radius: 14px; font-size: 13px; font-weight: 900; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; font-family: Arial, sans-serif; white-space: nowrap; }
-        .btn-primary { background: linear-gradient(135deg, #3d8a89 0%, #2f7c7a 100%); color: white; box-shadow: 0 12px 24px rgba(47,124,122,.16); }
-        .btn-soft { color: #2f7c7a; background: #eef7f5; border: 1px solid #d8ebe7; }
-        .btn-danger { background: #fff1f2; color: #be123c; border: 1px solid #ffe0e6; }
+
+
+
+
         .card { background: #ffffff; border: 1px solid #ecefef; border-radius: 28px; padding: 24px; box-shadow: 0 14px 34px rgba(15,23,42,.05); margin-bottom: 18px; }
         .filter { display: grid; grid-template-columns: 1fr auto; gap: 12px; margin-bottom: 18px; }
         input { width: 100%; padding: 14px 14px; border: 1px solid #dde5e3; border-radius: 14px; font-size: 14px; background: #ffffff; color: #111827; }
@@ -58,6 +58,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="/images/khayra-logo.png">
+    @include('partials.ui-assets')
 </head>
 <body>
 <div class="layout">
@@ -71,13 +72,13 @@
                     <h1 class="title">Dokumen Pembelian Paket</h1>
                     <p class="subtitle">Arsip surat pembelian paket treatment lengkap dengan data pasien, harga paket, masa berlaku, dan tabel rekap session.</p>
                 </div>
-                <a href="/admin/package-treatments/create" class="btn btn-primary">+ Buat Dokumen Paket</a>
+                <a href="/admin/package-treatments/create" class="kx-btn kx-btn--primary btn btn-primary">+ Buat Dokumen Paket</a>
             </div>
 
             <section class="card">
                 <form method="GET" action="/admin/package-treatments" class="filter">
                     <input type="text" name="search" value="{{ $search ?? '' }}" placeholder="Cari nama pasien, nomor rekam medis, nomor dokumen, atau paket">
-                    <button class="btn btn-soft" type="submit">Filter</button>
+                    <button class="kx-btn kx-btn--outline btn btn-soft" type="submit">Filter</button>
                 </form>
 
                 <div class="table-wrap">
@@ -131,10 +132,10 @@
                                     <td><span class="pill">Rp {{ number_format($document->package_price, 0, ',', '.') }}</span></td>
                                     <td>
                                         <div class="actions">
-                                            <a href="/admin/package-treatments/{{ $document->id }}/print" class="btn btn-soft" target="_blank">Print</a>
+                                            <a href="/admin/package-treatments/{{ $document->id }}/print" class="kx-btn kx-btn--outline btn btn-soft" target="_blank">Print</a>
                                             <form method="POST" action="/admin/package-treatments/{{ $document->id }}/delete" onsubmit="return confirm('Hapus dokumen paket ini?')">
                                                 @csrf
-                                                <button class="btn btn-danger" type="submit">Delete</button>
+                                                <button class="kx-btn kx-btn--danger btn btn-danger" type="submit">Delete</button>
                                             </form>
                                         </div>
                                     </td>
@@ -171,20 +172,7 @@
         button.id = 'khayraInstallAppButton';
         button.type = 'button';
         button.innerText = 'Install App';
-        button.style.position = 'fixed';
-        button.style.right = '18px';
-        button.style.bottom = '18px';
-        button.style.zIndex = '99999';
-        button.style.border = '0';
-        button.style.borderRadius = '999px';
-        button.style.padding = '12px 16px';
-        button.style.background = '#2f7c7a';
-        button.style.color = '#ffffff';
-        button.style.fontWeight = '900';
-        button.style.fontFamily = 'Arial, sans-serif';
-        button.style.fontSize = '13px';
-        button.style.boxShadow = '0 14px 30px rgba(47,124,122,.24)';
-        button.style.cursor = 'pointer';
+        button.className = 'kx-btn kx-btn--primary kx-install-btn';
 
         button.addEventListener('click', function () {
             if (!deferredInstallPrompt) {

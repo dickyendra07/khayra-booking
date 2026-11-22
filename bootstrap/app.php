@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Middleware\PortalAccess;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -12,9 +11,11 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->web(append: [
-            PortalAccess::class,
-        ]);
+        // Pengaman terpusat area admin / therapist / patient (lihat RequireAreaLogin).
+        $middleware->appendToGroup('web', \App\Http\Middleware\RequireAreaLogin::class);
+
+        // Gerbang role: /owner/* hanya untuk Owner (berjalan setelah RequireAreaLogin).
+        $middleware->appendToGroup('web', \App\Http\Middleware\PortalAccess::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

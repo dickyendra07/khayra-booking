@@ -62,39 +62,15 @@
             flex-wrap: wrap;
         }
 
-        .btn {
-            min-height: 42px;
-            border: 0;
-            cursor: pointer;
-            padding: 0 16px;
-            border-radius: 14px;
-            font-size: 13px;
-            font-weight: 900;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-family: Arial, sans-serif;
-            white-space: nowrap;
-        }
 
-        .btn-soft {
-            color: #2f7c7a;
-            background: #ffffff;
-            border: 1px solid #e6ebea;
-        }
 
-        .btn-primary {
-            background: linear-gradient(135deg, #3d8a89 0%, #2f7c7a 100%);
-            color: #ffffff;
-            box-shadow: 0 12px 24px rgba(47,124,122,.16);
-        }
 
-        .btn-blue {
-            background: #eef2ff;
-            color: #3457d5;
-            border: 1px solid #dde5ff;
-        }
+
+
+
+
+
+
 
         .alert {
             padding: 14px 16px;
@@ -109,6 +85,12 @@
             background: #ecfdf5;
             color: #166534;
             border: 1px solid #bbf7d0;
+        }
+
+        .alert-error {
+            background: #fff1f2;
+            color: #be123c;
+            border: 1px solid #ffe0e6;
         }
 
         .hero {
@@ -250,12 +232,21 @@
         .unpaid { background: #fee2e2; color: #b91c1c; }
         .partial { background: #fef3c7; color: #92400e; }
         .void { background: #e5e7eb; color: #374151; }
+        @media (max-width: 700px) {
+            .audit-table, .audit-table tbody, .audit-table tr, .audit-table td { display: block; width: 100%; min-width: 0; }
+            .audit-table thead { display: none; }
+            .audit-table tr { border: 1px solid #e6ebea; border-radius: 14px; padding: 10px 12px; margin-bottom: 10px; background: #fbfcfc; }
+            .audit-table td { border: 0; padding: 4px 0; word-break: break-word; }
+            .audit-table td[data-label]::before { content: attr(data-label); display: block; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; color: #64748b; }
+        }
         .void-box { background:#fff1f2; border:1px solid #ffe0e6; color:#991b1b; border-radius:20px; padding:18px; margin-bottom:18px; }
         .void-box h3 { margin:0 0 8px; font-size:18px; }
         .void-box p { margin:0 0 12px; font-size:13px; line-height:1.7; }
         .void-form { display:grid; grid-template-columns:1fr auto; gap:10px; align-items:end; }
+        .void-form > * { min-width: 0; }
+        @media (max-width: 700px) { .void-form { grid-template-columns: 1fr; } }
         .void-form textarea { width:100%; border:1px solid #fecaca; border-radius:14px; padding:12px; min-height:72px; font-family:Arial,sans-serif; }
-        .btn-void { background:#be123c; color:white; border:none; }
+
 
         .table-wrap {
             overflow-x: auto;
@@ -374,6 +365,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="/images/khayra-logo.png">
+    @include('partials.ui-assets')
 </head>
 <body>
 <div class="layout">
@@ -391,8 +383,8 @@
                 </div>
 
                 <div class="actions">
-                    <a href="/admin/billings" class="btn btn-soft">← Billing List</a>
-                    <a href="/admin/billings/{{ $billing->id }}/edit" class="btn btn-blue">Edit Billing</a>
+                    <a href="/admin/billings" class="kx-btn kx-btn--outline btn btn-soft">← Billing List</a>
+                    <a href="/admin/billings/{{ $billing->id }}/edit" class="kx-btn kx-btn--secondary btn btn-blue">Edit Billing</a>
                     
                     @php
                         $hasPackageItem = ($billing->items ?? collect())->contains(function ($item) {
@@ -401,16 +393,34 @@
                     @endphp
 
                     @if($hasPackageItem)
-                        <a href="/admin/package-treatments/create?billing_id={{ $billing->id }}" class="btn btn-soft">
+                        <a href="/admin/package-treatments/create?billing_id={{ $billing->id }}" class="kx-btn kx-btn--outline btn btn-soft">
                             Buat Dokumen Paket
                         </a>
                     @endif
-<a href="/admin/billings/{{ $billing->id }}/print" class="btn btn-primary" target="_blank">Print / Save PDF</a>
+<a href="/admin/billings/{{ $billing->id }}/print" class="kx-btn kx-btn--primary btn btn-primary" target="_blank">Print / Save PDF</a>
+                    @if($billing->payment_status !== 'void')
+                        <a href="/admin/billings/{{ $billing->id }}/whatsapp" class="kx-btn kx-btn--secondary btn btn-wa"
+                           title="Tampilkan nomor tujuan dan pratinjau pesan. PDF tidak terlampir otomatis.">Kirim via WhatsApp</a>
+                    @endif
                 </div>
             </div>
 
             @if(session('success'))
                 <div class="alert alert-success">{{ session('success') }}</div>
+            @endif
+
+            @if($errors->any())
+                <div class="alert alert-error">@foreach($errors->all() as $validationError)<div>{{ $validationError }}</div>@endforeach</div>
+            @endif
+            @if(session('error'))
+                <div class="alert alert-error">{{ session('error') }}</div>
+            @endif
+
+            @if($billing->payment_status !== 'void')
+                <div class="alert" style="background:#f1f5f9;color:#334155;border:1px solid #e2e8f0;font-size:13px;">
+                    <strong>Kirim via WhatsApp</strong> menampilkan nomor tujuan dan pratinjau pesan ringkas (tanpa rincian layanan) sebelum WhatsApp dibuka. Pesan dikirim manual oleh admin.
+                    Untuk melampirkan PDF: klik <em>Print / Save PDF</em>, simpan sebagai PDF, lalu lampirkan sendiri di chat WhatsApp.
+                </div>
             @endif
 
             <section class="hero">
@@ -471,13 +481,65 @@
                 </div>
             </section>
 
+            @if($billing->replaces)
+                <div class="alert" style="background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe;">
+                    Invoice pengganti (koreksi) untuk
+                    <a href="/admin/billings/{{ $billing->replaces->id }}" style="color:inherit;text-decoration:underline;">{{ $billing->replaces->invoice_number ?: '#' . $billing->replaces->id }}</a>.
+                </div>
+            @endif
+
+            @foreach($replacedBy as $replacement)
+                <div class="alert" style="background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe;">
+                    Invoice ini digantikan oleh
+                    <a href="/admin/billings/{{ $replacement->id }}" style="color:inherit;text-decoration:underline;">{{ $replacement->invoice_number ?: '#' . $replacement->id }}</a>
+                    ({{ $replacement->payment_status }}).
+                </div>
+            @endforeach
+
+            @if(!$lock['void'] && !empty($lock['reasons']))
+                <div class="alert" style="background:#fffbeb;color:#92400e;border:1px solid #fde68a;font-size:13px;">
+                    <strong>Data finansial invoice ini dikunci:</strong>
+                    @foreach($lock['reasons'] as $reason)
+                        <div>• {{ $reason }}</div>
+                    @endforeach
+                    <div style="margin-top:6px;">Koreksi dilakukan dengan Void (alasan wajib) lalu Terbitkan Ulang; semuanya tercatat di riwayat audit di bawah.</div>
+                </div>
+            @endif
+
             @if($billing->payment_status === 'void' || $billing->voided_at)
                 <div class="void-box">
                     <h3>Billing ini sudah di-void</h3>
                     <p>
-                        Transaksi dibatalkan pada {{ $billing->voided_at ? $billing->voided_at->format('Y-m-d H:i') : '-' }}.
+                        Transaksi dibatalkan pada {{ \App\Support\ClinicTime::display($billing->voided_at) }} WIB.
                         Reason: {{ $billing->void_reason ?: '-' }}
                     </p>
+                    @if($heldMoney > 0)
+                        <div style="background:#fffbeb;border:1px solid #fde68a;color:#92400e;border-radius:14px;padding:12px 14px;margin:0 0 12px;font-size:13px;">
+                            <strong>Kredit tertahan: Rp {{ number_format($heldMoney, 0, ',', '.') }}</strong> (uang sudah diterima, belum direfund atau dipindahkan).
+                            Akan dipindahkan otomatis ke invoice pengganti, atau direfund di bawah.
+                            <form method="POST" action="/admin/billings/{{ $billing->id }}/refunds" style="margin-top:10px;display:grid;gap:8px;" onsubmit="if (this.dataset.submitted) { return false; } this.dataset.submitted = '1'; this.querySelector('button[type=submit]').disabled = true;" data-once-form>
+                                @csrf
+                                <input type="hidden" name="idempotency_key" value="{{ \Illuminate\Support\Str::uuid() }}">
+                                <input type="number" name="amount" step="1" min="1" max="{{ $heldMoney }}" value="{{ $heldMoney }}" required>
+                                <select name="method" required>
+                                    <option value="cash">Cash</option><option value="qr">QR</option><option value="debit">Debit</option>
+                                    <option value="bank_bca">Bank BCA</option><option value="bank_bni">Bank BNI</option><option value="bank_mandiri">Bank Mandiri</option>
+                                </select>
+                                <input type="text" name="reason" minlength="5" placeholder="Alasan refund (wajib)" required>
+                                <button type="submit" class="kx-btn kx-btn--danger btn btn-void">Catat Refund</button>
+                            </form>
+                        </div>
+                    @endif
+                    @if($replacedBy->where('payment_status', '!=', 'void')->isEmpty() && !$lock['closed'])
+                        <a href="/admin/cashier?replaces={{ $billing->id }}" class="kx-btn kx-btn--primary btn btn-primary">Terbitkan Ulang (Koreksi)</a>
+                    @elseif($lock['closed'])
+                        <p style="margin:0;">Periode invoice ini sudah tutup buku; invoice pengganti tidak dapat diterbitkan pada periode tertutup.</p>
+                    @endif
+                </div>
+            @elseif($lock['closed'])
+                <div class="void-box">
+                    <h3>Periode tutup buku</h3>
+                    <p>Void tidak tersedia karena periode {{ $billing->invoice_date ? $billing->invoice_date->format('Y-m') : '-' }} sudah tutup buku. Gunakan prosedur Buka Kembali Buku di Owner Finance bila koreksi memang diperlukan.</p>
                 </div>
             @else
                 <div class="void-box">
@@ -488,7 +550,21 @@
                     <form method="POST" action="/admin/billings/{{ $billing->id }}/void" class="void-form" onsubmit="return confirm('Yakin VOID billing ini? Inventory akan dikembalikan dan invoice tidak boleh dipakai lagi.')">
                         @csrf
                         <textarea name="void_reason" placeholder="Tulis alasan void, contoh: salah input item / pasien batal transaksi" required></textarea>
-                        <button type="submit" class="btn btn-void">VOID Billing</button>
+
+                        @if($billing->is_ledger && $payments->isNotEmpty() && \App\Services\PaymentLedger::paidTotal($billing) > 0)
+                            <div style="margin:12px 0;font-size:13px;">
+                                <strong>Invoice ini sudah menerima Rp {{ number_format(\App\Services\PaymentLedger::paidTotal($billing), 0, ',', '.') }}. Nasib uangnya:</strong>
+                                <label style="display:block;margin-top:6px;"><input type="radio" name="money_disposition" value="refund" required> Dikembalikan ke pasien (refund, tercatat sebagai transaksi tersendiri)</label>
+                                <label style="display:block;margin-top:6px;"><input type="radio" name="money_disposition" value="credit" required> Ditahan sebagai kredit untuk invoice pengganti (bukan penerimaan kas baru)</label>
+                                <select name="refund_method" style="margin-top:8px;">
+                                    <option value="">Metode pengembalian (untuk refund)</option>
+                                    <option value="cash">Cash</option><option value="qr">QR</option><option value="debit">Debit</option>
+                                    <option value="bank_bca">Bank BCA</option><option value="bank_bni">Bank BNI</option><option value="bank_mandiri">Bank Mandiri</option>
+                                </select>
+                            </div>
+                        @endif
+
+                        <button type="submit" class="kx-btn kx-btn--danger btn btn-void">VOID Billing</button>
                     </form>
                 </div>
             @endif
@@ -516,6 +592,7 @@
                                 <tr>
                                     <td>
                                         <div class="primary-text">{{ $item->description }}</div>
+                                        @include('partials.billing-item-category', ['item' => $item, 'billing' => $billing, 'class' => 'secondary-text'])
                                         @if($item->inventoryItem)
                                             <div class="secondary-text">
                                                 SKU: {{ $item->inventoryItem->sku ?: '-' }} · Stock item: {{ $item->inventoryItem->stock }} {{ $item->inventoryItem->unit }}
@@ -560,7 +637,7 @@
                             </div>
                             <div style="display:flex; justify-content:space-between; gap:14px; font-size:13px; color:rgba(255,255,255,.84);">
                                 <span>Paid Amount</span>
-                                <strong>Rp {{ number_format($billing->paid_amount ?: 0, 0, ',', '.') }}</strong>
+                                <strong>Rp {{ number_format(\App\Services\BillingMoney::displayPaid($billing), 0, ',', '.') }}</strong>
                             </div>
                             <div style="display:flex; justify-content:space-between; gap:14px; font-size:13px; color:rgba(255,255,255,.84);">
                                 <span>Change</span>
@@ -568,7 +645,7 @@
                             </div>
                             <div style="display:flex; justify-content:space-between; gap:14px; font-size:13px; color:rgba(255,255,255,.84);">
                                 <span>Remaining</span>
-                                <strong>Rp {{ number_format($billing->remaining_amount ?: 0, 0, ',', '.') }}</strong>
+                                <strong>Rp {{ number_format(\App\Services\BillingMoney::displayRemaining($billing), 0, ',', '.') }}</strong>
                             </div>
                             <div class="total-row" style="border-top:1px solid rgba(255,255,255,.18); padding-top:14px;">
                                 <div>
@@ -615,6 +692,97 @@
                     </div>
                 </div>
             </section>
+
+            @if($billing->is_ledger)
+                <section class="section-card">
+                    <h2 class="section-title">Riwayat Pembayaran</h2>
+                    <p class="section-subtitle">
+                        Setiap pembayaran, refund, dan pemindahan kredit tercatat terpisah (tidak dapat diubah atau dihapus).
+                        Kembalian bukan pendapatan: yang dihitung adalah penerimaan bersih.
+                    </p>
+                    <div class="table-wrap">
+                        <table class="audit-table">
+                            <thead>
+                                <tr><th>Tanggal</th><th>Jenis</th><th>Metode</th><th>Diserahkan</th><th>Kembalian</th><th>Bersih</th><th>Oleh / Catatan</th></tr>
+                            </thead>
+                            <tbody>
+                                @forelse($payments as $payment)
+                                    <tr>
+                                        <td data-label="Tanggal">{{ \App\Support\ClinicTime::display($payment->paid_at) }}</td>
+                                        <td data-label="Jenis">{{ $payment->type_label }}</td>
+                                        <td data-label="Metode">{{ $payment->is_cash ? $payment->method_label : '-' }}</td>
+                                        <td data-label="Diserahkan">{{ $payment->is_cash ? 'Rp ' . number_format($payment->tendered_amount, 0, ',', '.') : '-' }}</td>
+                                        <td data-label="Kembalian">{{ (float) $payment->change_amount > 0 ? 'Rp ' . number_format($payment->change_amount, 0, ',', '.') : '-' }}</td>
+                                        <td data-label="Bersih"><strong>{{ $payment->type === 'refund' || $payment->type === 'credit_out' ? '-' : '' }}Rp {{ number_format($payment->amount, 0, ',', '.') }}</strong></td>
+                                        <td data-label="Oleh / Catatan">{{ $payment->recorded_by ?: '-' }}@if($payment->reason) · {{ $payment->reason }}@endif @if($payment->reference) · ref {{ $payment->reference }}@endif</td>
+                                    </tr>
+                                @empty
+                                    <tr><td colspan="7">Belum ada pembayaran tercatat.</td></tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+
+                    @if(!$lock['void'])
+                        <p style="margin:14px 0 6px;font-size:14px;"><strong>Sisa tagihan: Rp {{ number_format($outstanding, 0, ',', '.') }}</strong></p>
+                    @endif
+
+                    @if(!$lock['void'] && $outstanding > 0)
+                        <form method="POST" action="/admin/billings/{{ $billing->id }}/payments" style="display:grid;gap:10px;max-width:480px;margin-top:10px;" onsubmit="if (this.dataset.submitted) { return false; } this.dataset.submitted = '1'; this.querySelector('button[type=submit]').disabled = true;" data-once-form>
+                            @csrf
+                            <input type="hidden" name="idempotency_key" value="{{ \Illuminate\Support\Str::uuid() }}">
+                            <label style="font-weight:800;font-size:13px;">Catat Pembayaran (uang yang diserahkan pasien)</label>
+                            <input type="number" name="tendered_amount" min="1" step="1" required placeholder="Jumlah diserahkan, mis. {{ (int) $outstanding }}">
+                            <select name="method" required>
+                                <option value="cash">Cash</option><option value="qr">QR</option><option value="debit">Debit</option>
+                                <option value="credit">Credit Card</option><option value="bank_bca">Bank BCA</option><option value="bank_bni">Bank BNI</option>
+                                <option value="bank_mandiri">Bank Mandiri</option><option value="insurance">Insurance</option>
+                            </select>
+                            <input type="text" name="reference" maxlength="255" placeholder="No. referensi (opsional)">
+                            <button type="submit" class="kx-btn kx-btn--primary btn btn-primary">Catat Pembayaran</button>
+                        </form>
+                    @endif
+                </section>
+            @else
+                <div class="alert" style="background:#f1f5f9;color:#475569;border:1px solid #e2e8f0;font-size:13px;">
+                    Invoice lama (dibuat sebelum buku pembayaran): satu nilai pembayaran tanpa rincian tanggal/cicilan. Angka historisnya tidak diubah.
+                </div>
+            @endif
+
+            <section class="section-card">
+                <h2 class="section-title">Riwayat Audit</h2>
+                <p class="section-subtitle">Catatan perubahan invoice (tidak dapat diubah atau dihapus).</p>
+                <div class="table-wrap">
+                    <table class="audit-table">
+                        <thead>
+                            <tr><th>Waktu</th><th>Aksi</th><th>Oleh</th><th>Perubahan</th><th>Alasan</th></tr>
+                        </thead>
+                        <tbody>
+                            @forelse($auditLogs as $log)
+                                <tr>
+                                    <td data-label="Waktu">{{ \App\Support\ClinicTime::display($log->created_at) }}</td>
+                                    <td data-label="Aksi">{{ $log->action }}</td>
+                                    <td data-label="Oleh">{{ $log->actor ?: '-' }}</td>
+                                    <td data-label="Perubahan">
+                                        @if($log->action === 'created')
+                                            Invoice dibuat (total Rp {{ number_format($log->after['amount'] ?? 0, 0, ',', '.') }})
+                                        @else
+                                            @foreach(($log->after ?? []) as $field => $newValue)
+                                                @if(!is_array($newValue))
+                                                    <div>{{ $field }}: {{ is_array($log->before ?? null) && array_key_exists($field, $log->before) ? (is_array($log->before[$field]) ? '...' : ($log->before[$field] ?? '-')) : '-' }} → {{ $newValue ?? '-' }}</div>
+                                                @endif
+                                            @endforeach
+                                        @endif
+                                    </td>
+                                    <td data-label="Alasan">{{ $log->reason ?: '-' }}</td>
+                                </tr>
+                            @empty
+                                <tr><td colspan="5">Belum ada catatan audit (invoice dibuat sebelum fitur audit aktif).</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </section>
         </div>
     </main>
 </div>
@@ -640,20 +808,7 @@
         button.id = 'khayraInstallAppButton';
         button.type = 'button';
         button.innerText = 'Install App';
-        button.style.position = 'fixed';
-        button.style.right = '18px';
-        button.style.bottom = '18px';
-        button.style.zIndex = '99999';
-        button.style.border = '0';
-        button.style.borderRadius = '999px';
-        button.style.padding = '12px 16px';
-        button.style.background = '#2f7c7a';
-        button.style.color = '#ffffff';
-        button.style.fontWeight = '900';
-        button.style.fontFamily = 'Arial, sans-serif';
-        button.style.fontSize = '13px';
-        button.style.boxShadow = '0 14px 30px rgba(47,124,122,.24)';
-        button.style.cursor = 'pointer';
+        button.className = 'kx-btn kx-btn--primary kx-install-btn';
 
         button.addEventListener('click', function () {
             if (!deferredInstallPrompt) {
@@ -672,5 +827,16 @@
 })();
 </script>
 
+<script>
+    // Tombol Simpan dikunci sesudah submit (anti klik-ganda). Bila halaman dipulihkan dari tombol Back,
+    // buka kunci; token yang sama tetap dijaga server sehingga tidak tercatat dua kali.
+    window.addEventListener('pageshow', function () {
+        document.querySelectorAll('form[data-once-form]').forEach(function (form) {
+            delete form.dataset.submitted;
+            var button = form.querySelector('button[type=submit]');
+            if (button) { button.disabled = false; }
+        });
+    });
+</script>
 </body>
 </html>

@@ -46,27 +46,11 @@
             flex-wrap: wrap;
         }
 
-        .ghost-link,
-        .print-link {
-            display: inline-block;
-            text-decoration: none;
-            padding: 10px 14px;
-            border-radius: 12px;
-            font-size: 14px;
-            font-weight: 700;
-        }
 
-        .ghost-link {
-            background: white;
-            color: #0f766e;
-            border: 1px solid #d7ebe6;
-        }
 
-        .print-link {
-            background: #0f766e;
-            color: white;
-            border: 1px solid #0f766e;
-        }
+
+
+
 
         .hero {
             background: linear-gradient(135deg, #0f766e 0%, #2f7f74 100%);
@@ -592,6 +576,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="/images/khayra-logo.png">
+    @include('partials.ui-assets')
 </head>
 <body>
 @php
@@ -664,13 +649,13 @@
             <div class="brand">Khayra Physiotherapy Report</div>
             <div class="top-actions">
                 @if(($reportContext ?? 'therapist') === 'admin')
-                    <a href="/admin/visits" class="ghost-link">← Admin Visits</a>
-                    <a href="/admin/visits/{{ $visit->id }}/medical-record" class="ghost-link">Medical Record</a>
-                    <a href="/admin/visits/{{ $visit->id }}/report/print" target="_blank" class="print-link">Print / Save PDF</a>
+                    <a href="/admin/visits" class="kx-btn kx-btn--outline ghost-link">← Admin Visits</a>
+                    <a href="/admin/visits/{{ $visit->id }}/medical-record" class="kx-btn kx-btn--outline ghost-link">Medical Record</a>
+                    <a href="/admin/visits/{{ $visit->id }}/report/print" target="_blank" class="kx-btn kx-btn--primary kx-btn--sm print-link">Print / Save PDF</a>
                 @else
-                    <a href="/therapist/dashboard" class="ghost-link">← Dashboard</a>
-                    <a href="/therapist/visits/{{ $visit->id }}/medical-record" class="ghost-link">Medical Record</a>
-                    <a href="/therapist/visits/{{ $visit->id }}/report/print" target="_blank" class="print-link">Print / Save PDF</a>
+                    <a href="/therapist/dashboard" class="kx-btn kx-btn--outline ghost-link">← Dashboard</a>
+                    <a href="/therapist/visits/{{ $visit->id }}/medical-record" class="kx-btn kx-btn--outline ghost-link">Medical Record</a>
+                    <a href="/therapist/visits/{{ $visit->id }}/report/print" target="_blank" class="kx-btn kx-btn--primary kx-btn--sm print-link">Print / Save PDF</a>
                 @endif
             </div>
         </div>
@@ -1216,20 +1201,7 @@
         button.id = 'khayraInstallAppButton';
         button.type = 'button';
         button.innerText = 'Install App';
-        button.style.position = 'fixed';
-        button.style.right = '18px';
-        button.style.bottom = '18px';
-        button.style.zIndex = '99999';
-        button.style.border = '0';
-        button.style.borderRadius = '999px';
-        button.style.padding = '12px 16px';
-        button.style.background = '#2f7c7a';
-        button.style.color = '#ffffff';
-        button.style.fontWeight = '900';
-        button.style.fontFamily = 'Arial, sans-serif';
-        button.style.fontSize = '13px';
-        button.style.boxShadow = '0 14px 30px rgba(47,124,122,.24)';
-        button.style.cursor = 'pointer';
+        button.className = 'kx-btn kx-btn--primary kx-install-btn';
 
         button.addEventListener('click', function () {
             if (!deferredInstallPrompt) {

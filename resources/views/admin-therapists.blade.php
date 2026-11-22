@@ -55,19 +55,7 @@
             color: #5f6b76;
         }
 
-        .primary-link {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            text-decoration: none;
-            padding: 14px 18px;
-            border-radius: 16px;
-            background: linear-gradient(135deg, #17857e 0%, #136b66 100%);
-            color: #ffffff;
-            font-size: 14px;
-            font-weight: 800;
-            box-shadow: 0 12px 24px rgba(23, 117, 111, 0.18);
-        }
+
 
         .stats-grid {
             display: grid;
@@ -214,38 +202,13 @@
             flex-wrap: wrap;
         }
 
-        .action-btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            text-decoration: none;
-            padding: 9px 12px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 800;
-            border: 1px solid transparent;
-            cursor: pointer;
-            font-family: Arial, sans-serif;
-            background: #ffffff;
-        }
 
-        .btn-edit {
-            background: #eef2ff;
-            color: #3859d6;
-            border-color: #dbe4ff;
-        }
 
-        .btn-deactivate {
-            background: #fee2e2;
-            color: #b91c1c;
-            border-color: #fecdd3;
-        }
 
-        .btn-activate {
-            background: #dcfce7;
-            color: #166534;
-            border-color: #bbf7d0;
-        }
+
+
+
+
 
         .empty-state {
             padding: 26px;
@@ -295,6 +258,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="/images/khayra-logo.png">
+    @include('partials.ui-assets')
 </head>
 <body>
 <div class="layout">
@@ -310,7 +274,7 @@
                     </p>
                 </div>
 
-                <a href="/admin/therapists/create" class="primary-link">+ Tambah Staff</a>
+                <a href="/admin/therapists/create" class="kx-btn kx-btn--primary primary-link">+ Tambah Staff</a>
             </div>
 
             @php
@@ -389,12 +353,12 @@
                                     </td>
                                     <td>
                                         <div class="action-row">
-                                            <a href="/admin/therapists/{{ $therapist->id }}/edit" class="action-btn btn-edit">Edit</a>
+                                            <a href="/admin/therapists/{{ $therapist->id }}/edit" class="kx-btn kx-btn--outline kx-btn--sm action-btn btn-edit">Edit</a>
 
                                             <form method="POST" action="/admin/therapists/{{ $therapist->id }}/status" style="margin: 0;">
                                                 @csrf
                                                 <input type="hidden" name="status" value="{{ $therapist->status === 'active' ? 'inactive' : 'active' }}">
-                                                <button type="submit" class="action-btn {{ $therapist->status === 'active' ? 'btn-deactivate' : 'btn-activate' }}">
+                                                <button type="submit" class="kx-btn kx-btn--danger kx-btn--sm action-btn {{ $therapist->status === 'active' ? 'btn-deactivate' : 'btn-activate' }}">
                                                     {{ $therapist->status === 'active' ? 'Set Inactive' : 'Set Active' }}
                                                 </button>
                                             </form>
@@ -435,20 +399,7 @@
         button.id = 'khayraInstallAppButton';
         button.type = 'button';
         button.innerText = 'Install App';
-        button.style.position = 'fixed';
-        button.style.right = '18px';
-        button.style.bottom = '18px';
-        button.style.zIndex = '99999';
-        button.style.border = '0';
-        button.style.borderRadius = '999px';
-        button.style.padding = '12px 16px';
-        button.style.background = '#2f7c7a';
-        button.style.color = '#ffffff';
-        button.style.fontWeight = '900';
-        button.style.fontFamily = 'Arial, sans-serif';
-        button.style.fontSize = '13px';
-        button.style.boxShadow = '0 14px 30px rgba(47,124,122,.24)';
-        button.style.cursor = 'pointer';
+        button.className = 'kx-btn kx-btn--primary kx-install-btn';
 
         button.addEventListener('click', function () {
             if (!deferredInstallPrompt) {

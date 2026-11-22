@@ -16,10 +16,10 @@
         .title { margin: 0; font-size: 42px; line-height: 1.05; color: #22343a; font-weight: 900; }
         .subtitle { margin: 12px 0 0; max-width: 850px; color: #6b7280; font-size: 14px; line-height: 1.9; }
 
-        .btn { min-height: 42px; border: 0; cursor: pointer; padding: 0 16px; border-radius: 14px; font-size: 13px; font-weight: 900; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; font-family: Arial, sans-serif; white-space: nowrap; }
-        .btn-soft { color: #2f7c7a; background: #ffffff; border: 1px solid #e6ebea; }
-        .btn-primary { background: linear-gradient(135deg, #3d8a89 0%, #2f7c7a 100%); color: #ffffff; box-shadow: 0 12px 24px rgba(47,124,122,.16); }
-        .btn-danger { background: #fff1f2; color: #be123c; border: 1px solid #ffe0e6; }
+
+
+
+
 
         .hero, .section-card {
             background: #ffffff;
@@ -53,6 +53,13 @@
         .line-item { border: 1px solid #edf1f0; background: #fbfcfc; border-radius: 20px; padding: 16px; margin-bottom: 12px; }
         .line-grid { display: grid; grid-template-columns: 120px 1.15fr 135px 1.15fr 90px 130px 130px auto; gap: 12px; align-items: end; }
 
+        .category-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+        .category-row label { margin: 0; font-size: 12px; font-weight: 700; }
+        .category-row select { width: auto; min-width: 180px; }
+        .category-row select.locked { pointer-events: none; opacity: .75; }
+        .discount-badge { display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+        .discount-badge.yes { background: #dcfce7; color: #166534; }
+        .discount-badge.no { background: #f1f5f9; color: #475569; }
         .inventory-select-wrap { display: none; }
         .line-item[data-type="inventory"] .inventory-select-wrap { display: block; }
         .line-item[data-type="inventory"] .description-wrap { display: none; }
@@ -107,6 +114,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="/images/khayra-logo.png">
+    @include('partials.ui-assets')
 </head>
 <body>
 <div class="layout">
@@ -123,7 +131,7 @@
                     </p>
                 </div>
 
-                <a href="/admin/billings" class="btn btn-soft">Lihat Billing</a>
+                <a href="/admin/billings" class="kx-btn kx-btn--outline btn btn-soft">Lihat Billing</a>
             </div>
 
             <section class="hero">
@@ -140,6 +148,7 @@
                         <h3>Contoh Promo</h3>
                         <p>
                             Gunakan kode seperti KHAYRA10 lalu pilih diskon persen 10, atau gunakan diskon nominal seperti 50000 untuk potongan langsung.
+                            <strong>Diskon hanya berlaku untuk item Program / Treatment.</strong> Add-on, produk, biaya admin, booking fee, dan biaya ruangan tidak didiskon.
                         </p>
                     </div>
                 </div>
@@ -147,6 +156,20 @@
 
             <form method="POST" action="/admin/cashier/checkout" id="checkoutForm">
                 @csrf
+                {{-- Token anti klik-ganda: pengiriman ulang formulir yang sama tidak membuat invoice kedua. --}}
+                <input type="hidden" name="checkout_token" value="{{ \Illuminate\Support\Str::uuid() }}">
+
+                @if(isset($replaces) && $replaces)
+                    <input type="hidden" name="replaces_billing_id" value="{{ $replaces->id }}">
+                    <div class="error-box" style="background:#eff6ff;border-color:#bfdbfe;color:#1e40af;">
+                        <strong>Invoice pengganti (koreksi).</strong>
+                        Menggantikan invoice void {{ $replaces->invoice_number ?: '#' . $replaces->id }}. Periksa item dan harga, lalu simpan.
+                        @if(($creditAvailable ?? 0) > 0)
+                            <br><strong>Kredit tersedia Rp {{ number_format($creditAvailable, 0, ',', '.') }}</strong> dari invoice lama akan dipakai otomatis (bukan penerimaan kas baru).
+                        @endif
+                        Invoice lama tetap tersimpan sebagai riwayat dan tertaut ke invoice baru ini.
+                    </div>
+                @endif
 
                 <section class="section-card">
                     <h2 class="section-title">Data Transaksi</h2>
@@ -163,7 +186,7 @@
                     <div class="form-grid">
                         <div class="field">
                             <label>Patient</label>
-                            <select name="patient_id" required>
+                            <select name="patient_id" id="patientSelect" required onchange="refreshSuggestions()">
                                 <option value="">Pilih Patient</option>
                                 @foreach($patients as $patient)
                                     <option value="{{ $patient->id }}" {{ old('patient_id', $selectedPatientId) == $patient->id ? 'selected' : '' }}>
@@ -175,10 +198,10 @@
 
                         <div class="field">
                             <label>Visit Terkait</label>
-                            <select name="visit_id">
+                            <select name="visit_id" id="visitSelect" onchange="refreshSuggestions()">
                                 <option value="">Pilih Visit (opsional)</option>
                                 @foreach($visits as $visit)
-                                    <option value="{{ $visit->id }}" {{ old('visit_id', $selectedVisitId) == $visit->id ? 'selected' : '' }}>
+                                    <option value="{{ $visit->id }}" data-room="{{ $visit->room_name }}" {{ old('visit_id', $selectedVisitId) == $visit->id ? 'selected' : '' }}>
                                         #{{ $visit->id }} - {{ optional($visit->patient)->full_name ?: 'Patient' }} - {{ $visit->visit_date ?: '-' }}
                                     </option>
                                 @endforeach
@@ -187,7 +210,7 @@
 
                         <div class="field">
                             <label>Invoice Date</label>
-                            <input type="date" name="invoice_date" value="{{ old('invoice_date', now()->format('Y-m-d')) }}" required>
+                            <input type="date" name="invoice_date" value="{{ old('invoice_date', \App\Support\ClinicTime::today()) }}" required>
                         </div>
 
                         <div class="field">
@@ -220,10 +243,13 @@
                         </div>
 
                         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                            <button type="button" class="btn btn-soft" onclick="addBookingFeeItem()">+ Booking Fee Rp50.000</button>
-                            <button type="button" class="btn btn-primary" onclick="addLineItem()">+ Tambah Item</button>
+                            <button type="button" class="kx-btn kx-btn--outline btn btn-soft" onclick="addBookingFeeItem()">+ Booking Fee Rp50.000</button>
+                            <button type="button" class="kx-btn kx-btn--primary btn btn-primary" onclick="addLineItem()">+ Tambah Item</button>
                         </div>
                     </div>
+
+                    <div id="adminFeeIndicator" style="display:none;margin-bottom:10px;padding:10px 14px;border-radius:12px;font-size:13px;line-height:1.6;border:1px solid #e2e8f0;background:#f8fafc;color:#334155;"></div>
+                    <div id="chargeSuggestions" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;"></div>
 
                     <div id="lineItems"></div>
                 </section>
@@ -256,8 +282,9 @@
                                 </div>
 
                                 <div class="field">
-                                    <label>Paid Amount</label>
-                                    <input type="number" name="paid_amount" id="paidAmount" min="0" step="1" value="{{ old('paid_amount', 0) }}" oninput="calculateTotals()" placeholder="Jumlah dibayar pasien">
+                                    <label>Uang Diserahkan Pasien</label>
+                                    <input type="number" name="paid_amount" id="paidAmount" min="0" step="1" value="{{ old('paid_amount', 0) }}" oninput="calculateTotals()" placeholder="Jumlah diserahkan pasien">
+                                    <div class="hint">Kembalian tidak dihitung sebagai pendapatan; yang tercatat adalah penerimaan bersih.</div>
                                 </div>
 
                                 <div class="field">
@@ -274,6 +301,11 @@
                             <div class="summary-row">
                                 <span>Subtotal</span>
                                 <strong id="subtotalText">Rp 0</strong>
+                            </div>
+
+                            <div class="summary-row">
+                                <span>Dasar Diskon (Program)</span>
+                                <strong id="discountBaseText">Rp 0</strong>
                             </div>
 
                             <div class="summary-row">
@@ -311,8 +343,8 @@
                     <textarea name="notes" rows="4" placeholder="Contoh: pembayaran lengkap, paket treatment, atau catatan administrasi.">{{ old('notes') }}</textarea>
 
                     <div class="submit-row">
-                        <a href="/admin/billings" class="btn btn-soft">Batal</a>
-                        <button type="submit" class="btn btn-primary">Simpan Checkout</button>
+                        <a href="/admin/billings" class="kx-btn kx-btn--outline btn btn-soft">Batal</a>
+                        <button type="submit" class="kx-btn kx-btn--primary btn btn-primary">Simpan Checkout</button>
                     </div>
                 </section>
             </form>
@@ -333,12 +365,13 @@
 
             <div class="field service-master-wrap">
                 <label>Master Layanan</label>
-                <select class="service-master-select" onchange="handleClinicServiceChange(this)">
+                <select name="clinic_service_id[]" class="service-master-select" onchange="handleClinicServiceChange(this)">
                     <option value="">Manual / pilih layanan</option>
                     @foreach(($clinicServices ?? collect()) as $service)
                         <option
                             value="{{ $service->id }}"
                             data-name="{{ $service->name }}"
+                            data-category="{{ \App\Services\BillingCalculator::categoryForService($service->category) }}"
                             data-price="{{ $service->price_per_visit }}"
                             data-package-3x="{{ $service->package_3x_price }}"
                             data-package-6x="{{ $service->package_6x_price }}"
@@ -400,8 +433,27 @@
 
             <div class="field">
                 <label>&nbsp;</label>
-                <button type="button" class="btn btn-danger" onclick="removeLineItem(this)">Hapus</button>
+                <button type="button" class="kx-btn kx-btn--danger btn btn-danger" onclick="removeLineItem(this)">Hapus</button>
             </div>
+        </div>
+
+        <input type="hidden" name="reference_type[]" class="ref-type" value="">
+        <input type="hidden" name="reference_id[]" class="ref-id" value="">
+
+        <div class="price-reason-row" style="display:none; margin-top:10px;">
+            <label style="font-size:12px;font-weight:700;">Alasan harga berbeda dari master (wajib, tercatat di audit)</label>
+            <input type="text" name="price_reason[]" class="price-reason-input" maxlength="300" placeholder="Contoh: promo khusus disetujui owner / koreksi harga input">
+        </div>
+
+        <div class="category-row">
+            <label>Kategori Item</label>
+            <select name="item_category[]" class="category-select" onchange="calculateTotals()">
+                @foreach(\App\Services\BillingCalculator::categories() as $categoryKey => $categoryLabel)
+                    <option value="{{ $categoryKey }}" {{ $categoryKey === config('clinic.billing.manual_service_default_category') ? 'selected' : '' }}>{{ $categoryLabel }}</option>
+                @endforeach
+            </select>
+            <span class="discount-badge no category-badge">Tidak kena diskon</span>
+            <span class="hint category-hint" style="margin:0;"></span>
         </div>
 
         <div class="hint inventory-hint"></div>
@@ -409,6 +461,92 @@
 </template>
 
 <script>
+    const DISCOUNTABLE_CATEGORIES = @json(config('clinic.billing.discountable_categories'));
+    const CREDIT_AVAILABLE = @json((float) ($creditAvailable ?? 0));
+    const ROOM_RATES = @json($roomRates ?? new stdClass);
+    const BILLED_VISITS = @json($billedVisitIds ?? []);
+    const ADMIN_FEE = @json($adminFee);
+
+    function hasReferenceLine(type, id) {
+        return Array.from(document.querySelectorAll('.line-item')).some(row =>
+            row.querySelector('.ref-type').value === type && String(row.querySelector('.ref-id').value) === String(id));
+    }
+
+    // Baris berreferensi: kategori, harga acuan, dan satuan divalidasi ulang oleh server.
+    function addReferenceLine(opts) {
+        addLineItem();
+        const rows = document.querySelectorAll('.line-item');
+        const row = rows[rows.length - 1];
+        row.querySelector('.line-type').value = 'service';
+        row.dataset.type = 'service';
+        row.querySelector('.service-master-select').value = '';
+        row.querySelector('.description-input').value = opts.description;
+        row.querySelector('.qty-input').value = opts.quantity || 1;
+        row.querySelector('.price-input').value = opts.price;
+        row.querySelector('.ref-type').value = opts.type;
+        row.querySelector('.ref-id').value = opts.id;
+        setRowCategory(row, opts.category, true, opts.hint || 'Kategori ditentukan sistem.');
+        calculateTotals();
+        refreshSuggestions();
+    }
+
+    // Saran biaya (bukan penagihan otomatis): muncul hanya bila syaratnya terpenuhi.
+    function refreshSuggestions() {
+        const box = document.getElementById('chargeSuggestions');
+        if (!box) { return; }
+        box.innerHTML = '';
+
+        const visitSelect = document.getElementById('visitSelect');
+        const visitOption = visitSelect && visitSelect.options[visitSelect.selectedIndex];
+        const roomName = visitOption && visitOption.value ? (visitOption.dataset.room || '') : '';
+        const room = roomName ? ROOM_RATES[roomName.toLowerCase()] : null;
+
+        if (room && visitOption.value && !BILLED_VISITS.includes(Number(visitOption.value)) && !hasReferenceLine('visit_room', visitOption.value)) {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'kx-btn kx-btn--outline btn btn-soft';
+            button.textContent = '+ Biaya ruangan ' + room.name + ' (Rp ' + Number(room.rate).toLocaleString('id-ID') + ' ' + room.unitLabel.toLowerCase() + ')';
+            button.onclick = () => addReferenceLine({
+                type: 'visit_room', id: visitOption.value, category: 'room_charge', price: room.rate, quantity: 1,
+                description: 'Biaya ruangan ' + room.name + ' (' + room.unitLabel.toLowerCase() + ')',
+                hint: 'Biaya ruangan: komponen tersendiri, tidak didiskon. Ubah jumlah sesuai satuan tarif.',
+            });
+            box.appendChild(button);
+        }
+
+        const patientSelect = document.getElementById('patientSelect');
+        const indicator = document.getElementById('adminFeeIndicator');
+        const patientState = patientSelect && patientSelect.value && ADMIN_FEE.patients ? ADMIN_FEE.patients[patientSelect.value] : null;
+
+        // Indikator biaya administrasi (informasi saja): tagihan dibuat otomatis saat registrasi pasien, bukan di kasir.
+        if (indicator) {
+            indicator.style.display = patientState ? 'block' : 'none';
+
+            if (patientState) {
+                const tone = {
+                    charged: ['#ecfdf5', '#bbf7d0', '#166534'], voided: ['#fffbeb', '#fde68a', '#92400e'],
+                    not_applicable: ['#f8fafc', '#e2e8f0', '#475569'],
+                }[patientState.state] || ['#f8fafc', '#e2e8f0', '#475569'];
+                indicator.style.background = tone[0];
+                indicator.style.borderColor = tone[1];
+                indicator.style.color = tone[2];
+                indicator.textContent = patientState.label;
+            }
+        }
+
+        // Koreksi: bila invoice administrasi di-void, baris biayanya dapat diterbitkan ulang lewat Terbitkan Ulang
+        // (halaman detail invoice), bukan lewat saran di kasir.
+    }
+    const MANUAL_DEFAULT_CATEGORY = @json(config('clinic.billing.manual_service_default_category'));
+
+    function setRowCategory(row, category, locked, hint) {
+        const select = row.querySelector('.category-select');
+        select.value = category;
+        select.classList.toggle('locked', !!locked);
+        select.tabIndex = locked ? -1 : 0;
+        row.querySelector('.category-hint').innerText = hint || '';
+    }
+
     function formatRupiah(value) {
         return 'Rp ' + Number(value || 0).toLocaleString('id-ID');
     }
@@ -447,8 +585,10 @@
             }
             descriptionInput.value = '';
             priceInput.value = 0;
+            setRowCategory(row, 'product', true, 'Produk tidak termasuk diskon.');
             handleInventoryChange(inventorySelect);
         } else {
+            setRowCategory(row, MANUAL_DEFAULT_CATEGORY, false, '');
             inventorySelect.value = '';
             descriptionInput.value = descriptionInput.value || 'Fisioterapi Umum';
             if (Number(priceInput.value || 0) === 0) {
@@ -507,8 +647,12 @@
         const packageSelect = row.querySelector('.package-price-select');
 
         if (!selected || !selected.value) {
+            setRowCategory(row, MANUAL_DEFAULT_CATEGORY, false, '');
+            calculateTotals();
             return;
         }
+
+        setRowCategory(row, selected.dataset.category || 'other', true, 'Kategori mengikuti master layanan.');
 
         syncPackageOptions(row);
 
@@ -588,6 +732,7 @@
         if (serviceSelect) serviceSelect.value = '';
         if (packageSelect) packageSelect.value = 'visit';
 
+        setRowCategory(row, 'booking_fee', false, '');
         descriptionInput.value = 'Booking Fee Non-Paket';
         qtyInput.value = 1;
         priceInput.value = 50000;
@@ -620,15 +765,94 @@
         calculateTotals();
     }
 
+    function referencePrices(row) {
+        if (row.dataset.type === 'inventory') {
+            const inv = row.querySelector('.inventory-select');
+            const opt = inv.options[inv.selectedIndex];
+            return opt && opt.value ? [Number(opt.dataset.price || 0)] : [];
+        }
+
+        const svc = row.querySelector('.service-master-select');
+        const opt = svc.options[svc.selectedIndex];
+
+        if (!opt || !opt.value) {
+            return [];
+        }
+
+        return [opt.dataset.price, opt.getAttribute('data-package-3x'), opt.getAttribute('data-package-6x'), opt.getAttribute('data-package-12x')]
+            .filter(value => value !== null && value !== undefined && value !== '')
+            .map(Number);
+    }
+
+    const PREFILL_ITEMS = @json($prefillItems ?? []);
+
+    function fillRowFromPrefill(row, item) {
+        const typeSelect = row.querySelector('.line-type');
+        typeSelect.value = item.type;
+        handleTypeChange(typeSelect);
+
+        if (item.type === 'inventory') {
+            const inventorySelect = row.querySelector('.inventory-select');
+
+            if (item.inventory_item_id) {
+                inventorySelect.value = String(item.inventory_item_id);
+
+                if (inventorySelect.value) {
+                    handleInventoryChange(inventorySelect);
+                }
+            }
+        } else if (item.clinic_service_id) {
+            const serviceSelect = row.querySelector('.service-master-select');
+            serviceSelect.value = String(item.clinic_service_id);
+
+            if (serviceSelect.value) {
+                handleClinicServiceChange(serviceSelect);
+            }
+        }
+
+        row.querySelector('.description-input').value = item.description;
+        row.querySelector('.qty-input').value = item.quantity;
+        row.querySelector('.price-input').value = item.unit_price;
+
+        if (item.reference_type) {
+            row.querySelector('.ref-type').value = item.reference_type;
+            row.querySelector('.ref-id').value = item.reference_id;
+            setRowCategory(row, item.category, true, 'Biaya berreferensi dari invoice sebelumnya; divalidasi ulang oleh sistem.');
+        }
+
+        const hasMaster = row.querySelector('.service-master-select').value !== '';
+
+        if (item.type === 'service' && !hasMaster && item.category) {
+            setRowCategory(row, item.category, false, 'Kategori dari invoice sebelumnya; periksa kembali.');
+        }
+    }
+
     function calculateTotals() {
         let subtotal = 0;
+        let discountBase = 0;
 
         document.querySelectorAll('.line-item').forEach(row => {
             const qty = Number(row.querySelector('.qty-input').value || 0);
             const price = Number(row.querySelector('.price-input').value || 0);
             const lineTotal = qty * price;
+            const category = row.querySelector('.category-select').value;
+            const eligible = DISCOUNTABLE_CATEGORIES.includes(category);
 
             subtotal += lineTotal;
+
+            if (eligible) {
+                discountBase += lineTotal;
+            }
+
+            // Harga di luar daftar harga master: alasan wajib (dicatat di audit oleh server).
+            const refs = referencePrices(row);
+            const override = refs.length > 0 && !refs.includes(price);
+            row.querySelector('.price-reason-row').style.display = override ? 'block' : 'none';
+            row.querySelector('.price-reason-input').required = override;
+
+            const badge = row.querySelector('.category-badge');
+            badge.innerText = eligible ? 'Kena diskon promo' : 'Tidak kena diskon';
+            badge.className = 'discount-badge category-badge ' + (eligible ? 'yes' : 'no');
             row.querySelector('.line-total-box').innerText = formatRupiah(lineTotal);
         });
 
@@ -646,37 +870,43 @@
             const maxDiscount = Number(promoOption.dataset.max || 0);
             const code = promoOption.dataset.code || '';
 
-            if (minimum > 0 && subtotal < minimum) {
+            if (discountBase <= 0) {
                 discountAmount = 0;
-                promoHint = 'Promo ' + code + ' butuh minimum transaksi ' + formatRupiah(minimum) + '.';
+                promoHint = 'Promo ' + code + ' hanya berlaku untuk item Program / Treatment. Belum ada item program.';
+            } else if (minimum > 0 && discountBase < minimum) {
+                discountAmount = 0;
+                promoHint = 'Promo ' + code + ' butuh minimum item program ' + formatRupiah(minimum) + '.';
             } else {
                 if (discountType === 'nominal') {
                     discountAmount = discountValue;
                 }
 
                 if (discountType === 'percent') {
-                    discountAmount = subtotal * Math.min(discountValue, 100) / 100;
+                    discountAmount = discountBase * Math.min(discountValue, 100) / 100;
                 }
 
                 if (maxDiscount > 0) {
                     discountAmount = Math.min(discountAmount, maxDiscount);
                 }
 
-                discountAmount = Math.min(discountAmount, subtotal);
-                promoHint = 'Promo ' + code + ' aktif. Potongan: ' + formatRupiah(discountAmount) + '.';
+                discountAmount = Math.min(discountAmount, discountBase);
+                promoHint = 'Promo ' + code + ' aktif. Potongan ' + formatRupiah(discountAmount) + ' dari dasar diskon (item program) ' + formatRupiah(discountBase) + '. Add-on, produk, dan biaya lain tidak didiskon.';
             }
         }
 
         document.getElementById('promoHint').innerText = promoHint;
 
         const grandTotal = Math.max(subtotal - discountAmount, 0);
-        const changeAmount = Math.max(paidAmount - grandTotal, 0);
-        const remainingAmount = Math.max(grandTotal - paidAmount, 0);
+        // Kredit dari invoice yang digantikan menutup sebagian tagihan (bukan kas baru).
+        const credit = Math.min(CREDIT_AVAILABLE, grandTotal);
+        const dueAfterCredit = grandTotal - credit;
+        const changeAmount = Math.max(paidAmount - dueAfterCredit, 0);
+        const remainingAmount = Math.max(dueAfterCredit - paidAmount, 0);
 
         let status = 'unpaid';
-        if (paidAmount >= grandTotal && grandTotal > 0) {
+        if (grandTotal > 0 && (credit + Math.min(paidAmount, dueAfterCredit)) >= grandTotal) {
             status = 'paid';
-        } else if (paidAmount > 0) {
+        } else if (credit + paidAmount > 0) {
             status = 'partial';
         }
 
@@ -685,6 +915,7 @@
         statusPreview.className = 'status-preview ' + status;
 
         document.getElementById('subtotalText').innerText = formatRupiah(subtotal);
+        document.getElementById('discountBaseText').innerText = formatRupiah(discountBase);
         document.getElementById('discountText').innerText = formatRupiah(discountAmount);
         document.getElementById('paidText').innerText = formatRupiah(paidAmount);
         document.getElementById('changeText').innerText = formatRupiah(changeAmount);
@@ -693,8 +924,18 @@
     }
 
     document.addEventListener('DOMContentLoaded', function () {
-        addLineItem();
+        if (PREFILL_ITEMS.length) {
+            PREFILL_ITEMS.forEach(function (item) {
+                addLineItem();
+                const rows = document.querySelectorAll('.line-item');
+                fillRowFromPrefill(rows[rows.length - 1], item);
+            });
+        } else {
+            addLineItem();
+        }
+
         calculateTotals();
+        refreshSuggestions();
     });
 </script>
 <script>
@@ -719,20 +960,7 @@
         button.id = 'khayraInstallAppButton';
         button.type = 'button';
         button.innerText = 'Install App';
-        button.style.position = 'fixed';
-        button.style.right = '18px';
-        button.style.bottom = '18px';
-        button.style.zIndex = '99999';
-        button.style.border = '0';
-        button.style.borderRadius = '999px';
-        button.style.padding = '12px 16px';
-        button.style.background = '#2f7c7a';
-        button.style.color = '#ffffff';
-        button.style.fontWeight = '900';
-        button.style.fontFamily = 'Arial, sans-serif';
-        button.style.fontSize = '13px';
-        button.style.boxShadow = '0 14px 30px rgba(47,124,122,.24)';
-        button.style.cursor = 'pointer';
+        button.className = 'kx-btn kx-btn--primary kx-install-btn';
 
         button.addEventListener('click', function () {
             if (!deferredInstallPrompt) {

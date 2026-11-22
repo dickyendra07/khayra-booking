@@ -36,20 +36,7 @@
             margin-bottom: 18px;
         }
 
-        .ghost-link {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            text-decoration: none;
-            padding: 11px 14px;
-            border-radius: 14px;
-            background: #ffffff;
-            border: 1px solid #e5ece9;
-            color: #2d6d69;
-            font-size: 13px;
-            font-weight: 800;
-            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.03);
-        }
+
 
         .hero {
             background: #ffffff;
@@ -211,17 +198,7 @@
             margin-top: 22px;
         }
 
-        .submit-btn {
-            border: none;
-            cursor: pointer;
-            padding: 14px 18px;
-            border-radius: 16px;
-            background: linear-gradient(135deg, #17857e 0%, #136b66 100%);
-            color: #ffffff;
-            font-size: 14px;
-            font-weight: 800;
-            box-shadow: 0 12px 24px rgba(23, 117, 111, 0.18);
-        }
+
 
         @media (max-width: 980px) {
             .layout { display: block; }
@@ -240,6 +217,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="/images/khayra-logo.png">
+    @include('partials.ui-assets')
 </head>
 <body>
 <div class="layout">
@@ -248,7 +226,7 @@
     <main class="main">
         <div class="container">
             <div class="topbar">
-                <a href="/admin/therapists" class="ghost-link">← Kembali ke Physiotherapy Team</a>
+                <a href="/admin/therapists" class="kx-btn kx-btn--outline ghost-link">← Kembali ke Physiotherapy Team</a>
             </div>
 
             <section class="hero">
@@ -326,7 +304,7 @@
                     </div>
 
                     <div class="actions">
-                        <button type="submit" class="submit-btn">Update Staff</button>
+                        <button type="submit" class="kx-btn kx-btn--primary submit-btn">Update Staff</button>
                     </div>
                 </form>
             </section>
@@ -355,20 +333,7 @@
         button.id = 'khayraInstallAppButton';
         button.type = 'button';
         button.innerText = 'Install App';
-        button.style.position = 'fixed';
-        button.style.right = '18px';
-        button.style.bottom = '18px';
-        button.style.zIndex = '99999';
-        button.style.border = '0';
-        button.style.borderRadius = '999px';
-        button.style.padding = '12px 16px';
-        button.style.background = '#2f7c7a';
-        button.style.color = '#ffffff';
-        button.style.fontWeight = '900';
-        button.style.fontFamily = 'Arial, sans-serif';
-        button.style.fontSize = '13px';
-        button.style.boxShadow = '0 14px 30px rgba(47,124,122,.24)';
-        button.style.cursor = 'pointer';
+        button.className = 'kx-btn kx-btn--primary kx-install-btn';
 
         button.addEventListener('click', function () {
             if (!deferredInstallPrompt) {

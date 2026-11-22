@@ -1,0 +1,986 @@
+diff --git a/.env.example b/.env.example
+index c0660ea..ad7a2a3 100644
+--- a/.env.example
++++ b/.env.example
+@@ -63,3 +63,9 @@ AWS_BUCKET=
+ AWS_USE_PATH_STYLE_ENDPOINT=false
+ 
+ VITE_APP_NAME="${APP_NAME}"
++
++# Kredensial admin (wajib diisi; tidak ada nilai default).
++# Disarankan memakai ADMIN_PASSWORD_HASH (bcrypt) dibanding ADMIN_PASSWORD.
++ADMIN_EMAIL=
++ADMIN_PASSWORD_HASH=
++ADMIN_PASSWORD=
+diff --git a/app/Http/Middleware/RequireAreaLogin.php b/app/Http/Middleware/RequireAreaLogin.php
+new file mode 100644
+index 0000000..5162e04
+--- /dev/null
++++ b/app/Http/Middleware/RequireAreaLogin.php
+@@ -0,0 +1,57 @@
++<?php
++
++namespace App\Http\Middleware;
++
++use Closure;
++use Illuminate\Http\Request;
++use Symfony\Component\HttpFoundation\Response;
++
++/**
++ * Pengaman terpusat (fail-closed) untuk area login berbasis sesi.
++ *
++ * Setiap path di bawah /admin, /therapist, dan /patient wajib punya sesi login
++ * yang sesuai, kecuali halaman login/logout. Rute baru otomatis terlindungi
++ * walaupun lupa menambahkan pengecekan sesi di dalam closure-nya. Pengecekan
++ * inline yang sudah ada tetap berjalan sebagai lapis kedua.
++ */
++class RequireAreaLogin
++{
++    /**
++     * @var array<string, array{session: string, login: string, public: array<int, string>}>
++     */
++    private const AREAS = [
++        'admin' => [
++            'session' => 'admin_logged_in',
++            'login' => '/admin/login',
++            'public' => ['admin/login', 'admin/logout'],
++        ],
++        'therapist' => [
++            'session' => 'therapist_logged_in',
++            'login' => '/therapist/login',
++            'public' => ['therapist', 'therapist/login', 'therapist/logout'],
++        ],
++        'patient' => [
++            'session' => 'patient_logged_in',
++            'login' => '/patient',
++            'public' => ['patient', 'patient/login', 'patient/logout'],
++        ],
++    ];
++
++    public function handle(Request $request, Closure $next): Response
++    {
++        $path = trim($request->path(), '/');
++        $area = explode('/', $path)[0];
++
++        if (! isset(self::AREAS[$area])) {
++            return $next($request);
++        }
++
++        $config = self::AREAS[$area];
++
++        if (in_array($path, $config['public'], true) || $request->session()->get($config['session'])) {
++            return $next($request);
++        }
++
++        return redirect($config['login']);
++    }
++}
+diff --git a/app/Support/AdminCredentials.php b/app/Support/AdminCredentials.php
+new file mode 100644
+index 0000000..cfe04b1
+--- /dev/null
++++ b/app/Support/AdminCredentials.php
+@@ -0,0 +1,55 @@
++<?php
++
++namespace App\Support;
++
++use Illuminate\Support\Facades\Hash;
++use Illuminate\Support\Facades\Log;
++use Throwable;
++
++/**
++ * Verifikasi kredensial admin dari config('khayra_auth.admin').
++ *
++ * Tanpa fallback default: jika kredensial belum dikonfigurasi, login ditolak.
++ */
++class AdminCredentials
++{
++    public static function isConfigured(): bool
++    {
++        return filled(config('khayra_auth.admin.email'))
++            && (filled(config('khayra_auth.admin.password_hash')) || filled(config('khayra_auth.admin.password')));
++    }
++
++    public static function attempt(string $email, string $password): bool
++    {
++        if (! self::isConfigured()) {
++            Log::warning('Login admin ditolak: ADMIN_EMAIL / ADMIN_PASSWORD(_HASH) belum dikonfigurasi.');
++
++            return false;
++        }
++
++        $emailMatches = hash_equals(
++            mb_strtolower(trim((string) config('khayra_auth.admin.email'))),
++            mb_strtolower(trim($email))
++        );
++
++        $passwordMatches = self::passwordMatches($password);
++
++        // Kedua pengecekan selalu dijalankan agar waktu respons tidak membocorkan mana yang salah.
++        return $emailMatches && $passwordMatches;
++    }
++
++    private static function passwordMatches(string $password): bool
++    {
++        $hash = config('khayra_auth.admin.password_hash');
++
++        if (filled($hash)) {
++            try {
++                return Hash::check($password, $hash);
++            } catch (Throwable) {
++                return false;
++            }
++        }
++
++        return hash_equals((string) config('khayra_auth.admin.password'), $password);
++    }
++}
+diff --git a/app/Support/LoginThrottle.php b/app/Support/LoginThrottle.php
+new file mode 100644
+index 0000000..27003d7
+--- /dev/null
++++ b/app/Support/LoginThrottle.php
+@@ -0,0 +1,97 @@
++<?php
++
++namespace App\Support;
++
++use Illuminate\Support\Facades\RateLimiter;
++
++/**
++ * Pembatasan percobaan login gagal (admin / therapist / patient).
++ *
++ * Tiga lapis: identitas+IP, IP saja (percobaan massal lintas identitas),
++ * dan identitas saja (percobaan terdistribusi lintas IP, jika diaktifkan).
++ * Hanya kegagalan yang dihitung; login berhasil membersihkan lapis identitas+IP.
++ */
++class LoginThrottle
++{
++    private array $policy;
++
++    private string $pairKey;
++
++    private string $ipKey;
++
++    private string $identityKey;
++
++    private function __construct(string $scope, string $identity, string $ip)
++    {
++        $this->policy = config("khayra_auth.throttle.{$scope}");
++
++        $identity = sha1($identity);
++        $this->pairKey = "login:{$scope}:pair:{$identity}|{$ip}";
++        $this->ipKey = "login:{$scope}:ip:{$ip}";
++        $this->identityKey = "login:{$scope}:id:{$identity}";
++    }
++
++    public static function for(string $scope, string $identity, ?string $ip): self
++    {
++        return new self($scope, $identity, (string) $ip);
++    }
++
++    /** Normalisasi nomor WhatsApp agar 0812..., +62812..., 62812... dihitung sebagai identitas yang sama. */
++    public static function normalizePhone(string $raw): string
++    {
++        $digits = preg_replace('/\D+/', '', $raw);
++
++        if (str_starts_with($digits, '62')) {
++            $digits = '0'.substr($digits, 2);
++        }
++
++        return $digits;
++    }
++
++    /** Sisa detik penguncian; 0 jika boleh mencoba. */
++    public function lockedOutFor(): int
++    {
++        $remaining = 0;
++
++        foreach ($this->limits() as $key => $max) {
++            if (RateLimiter::tooManyAttempts($key, $max)) {
++                $remaining = max($remaining, RateLimiter::availableIn($key));
++            }
++        }
++
++        return $remaining;
++    }
++
++    public function hit(): void
++    {
++        foreach (array_keys($this->limits()) as $key) {
++            RateLimiter::hit($key, $this->policy['decay']);
++        }
++    }
++
++    public function clear(): void
++    {
++        RateLimiter::clear($this->pairKey);
++    }
++
++    public static function message(int $seconds): string
++    {
++        $minutes = max(1, (int) ceil($seconds / 60));
++
++        return "Terlalu banyak percobaan login. Silakan coba lagi dalam {$minutes} menit.";
++    }
++
++    private function limits(): array
++    {
++        $limits = [
++            $this->pairKey => $this->policy['pair'],
++            $this->ipKey => $this->policy['ip'],
++        ];
++
++        if (! empty($this->policy['identity'])) {
++            $limits[$this->identityKey] = $this->policy['identity'];
++        }
++
++        return $limits;
++    }
++}
+diff --git a/bootstrap/app.php b/bootstrap/app.php
+index c183276..7049102 100644
+--- a/bootstrap/app.php
++++ b/bootstrap/app.php
+@@ -11,7 +11,8 @@
+         health: '/up',
+     )
+     ->withMiddleware(function (Middleware $middleware): void {
+-        //
++        // Pengaman terpusat area admin / therapist / patient (lihat RequireAreaLogin).
++        $middleware->appendToGroup('web', \App\Http\Middleware\RequireAreaLogin::class);
+     })
+     ->withExceptions(function (Exceptions $exceptions): void {
+         //
+diff --git a/config/khayra_auth.php b/config/khayra_auth.php
+new file mode 100644
+index 0000000..4a7c776
+--- /dev/null
++++ b/config/khayra_auth.php
+@@ -0,0 +1,41 @@
++<?php
++
++/*
++|--------------------------------------------------------------------------
++| Konfigurasi autentikasi area admin / terapis / pasien
++|--------------------------------------------------------------------------
++|
++| Nilai env() hanya dibaca di file config ini supaya tetap berfungsi
++| setelah `php artisan config:cache`. Tidak ada nilai default untuk kredensial:
++| jika ADMIN_EMAIL dan salah satu dari ADMIN_PASSWORD_HASH / ADMIN_PASSWORD
++| tidak diisi, login admin selalu ditolak.
++|
++*/
++
++return [
++
++    'admin' => [
++        'email' => env('ADMIN_EMAIL'),
++
++        // Disarankan: hash bcrypt (php artisan tinker -> Hash::make('...')).
++        'password_hash' => env('ADMIN_PASSWORD_HASH'),
++
++        // Masih didukung demi kompatibilitas dengan konfigurasi lama.
++        'password' => env('ADMIN_PASSWORD'),
++    ],
++
++    /*
++    | Kebijakan pembatasan percobaan login (gagal) per area.
++    |
++    | pair     : kombinasi identitas + IP
++    | ip       : seluruh percobaan dari satu IP (lintas identitas)
++    | identity : seluruh percobaan ke satu identitas (lintas IP); null = nonaktif
++    | decay    : detik sebelum hitungan di-reset
++    */
++    'throttle' => [
++        'admin' => ['pair' => 5, 'ip' => 20, 'identity' => null, 'decay' => 900],
++        'therapist' => ['pair' => 5, 'ip' => 20, 'identity' => 20, 'decay' => 900],
++        'patient' => ['pair' => 5, 'ip' => 20, 'identity' => 20, 'decay' => 900],
++    ],
++
++];
+diff --git a/routes/web.php b/routes/web.php
+index 9c4a9b5..4804b77 100644
+--- a/routes/web.php
++++ b/routes/web.php
+@@ -26,6 +26,8 @@
+ use App\Models\PatientProgressEntry;
+ use App\Models\HomeExerciseTemplate;
+ use App\Models\ClinicService;
++use App\Support\AdminCredentials;
++use App\Support\LoginThrottle;
+ use App\Models\PackageTreatmentDocument;
+ use App\Models\TherapistLeaveRequest;
+ 
+@@ -76,15 +78,25 @@
+         'password' => 'required|string',
+     ]);
+ 
+-    $adminEmail = env('ADMIN_EMAIL', 'admin@khayraphysio.com');
+-    $adminPassword = env('ADMIN_PASSWORD', 'password');
++    $throttle = LoginThrottle::for('admin', mb_strtolower(trim($request->email)), $request->ip());
+ 
+-    if ($request->email !== $adminEmail || $request->password !== $adminPassword) {
++    if ($seconds = $throttle->lockedOutFor()) {
+         return back()
+-            ->withInput()
++            ->withInput($request->only('email'))
++            ->withErrors(['email' => LoginThrottle::message($seconds)]);
++    }
++
++    if (!AdminCredentials::attempt($request->email, $request->password)) {
++        $throttle->hit();
++
++        return back()
++            ->withInput($request->only('email'))
+             ->withErrors(['email' => 'Email atau password admin salah.']);
+     }
+ 
++    $throttle->clear();
++    $request->session()->regenerate();
++
+     session([
+         'admin_logged_in' => true,
+         'admin_email' => $request->email,
+@@ -93,11 +105,9 @@
+     return redirect('/admin/dashboard');
+ });
+ 
+-Route::post('/admin/logout', function () {
+-    session()->forget([
+-        'admin_logged_in',
+-        'admin_email',
+-    ]);
++Route::post('/admin/logout', function (Request $request) {
++    $request->session()->invalidate();
++    $request->session()->regenerateToken();
+ 
+     return redirect('/admin/login')->with('success', 'Anda berhasil logout.');
+ });
+@@ -2863,11 +2873,27 @@
+         'password' => 'required|string',
+     ]);
+ 
++    $throttle = LoginThrottle::for('therapist', mb_strtolower(trim($request->email)), $request->ip());
++
++    if ($seconds = $throttle->lockedOutFor()) {
++        return redirect('/therapist/login')
++            ->withInput($request->only('email'))
++            ->with('error', LoginThrottle::message($seconds));
++    }
++
+     $therapist = Therapist::where('email', $request->email)
+         ->where('status', 'active')
+         ->first();
+ 
+-    if ($therapist && Hash::check($request->password, $therapist->password)) {
++    // Hash::check selalu dijalankan (hash dummy bila akun tidak ada) agar waktu
++    // respons tidak membocorkan apakah email terdaftar.
++    $dummyHash = '$2y$10$ra.4UF1A097AZ8JwAxWTtexMNKyeaJqBe10RjepprRBcYtR3LvIue';
++    $passwordValid = Hash::check($request->password, $therapist ? $therapist->password : $dummyHash);
++
++    if ($therapist && $passwordValid) {
++        $throttle->clear();
++        $request->session()->regenerate();
++
+         session([
+             'therapist_logged_in' => true,
+             'therapist_id' => $therapist->id,
+@@ -2877,13 +2903,16 @@
+         return redirect('/therapist/dashboard');
+     }
+ 
+-    return redirect('/therapist/login')->with('error', 'Email atau password therapist salah.');
++    $throttle->hit();
++
++    return redirect('/therapist/login')
++        ->withInput($request->only('email'))
++        ->with('error', 'Email atau password therapist salah.');
+ });
+ 
+-Route::post('/therapist/logout', function () {
+-    session()->forget('therapist_logged_in');
+-    session()->forget('therapist_id');
+-    session()->forget('therapist_name');
++Route::post('/therapist/logout', function (Request $request) {
++    $request->session()->invalidate();
++    $request->session()->regenerateToken();
+ 
+     return redirect('/therapist/login');
+ });
+@@ -4739,6 +4768,10 @@
+ });
+ 
+ Route::get('/admin/reports/therapist-performance', function () {
++    if (!session('admin_logged_in')) {
++        return redirect('/admin/login');
++    }
++
+     $therapists = \App\Models\Therapist::orderBy('full_name')->get();
+ 
+     $clinicalRequiredFields = [
+@@ -5604,6 +5637,14 @@
+         'birth_date' => 'required|date',
+     ]);
+ 
++    $throttle = LoginThrottle::for('patient', LoginThrottle::normalizePhone((string) $request->whatsapp), $request->ip());
++
++    if ($seconds = $throttle->lockedOutFor()) {
++        return back()
++            ->withInput($request->only('whatsapp'))
++            ->withErrors(['whatsapp' => LoginThrottle::message($seconds)]);
++    }
++
+     $rawWhatsapp = trim((string) $request->whatsapp);
+     $digits = preg_replace('/\D+/', '', $rawWhatsapp);
+ 
+@@ -5632,13 +5673,18 @@
+         ->first();
+ 
+     if (!$patient) {
++        $throttle->hit();
++
+         return back()
+-            ->withInput()
++            ->withInput($request->only('whatsapp'))
+             ->withErrors([
+                 'whatsapp' => 'Nomor WhatsApp atau tanggal lahir tidak cocok dengan data pasien. Hubungi admin Khayra Physio untuk pengecekan.',
+             ]);
+     }
+ 
++    $throttle->clear();
++    $request->session()->regenerate();
++
+     session([
+         'patient_logged_in' => true,
+         'patient_id' => $patient->id,
+@@ -5648,12 +5694,9 @@
+     return redirect('/patient/dashboard');
+ });
+ 
+-Route::post('/patient/logout', function () {
+-    session()->forget([
+-        'patient_logged_in',
+-        'patient_id',
+-        'patient_name',
+-    ]);
++Route::post('/patient/logout', function (Request $request) {
++    $request->session()->invalidate();
++    $request->session()->regenerateToken();
+ 
+     return redirect('/patient')->with('success', 'Anda berhasil logout.');
+ });
+diff --git a/tests/Feature/Security/AdminLoginTest.php b/tests/Feature/Security/AdminLoginTest.php
+new file mode 100644
+index 0000000..5dde0e7
+--- /dev/null
++++ b/tests/Feature/Security/AdminLoginTest.php
+@@ -0,0 +1,117 @@
++<?php
++
++use App\Support\AdminCredentials;
++use Illuminate\Foundation\Testing\RefreshDatabase;
++use Illuminate\Support\Facades\Hash;
++
++uses(RefreshDatabase::class);
++
++beforeEach(function () {
++    // Nilai uji lokal saja; bukan kredensial production.
++    config([
++        'khayra_auth.admin.email' => 'admin@uji.test',
++        'khayra_auth.admin.password' => 'kata-sandi-uji-lokal',
++        'khayra_auth.admin.password_hash' => null,
++    ]);
++});
++
++function adminLogin($test, string $email = 'admin@uji.test', string $password = 'kata-sandi-uji-lokal', string $ip = '10.0.0.1')
++{
++    return $test->withServerVariables(['REMOTE_ADDR' => $ip])
++        ->post('/admin/login', ['email' => $email, 'password' => $password]);
++}
++
++it('mengizinkan login admin dengan kredensial dari config', function () {
++    adminLogin($this)->assertRedirect('/admin/dashboard');
++
++    $this->get('/admin/dashboard')->assertOk();
++});
++
++it('mendukung ADMIN_PASSWORD_HASH (bcrypt)', function () {
++    config(['khayra_auth.admin.password' => null, 'khayra_auth.admin.password_hash' => Hash::make('sandi-hash-uji')]);
++
++    adminLogin($this, password: 'sandi-hash-uji')->assertRedirect('/admin/dashboard');
++});
++
++it('menolak password yang salah dengan pesan generik', function () {
++    adminLogin($this, password: 'salah')->assertSessionHasErrors(['email' => 'Email atau password admin salah.']);
++
++    $this->get('/admin/dashboard')->assertRedirect('/admin/login');
++});
++
++it('menolak login jika kredensial belum dikonfigurasi (tanpa fallback default)', function () {
++    config(['khayra_auth.admin.email' => null, 'khayra_auth.admin.password' => null, 'khayra_auth.admin.password_hash' => null]);
++
++    expect(AdminCredentials::isConfigured())->toBeFalse();
++
++    // Kredensial default lama tidak boleh lagi berlaku.
++    adminLogin($this, 'admin@khayraphysio.com', 'password')->assertSessionHasErrors('email');
++    adminLogin($this, '', '')->assertSessionHasErrors();
++
++    $this->get('/admin/dashboard')->assertRedirect('/admin/login');
++});
++
++it('meregenerasi sesi setelah login berhasil', function () {
++    $this->startSession();
++    $before = session()->getId();
++
++    adminLogin($this)->assertRedirect('/admin/dashboard');
++
++    expect(session()->getId())->not->toBe($before);
++});
++
++it('memblokir setelah 5 kegagalan dari kombinasi email dan IP yang sama', function () {
++    foreach (range(1, 5) as $i) {
++        adminLogin($this, password: 'salah')->assertSessionHasErrors('email');
++    }
++
++    // Percobaan ke-6 diblokir, walaupun password benar.
++    adminLogin($this)->assertSessionHasErrors('email');
++    expect(sessionError('email'))->toContain('Terlalu banyak percobaan');
++    $this->get('/admin/dashboard')->assertRedirect('/admin/login');
++});
++
++it('tidak memblokir IP lain untuk kombinasi yang sama', function () {
++    foreach (range(1, 5) as $i) {
++        adminLogin($this, password: 'salah');
++    }
++
++    adminLogin($this, ip: '10.0.0.99')->assertRedirect('/admin/dashboard');
++});
++
++it('memblokir satu IP yang mencoba banyak identitas berbeda', function () {
++    foreach (range(1, 20) as $i) {
++        adminLogin($this, "orang{$i}@uji.test", 'salah');
++    }
++
++    adminLogin($this)->assertSessionHasErrors('email');
++    expect(sessionError('email'))->toContain('Terlalu banyak percobaan');
++});
++
++it('membersihkan hitungan kegagalan setelah login berhasil', function () {
++    foreach (range(1, 4) as $i) {
++        adminLogin($this, password: 'salah');
++    }
++
++    adminLogin($this)->assertRedirect('/admin/dashboard');
++    $this->post('/admin/logout');
++
++    foreach (range(1, 4) as $i) {
++        adminLogin($this, password: 'salah')->assertSessionHasErrors('email');
++        expect(sessionError('email'))->not->toContain('Terlalu banyak');
++    }
++});
++
++it('menginvalidasi sesi saat logout', function () {
++    adminLogin($this);
++    $this->get('/admin/dashboard')->assertOk();
++
++    $this->post('/admin/logout')->assertRedirect('/admin/login');
++
++    expect(session('admin_logged_in'))->toBeNull();
++    $this->get('/admin/dashboard')->assertRedirect('/admin/login');
++});
++
++it('tetap memakai perlindungan CSRF pada form login di aplikasi (token tersedia di halaman)', function () {
++    $this->get('/admin/login')->assertOk()->assertSee('name="_token"', false);
++});
+diff --git a/tests/Feature/Security/AuthenticatedWorkflowRegressionTest.php b/tests/Feature/Security/AuthenticatedWorkflowRegressionTest.php
+new file mode 100644
+index 0000000..0d4b294
+--- /dev/null
++++ b/tests/Feature/Security/AuthenticatedWorkflowRegressionTest.php
+@@ -0,0 +1,86 @@
++<?php
++
++use App\Models\Billing;
++use App\Models\Booking;
++use App\Models\FinanceMonthlyClosing;
++use App\Models\Patient;
++use App\Models\Therapist;
++use App\Models\Visit;
++use Illuminate\Foundation\Testing\RefreshDatabase;
++use Illuminate\Support\Facades\Hash;
++
++uses(RefreshDatabase::class);
++
++/**
++ * Regresi: middleware pengaman terpusat tidak boleh merusak alur kerja
++ * admin / therapist / pasien yang sudah login.
++ */
++beforeEach(function () {
++    $this->patient = Patient::create(['full_name' => 'Pasien Regresi', 'whatsapp' => '081234567890', 'birth_date' => '1990-05-17', 'gender' => 'female']);
++    $this->therapist = Therapist::create(['full_name' => 'Terapis Regresi', 'email' => 'reg@uji.test', 'password' => Hash::make('x-uji-lokal'), 'status' => 'active']);
++});
++
++it('admin login: membuka booking, kalender, pasien, visit, billing, kasir, finance', function () {
++    $this->withSession(['admin_logged_in' => true]);
++
++    $booking = Booking::create(['patient_id' => $this->patient->id, 'full_name' => 'Pasien Regresi', 'whatsapp' => '081234567890', 'service' => 'Uji', 'booking_date' => now()->toDateString(), 'booking_time' => '09:00', 'status' => 'confirmed']);
++    $visit = Visit::create(['patient_id' => $this->patient->id, 'therapist_id' => $this->therapist->id, 'therapist' => 'Terapis Regresi', 'visit_date' => now()->toDateString(), 'status' => 'scheduled']);
++
++    foreach ([
++        '/admin/dashboard', '/admin/bookings', '/admin/bookings/calendar', '/admin/bookings/create',
++        "/admin/bookings/{$booking->id}", "/admin/bookings/{$booking->id}/edit",
++        '/admin/patients', "/admin/patients/{$this->patient->id}", '/admin/visits', '/admin/visits/create', "/admin/visits/{$visit->id}/edit",
++        '/admin/billings', '/admin/cashier', '/admin/owner-finance', '/admin/owner-dashboard', '/admin/reports', '/admin/reports/revenue',
++        '/admin/therapists', '/admin/promos', '/admin/services', '/admin/inventory',
++    ] as $url) {
++        $this->get($url)->assertOk();
++    }
++});
++
++it('admin login: membuat booking dan visit lewat form seperti biasa', function () {
++    $this->withSession(['admin_logged_in' => true]);
++
++    $this->post('/admin/bookings/create', [
++        'patient_id' => $this->patient->id, 'therapist_id' => $this->therapist->id, 'full_name' => 'Pasien Regresi',
++        'whatsapp' => '081234567890', 'service' => 'Uji', 'booking_date' => now()->toDateString(),
++        'booking_time' => '10:00', 'status' => 'confirmed',
++    ])->assertRedirect();
++
++    $this->post('/admin/visits', [
++        'patient_id' => $this->patient->id, 'therapist_id' => $this->therapist->id,
++        'visit_date' => now()->toDateString(), 'status' => 'scheduled',
++    ])->assertRedirect('/admin/visits');
++
++    expect(Booking::count())->toBe(1)->and(Visit::count())->toBe(1);
++});
++
++it('admin login: tutup buku bulanan tetap berjalan dan memakai angka invoice', function () {
++    $this->withSession(['admin_logged_in' => true]);
++
++    Billing::create(['patient_id' => $this->patient->id, 'invoice_number' => 'INV-REG', 'invoice_date' => now()->toDateString(), 'amount' => 250000, 'paid_amount' => 250000, 'payment_status' => 'paid']);
++    $month = now()->format('Y-m');
++
++    $this->post('/admin/owner-finance/close', ['month' => $month])->assertRedirect("/admin/owner-finance?month={$month}");
++
++    expect((float) FinanceMonthlyClosing::firstOrFail()->billing_income)->toBe(250000.0);
++
++    $this->get("/admin/owner-finance/print?month={$month}")->assertOk();
++});
++
++it('therapist login: dashboard dan logout tetap berfungsi', function () {
++    $this->withSession(['therapist_logged_in' => true, 'therapist_id' => $this->therapist->id, 'therapist_name' => 'Terapis Regresi']);
++
++    $this->get('/therapist/dashboard')->assertOk();
++    $this->post('/therapist/logout')->assertRedirect('/therapist/login');
++});
++
++it('pasien login: dashboard dan logout tetap berfungsi', function () {
++    $this->withSession(['patient_logged_in' => true, 'patient_id' => $this->patient->id, 'patient_name' => 'Pasien Regresi']);
++
++    $this->get('/patient/dashboard')->assertOk();
++    $this->post('/patient/logout')->assertRedirect('/patient');
++});
++
++it('halaman booking publik tetap bisa dibuka tanpa login', function () {
++    $this->get('/booking')->assertOk();
++});
+diff --git a/tests/Feature/Security/PatientTherapistLoginTest.php b/tests/Feature/Security/PatientTherapistLoginTest.php
+new file mode 100644
+index 0000000..f5d743f
+--- /dev/null
++++ b/tests/Feature/Security/PatientTherapistLoginTest.php
+@@ -0,0 +1,150 @@
++<?php
++
++use App\Models\Patient;
++use App\Models\Therapist;
++use Illuminate\Foundation\Testing\RefreshDatabase;
++use Illuminate\Support\Facades\Hash;
++
++uses(RefreshDatabase::class);
++
++function patientLogin($test, string $whatsapp, string $birthDate, string $ip = '10.1.0.1')
++{
++    return $test->withServerVariables(['REMOTE_ADDR' => $ip])
++        ->post('/patient/login', ['whatsapp' => $whatsapp, 'birth_date' => $birthDate]);
++}
++
++function therapistLogin($test, string $email, string $password, string $ip = '10.2.0.1')
++{
++    return $test->withServerVariables(['REMOTE_ADDR' => $ip])
++        ->post('/therapist/login', ['email' => $email, 'password' => $password]);
++}
++
++beforeEach(function () {
++    $this->patient = Patient::create(['full_name' => 'Pasien Uji', 'whatsapp' => '081234567890', 'birth_date' => '1990-05-17']);
++    $this->therapist = Therapist::create([
++        'full_name' => 'Terapis Uji', 'email' => 'terapis@uji.test',
++        'password' => Hash::make('sandi-terapis-uji'), 'status' => 'active',
++    ]);
++});
++
++// ---------------- Pasien ----------------
++
++it('mengizinkan login pasien yang benar (mekanisme WhatsApp + tanggal lahir tidak berubah)', function () {
++    patientLogin($this, '0812-3456-7890', '1990-05-17')->assertRedirect('/patient/dashboard');
++
++    expect(session('patient_id'))->toBe($this->patient->id);
++});
++
++it('memberi pesan error yang sama untuk nomor tidak terdaftar dan tanggal lahir salah', function () {
++    patientLogin($this, '089999999999', '1990-05-17');
++    $unknownNumber = sessionError('whatsapp');
++
++    patientLogin($this, '081234567890', '1991-01-01');
++    $wrongBirthDate = sessionError('whatsapp');
++
++    expect($unknownNumber)->not->toBe('')->and($wrongBirthDate)->toBe($unknownNumber);
++});
++
++it('meregenerasi sesi saat login pasien', function () {
++    $this->startSession();
++    $before = session()->getId();
++
++    patientLogin($this, '081234567890', '1990-05-17')->assertRedirect('/patient/dashboard');
++
++    expect(session()->getId())->not->toBe($before);
++});
++
++it('memblokir setelah 5 kegagalan untuk nomor yang sama dari IP yang sama, termasuk penulisan nomor berbeda', function () {
++    $variants = ['081234567890', '+62 812-3456-7890', '6281234567890', '0812 3456 7890', '081234567890'];
++
++    foreach ($variants as $variant) {
++        patientLogin($this, $variant, '1980-01-01')->assertSessionHasErrors('whatsapp');
++    }
++
++    // Tanggal lahir yang benar pun ditolak selama diblokir.
++    patientLogin($this, '081234567890', '1990-05-17')->assertSessionHasErrors('whatsapp');
++    expect(sessionError('whatsapp'))->toContain('Terlalu banyak percobaan');
++    $this->get('/patient/dashboard')->assertRedirect('/patient');
++});
++
++it('memblokir penebakan terdistribusi lintas IP terhadap satu nomor pasien', function () {
++    foreach (range(1, 20) as $i) {
++        patientLogin($this, '081234567890', '1980-01-01', "10.9.0.{$i}");
++    }
++
++    patientLogin($this, '081234567890', '1990-05-17', '10.9.1.1')->assertSessionHasErrors('whatsapp');
++    expect(sessionError('whatsapp'))->toContain('Terlalu banyak percobaan');
++});
++
++it('memblokir satu IP yang menebak banyak nomor berbeda', function () {
++    foreach (range(1, 20) as $i) {
++        patientLogin($this, '08111111'.str_pad((string) $i, 4, '0', STR_PAD_LEFT), '1980-01-01');
++    }
++
++    patientLogin($this, '081234567890', '1990-05-17')->assertSessionHasErrors('whatsapp');
++    expect(sessionError('whatsapp'))->toContain('Terlalu banyak percobaan');
++});
++
++it('menginvalidasi sesi pasien saat logout', function () {
++    patientLogin($this, '081234567890', '1990-05-17');
++    $this->get('/patient/dashboard')->assertOk();
++
++    $this->post('/patient/logout')->assertRedirect('/patient');
++
++    expect(session('patient_logged_in'))->toBeNull();
++    $this->get('/patient/dashboard')->assertRedirect('/patient');
++});
++
++// ---------------- Therapist ----------------
++
++it('mengizinkan login therapist yang benar', function () {
++    therapistLogin($this, 'terapis@uji.test', 'sandi-terapis-uji')->assertRedirect('/therapist/dashboard');
++
++    $this->get('/therapist/dashboard')->assertOk();
++});
++
++it('memberi pesan yang sama untuk email tidak terdaftar, password salah, dan akun nonaktif', function () {
++    therapistLogin($this, 'tidakada@uji.test', 'apa-saja');
++    $unknown = session('error');
++
++    therapistLogin($this, 'terapis@uji.test', 'salah');
++    $wrongPassword = session('error');
++
++    $this->therapist->update(['status' => 'inactive']);
++    therapistLogin($this, 'terapis@uji.test', 'sandi-terapis-uji', '10.2.0.2');
++    $inactive = session('error');
++
++    expect($unknown)->toBe('Email atau password therapist salah.')
++        ->and($wrongPassword)->toBe($unknown)
++        ->and($inactive)->toBe($unknown);
++});
++
++it('meregenerasi sesi saat login therapist', function () {
++    $this->startSession();
++    $before = session()->getId();
++
++    therapistLogin($this, 'terapis@uji.test', 'sandi-terapis-uji')->assertRedirect('/therapist/dashboard');
++
++    expect(session()->getId())->not->toBe($before);
++});
++
++it('memblokir therapist setelah 5 kegagalan dan membersihkan hitungan setelah berhasil', function () {
++    foreach (range(1, 5) as $i) {
++        therapistLogin($this, 'terapis@uji.test', 'salah');
++    }
++
++    therapistLogin($this, 'terapis@uji.test', 'sandi-terapis-uji');
++    expect(session('error'))->toContain('Terlalu banyak percobaan');
++    $this->get('/therapist/dashboard')->assertRedirect('/therapist/login');
++
++    // IP lain tidak terdampak oleh lapis identitas+IP, dan sukses membersihkan hitungan.
++    therapistLogin($this, 'terapis@uji.test', 'sandi-terapis-uji', '10.2.5.5')->assertRedirect('/therapist/dashboard');
++});
++
++it('menginvalidasi sesi therapist saat logout', function () {
++    therapistLogin($this, 'terapis@uji.test', 'sandi-terapis-uji');
++    $this->post('/therapist/logout')->assertRedirect('/therapist/login');
++
++    expect(session('therapist_logged_in'))->toBeNull();
++    $this->get('/therapist/dashboard')->assertRedirect('/therapist/login');
++});
+diff --git a/tests/Feature/Security/RouteProtectionTest.php b/tests/Feature/Security/RouteProtectionTest.php
+new file mode 100644
+index 0000000..4f2a9c6
+--- /dev/null
++++ b/tests/Feature/Security/RouteProtectionTest.php
+@@ -0,0 +1,107 @@
++<?php
++
++use Illuminate\Foundation\Testing\RefreshDatabase;
++use Illuminate\Support\Facades\Route;
++
++uses(RefreshDatabase::class);
++
++/**
++ * Daftar halaman area login yang memang publik (halaman login/logout).
++ */
++const PUBLIC_AREA_PATHS = [
++    'admin/login', 'admin/logout',
++    'therapist', 'therapist/login', 'therapist/logout',
++    'patient', 'patient/login', 'patient/logout',
++];
++
++function protectedAreaRoutes(): array
++{
++    $routes = [];
++
++    foreach (Route::getRoutes() as $route) {
++        $uri = $route->uri();
++        $area = explode('/', $uri)[0];
++
++        if (! in_array($area, ['admin', 'therapist', 'patient'], true) || in_array($uri, PUBLIC_AREA_PATHS, true)) {
++            continue;
++        }
++
++        foreach ($route->methods() as $method) {
++            if (in_array($method, ['GET', 'POST'], true)) {
++                $routes[] = [$method, '/'.preg_replace('/\{[^}]+\}/', '1', $uri), $area];
++            }
++        }
++    }
++
++    return $routes;
++}
++
++it('menemukan rute area login untuk diuji', function () {
++    expect(count(protectedAreaRoutes()))->toBeGreaterThan(100);
++});
++
++it('mengarahkan SEMUA rute admin/therapist/patient tanpa login ke halaman login', function () {
++    $loginPaths = ['admin' => '/admin/login', 'therapist' => '/therapist/login', 'patient' => '/patient'];
++    $failures = [];
++
++    foreach (protectedAreaRoutes() as [$method, $uri, $area]) {
++        $response = $this->call($method, $uri);
++
++        $location = parse_url((string) $response->headers->get('Location'), PHP_URL_PATH);
++
++        if ($response->getStatusCode() !== 302 || $location !== $loginPaths[$area]) {
++            $failures[] = "{$method} {$uri} => {$response->getStatusCode()}";
++        }
++    }
++
++    expect($failures)->toBe([]);
++});
++
++it('menutup laporan therapist-performance dari pengguna tanpa login dan tidak membocorkan isinya', function () {
++    $response = $this->get('/admin/reports/therapist-performance');
++
++    $response->assertRedirect('/admin/login');
++    expect($response->getContent())->not->toContain('Rp ')->not->toContain('patients');
++});
++
++it('tetap mengizinkan admin yang sudah login membuka laporan therapist-performance', function () {
++    $this->withSession(['admin_logged_in' => true])
++        ->get('/admin/reports/therapist-performance')
++        ->assertOk();
++});
++
++it('tidak membiarkan sesi pasien atau therapist membuka halaman admin', function () {
++    $this->withSession(['patient_logged_in' => true, 'patient_id' => 1])
++        ->get('/admin/dashboard')->assertRedirect('/admin/login');
++
++    $this->withSession(['therapist_logged_in' => true, 'therapist_id' => 1])
++        ->get('/admin/billings')->assertRedirect('/admin/login');
++});
++
++it('tidak membiarkan sesi admin menggantikan sesi pasien di portal pasien', function () {
++    $this->withSession(['admin_logged_in' => true])
++        ->get('/patient/dashboard')->assertRedirect('/patient');
++});
++
++it('membiarkan halaman publik tetap terbuka', function () {
++    foreach (['/admin/login', '/patient', '/therapist/login', '/booking', '/'] as $url) {
++        $this->get($url)->assertOk();
++    }
++});
++
++it('tidak lagi memakai env() di routes atau app (kompatibel config:cache)', function () {
++    $offenders = [];
++
++    foreach ([base_path('routes'), app_path()] as $dir) {
++        $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir));
++
++        foreach ($files as $file) {
++            if ($file->isFile() && $file->getExtension() === 'php'
++                && preg_match('/(?<![A-Za-z_>:])env\(/', file_get_contents($file->getPathname()))) {
++                $offenders[] = $file->getPathname();
++            }
++        }
++    }
++
++    expect($offenders)->toBe([]);
++});
+diff --git a/tests/Pest.php b/tests/Pest.php
+index 3834758..08a4064 100644
+--- a/tests/Pest.php
++++ b/tests/Pest.php
+@@ -1,5 +1,6 @@
+ <?php
+ 
++use Illuminate\Support\ViewErrorBag;
+ use Tests\TestCase;
+ 
+ /*
+@@ -47,3 +48,17 @@ function something()
+ {
+     // ..
+ }
++
++/**
++ * Pesan error validasi pertama untuk sebuah key dari sesi (format array maupun ViewErrorBag).
++ */
++function sessionError(string $key): ?string
++{
++    $errors = session('errors');
++
++    if ($errors instanceof ViewErrorBag) {
++        return $errors->first($key) ?: null;
++    }
++
++    return $errors['default']['messages'][$key][0] ?? null;
++}

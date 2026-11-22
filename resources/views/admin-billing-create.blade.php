@@ -20,18 +20,7 @@
             justify-content: flex-end;
             margin-bottom: 18px;
         }
-        .ghost-link {
-            display: inline-flex;
-            align-items: center;
-            text-decoration: none;
-            padding: 11px 14px;
-            border-radius: 12px;
-            background: #ffffff;
-            border: 1px solid #e6ebea;
-            color: #2c5b5a;
-            font-size: 13px;
-            font-weight: 700;
-        }
+
         .hero {
             background: #ffffff;
             border: 1px solid #ecefef;
@@ -159,17 +148,7 @@
             justify-content: flex-end;
             margin-top: 22px;
         }
-        .submit-btn {
-            border: none;
-            background: linear-gradient(135deg, #3d8a89 0%, #2f7c7a 100%);
-            color: #ffffff;
-            padding: 14px 22px;
-            border-radius: 14px;
-            font-size: 14px;
-            font-weight: 800;
-            cursor: pointer;
-            box-shadow: 0 10px 20px rgba(47,124,122,.16);
-        }
+
         @media (max-width: 960px) {
             .layout { display: block; }
             .main { padding: 16px; }
@@ -185,6 +164,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="/images/khayra-logo.png">
+    @include('partials.ui-assets')
 </head>
 <body>
 <div class="layout">
@@ -193,7 +173,7 @@
     <main class="main">
         <div class="container">
             <div class="top-actions">
-                <a href="/admin/billings" class="ghost-link">← Kembali ke Billing List</a>
+                <a href="/admin/billings" class="kx-btn kx-btn--outline ghost-link">← Kembali ke Billing List</a>
             </div>
 
             <section class="hero">
@@ -233,6 +213,8 @@
 
                 <form method="POST" action="/admin/billings">
                     @csrf
+                    {{-- Token anti kirim-ganda: klik ganda / tombol Back tidak membuat invoice atau pembayaran kedua. --}}
+                    <input type="hidden" name="checkout_token" value="{{ \Illuminate\Support\Str::uuid() }}">
 
                     <div class="form-grid">
                         <div class="field">
@@ -261,12 +243,17 @@
 
                         <div class="field">
                             <label>Invoice Date</label>
-                            <input type="date" name="invoice_date" value="{{ old('invoice_date', now()->format('Y-m-d')) }}" required>
+                            <input type="date" name="invoice_date" value="{{ old('invoice_date', \App\Support\ClinicTime::today()) }}" required>
                         </div>
 
                         <div class="field">
                             <label>Amount</label>
                             <input type="number" step="0.01" min="0" name="amount" value="{{ old('amount') }}" required>
+                        </div>
+
+                        <div class="field">
+                            <label>Paid Amount (wajib untuk status Partial)</label>
+                            <input type="number" step="0.01" min="0" name="paid_amount" value="{{ old('paid_amount') }}" placeholder="Isi bila status Partial">
                         </div>
 
                         <div class="field">
@@ -282,6 +269,7 @@
                             <label>Payment Method</label>
                             <select name="payment_method">
                                 <option value="">Pilih Metode Pembayaran</option>
+                                <option value="cash" {{ old('payment_method') == 'cash' ? 'selected' : '' }}>Cash</option>
                                 <option value="qr" {{ old('payment_method') == 'qr' ? 'selected' : '' }}>QR</option>
                                 <option value="debit" {{ old('payment_method') == 'debit' ? 'selected' : '' }}>Debit</option>
                                 <option value="credit" {{ old('payment_method') == 'credit' ? 'selected' : '' }}>Credit Card</option>
@@ -307,7 +295,7 @@
                     </div>
 
                     <div class="actions">
-                        <button type="submit" class="submit-btn">Simpan Billing</button>
+                        <button type="submit" class="kx-btn kx-btn--primary submit-btn">Simpan Billing</button>
                     </div>
                 </form>
             </section>
@@ -336,20 +324,7 @@
         button.id = 'khayraInstallAppButton';
         button.type = 'button';
         button.innerText = 'Install App';
-        button.style.position = 'fixed';
-        button.style.right = '18px';
-        button.style.bottom = '18px';
-        button.style.zIndex = '99999';
-        button.style.border = '0';
-        button.style.borderRadius = '999px';
-        button.style.padding = '12px 16px';
-        button.style.background = '#2f7c7a';
-        button.style.color = '#ffffff';
-        button.style.fontWeight = '900';
-        button.style.fontFamily = 'Arial, sans-serif';
-        button.style.fontSize = '13px';
-        button.style.boxShadow = '0 14px 30px rgba(47,124,122,.24)';
-        button.style.cursor = 'pointer';
+        button.className = 'kx-btn kx-btn--primary kx-install-btn';
 
         button.addEventListener('click', function () {
             if (!deferredInstallPrompt) {

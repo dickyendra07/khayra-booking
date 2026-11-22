@@ -15,9 +15,9 @@
         .page-title { margin: 0; font-size: 40px; line-height: 1.04; color: #22343a; font-weight: 900; letter-spacing: -.8px; }
         .page-subtitle { margin: 12px 0 0; max-width: 860px; color: #6b7280; font-size: 14px; line-height: 1.9; }
         .actions { display:flex; gap:10px; flex-wrap:wrap; }
-        .btn { min-height: 42px; border: 0; cursor: pointer; padding: 0 16px; border-radius: 14px; font-size: 13px; font-weight: 900; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; }
-        .btn-primary { background: linear-gradient(135deg, #3d8a89 0%, #2f7c7a 100%); color: #fff; }
-        .btn-soft { color: #2f7c7a; background: #ffffff; border: 1px solid #e6ebea; }
+
+
+
 
         .hero { background:#fff; border:1px solid #ecefef; border-radius:28px; padding:24px; box-shadow:0 14px 34px rgba(15,23,42,.05); margin-bottom:18px; }
         .hero-grid { display:grid; grid-template-columns:1.1fr .9fr; gap:18px; align-items:stretch; }
@@ -63,7 +63,7 @@
         .audit-pill { display:inline-flex; padding:7px 10px; border-radius:999px; font-size:11px; font-weight:900; background:#f8fafc; color:#475569; border:1px solid #e2e8f0; white-space:nowrap; }
         .audit-void { background:#fff1f2; color:#be123c; border-color:#ffe0e6; }
         .audit-invoice { background:#eef7f5; color:#2f7c7a; border-color:#d8ebe7; }
-        .mini-link { display:inline-flex; text-decoration:none; padding:8px 11px; border-radius:11px; font-size:11px; font-weight:900; background:#eef7f5; color:#2f7c7a; border:1px solid #d8ebe7; margin-top:6px; }
+        .mini-link { margin-top:6px; }
         .empty-state { padding: 18px; background: #fff7ed; color: #9a3412; border-radius: 16px; font-weight: 800; border: 1px solid #fed7aa; line-height: 1.7; }
 
         @media (max-width: 1180px) {
@@ -87,6 +87,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="/images/khayra-logo.png">
+    @include('partials.ui-assets')
 </head>
 <body>
 <div class="layout">
@@ -104,8 +105,8 @@
                 </div>
 
                 <div class="actions">
-                    <a href="/admin/inventory" class="btn btn-soft">← Inventory Control</a>
-                    <a href="/admin/inventory/product-usage" class="btn btn-primary">Product Usage</a>
+                    <a href="/admin/inventory" class="kx-btn kx-btn--outline btn btn-soft">← Inventory Control</a>
+                    <a href="/admin/inventory/product-usage" class="kx-btn kx-btn--primary btn btn-primary">Product Usage</a>
                 </div>
             </div>
 
@@ -195,7 +196,7 @@
                         <input type="date" name="date_to" value="{{ $dateTo }}">
                     </div>
 
-                    <button type="submit" class="btn btn-primary">Filter</button>
+                    <button type="submit" class="kx-btn kx-btn--primary btn btn-primary">Filter</button>
                 </form>
 
                 @if($movements->count())
@@ -255,12 +256,12 @@
                                         @if($movement->voided_billing_id)
                                             <span class="audit-pill audit-void">VOID RETURN</span>
                                             <div>
-                                                <a href="/admin/billings/{{ $movement->voided_billing_id }}" class="mini-link">Open Voided Invoice</a>
+                                                <a href="/admin/billings/{{ $movement->voided_billing_id }}" class="kx-btn kx-btn--secondary kx-btn--sm mini-link">Open Voided Invoice</a>
                                             </div>
                                         @elseif($movement->billing_id)
                                             <span class="audit-pill audit-invoice">CHECKOUT</span>
                                             <div>
-                                                <a href="/admin/billings/{{ $movement->billing_id }}" class="mini-link">Open Invoice</a>
+                                                <a href="/admin/billings/{{ $movement->billing_id }}" class="kx-btn kx-btn--secondary kx-btn--sm mini-link">Open Invoice</a>
                                             </div>
                                         @elseif(str_contains(strtoupper((string)$movement->reference), 'CSV'))
                                             <span class="audit-pill">CSV IMPORT</span>
@@ -306,20 +307,7 @@
         button.id = 'khayraInstallAppButton';
         button.type = 'button';
         button.innerText = 'Install App';
-        button.style.position = 'fixed';
-        button.style.right = '18px';
-        button.style.bottom = '18px';
-        button.style.zIndex = '99999';
-        button.style.border = '0';
-        button.style.borderRadius = '999px';
-        button.style.padding = '12px 16px';
-        button.style.background = '#2f7c7a';
-        button.style.color = '#ffffff';
-        button.style.fontWeight = '900';
-        button.style.fontFamily = 'Arial, sans-serif';
-        button.style.fontSize = '13px';
-        button.style.boxShadow = '0 14px 30px rgba(47,124,122,.24)';
-        button.style.cursor = 'pointer';
+        button.className = 'kx-btn kx-btn--primary kx-install-btn';
 
         button.addEventListener('click', function () {
             if (!deferredInstallPrompt) {

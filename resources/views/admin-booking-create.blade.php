@@ -21,13 +21,14 @@
         input, select, textarea { width: 100%; padding: 14px; border: 1px solid #dde5e3; border-radius: 14px; font-size: 14px; background: #fff; color: #111827; font-family: Arial, sans-serif; }
         textarea { min-height: 110px; line-height: 1.7; }
         input:focus, select:focus, textarea:focus { outline: none; border-color: #176f69; box-shadow: 0 0 0 4px rgba(23,111,105,.08); }
-        .btn { min-height: 44px; border: 0; cursor: pointer; padding: 0 18px; border-radius: 14px; font-size: 13px; font-weight: 900; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; font-family: Arial, sans-serif; white-space: nowrap; }
-        .btn-primary { background: linear-gradient(135deg, #3d8a89 0%, #2f7c7a 100%); color: #fff; box-shadow: 0 12px 24px rgba(47,124,122,.16); }
-        .btn-soft { color: #2f7c7a; background: #fff; border: 1px solid #d8ebe7; }
+
+
+
         .actions { display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
         .error-box { background: #fff1f2; border: 1px solid #ffe0e6; color: #be123c; padding: 14px 16px; border-radius: 16px; margin-bottom: 18px; font-size: 13px; line-height: 1.8; }
         @media (max-width: 900px) { .layout { display: block; } .main { padding: 16px; } .grid { grid-template-columns: 1fr; } .full { grid-column: auto; } .title { font-size: 32px; } }
     </style>
+    @include('partials.ui-assets')
 </head>
 <body>
 <div class="layout">
@@ -41,7 +42,7 @@
                     <h1 class="title">Buat Appointment</h1>
                     <p class="subtitle">Buat appointment pasien langsung dari admin dan hubungkan dengan fisioterapis.</p>
                 </div>
-                <a href="/admin/bookings/calendar?date={{ $prefill['booking_date'] }}" class="btn btn-soft">Kembali Calendar</a>
+                <a href="/admin/bookings/calendar?date={{ $prefill['booking_date'] }}" class="kx-btn kx-btn--outline btn btn-soft">Kembali Calendar</a>
             </div>
 
             <form method="POST" action="/admin/bookings/create" class="card">
@@ -151,8 +152,8 @@
                 </div>
 
                 <div class="actions">
-                    <a href="/admin/bookings/calendar?date={{ $prefill['booking_date'] }}" class="btn btn-soft">Batal</a>
-                    <button type="submit" class="btn btn-primary">Simpan Appointment</button>
+                    <a href="/admin/bookings/calendar?date={{ $prefill['booking_date'] }}" class="kx-btn kx-btn--outline btn btn-soft">Batal</a>
+                    <button type="submit" class="kx-btn kx-btn--primary btn btn-primary">Simpan Appointment</button>
                 </div>
             </form>
         </div>

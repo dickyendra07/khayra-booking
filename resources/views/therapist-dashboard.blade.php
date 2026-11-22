@@ -46,31 +46,11 @@
             flex-wrap: wrap;
         }
 
-        .ghost-link,
-        .logout-btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            text-decoration: none;
-            padding: 11px 14px;
-            border-radius: 13px;
-            font-size: 14px;
-            font-weight: 800;
-        }
 
-        .ghost-link {
-            background: white;
-            color: #0f766e;
-            border: 1px solid #d7ebe6;
-        }
 
-        .logout-btn {
-            border: none;
-            background: #111827;
-            color: white;
-            cursor: pointer;
-            font-family: Arial, sans-serif;
-        }
+
+
+
 
         .hero {
             display: grid;
@@ -361,36 +341,13 @@
             margin-top: 14px;
         }
 
-        .record-link,
-        .report-link,
-        .print-link {
-            display: inline-flex;
-            align-items: center;
-            text-decoration: none;
-            padding: 9px 12px;
-            border-radius: 12px;
-            font-size: 13px;
-            font-weight: 900;
-            white-space: nowrap;
-        }
 
-        .record-link {
-            background: #0f766e;
-            color: #ffffff;
-            border: 1px solid #0f766e;
-        }
 
-        .report-link {
-            background: #eff6ff;
-            color: #1d4ed8;
-            border: 1px solid #cfe0ff;
-        }
 
-        .print-link {
-            background: #ffffff;
-            color: #0f766e;
-            border: 1px solid #d7ebe6;
-        }
+
+
+
+
 
         .empty-state {
             background: #f8fafc;
@@ -527,6 +484,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="/images/khayra-logo.png">
+    @include('partials.ui-assets')
 </head>
 <body>
 @php
@@ -539,11 +497,11 @@
             <div class="brand">Khayra Physio Dashboard</div>
 
             <div class="topbar-actions">
-                <a href="/therapist/leaves/create" class="ghost-link">Request Leave</a>
-                <a href="/" class="ghost-link">Home</a>
+                <a href="/therapist/leaves/create" class="kx-btn kx-btn--outline ghost-link">Request Leave</a>
+                <a href="/" class="kx-btn kx-btn--outline ghost-link">Home</a>
                 <form method="POST" action="/therapist/logout" style="margin:0;">
                     @csrf
-                    <button type="submit" class="logout-btn">Logout</button>
+                    <button type="submit" class="kx-btn kx-btn--outline logout-btn">Logout</button>
                 </form>
             </div>
         </div>
@@ -653,7 +611,7 @@
                                     <span class="appointment-status">{{ str_replace('_', ' ', $booking->status ?: 'pending') }}</span>
 
                                     @if($booking->linked_visit && (int) $booking->therapist_id === (int) session('therapist_id'))
-                                        <a href="/therapist/visits/{{ $booking->linked_visit->id }}/medical-record" class="record-link">Medical Record</a>
+                                        <a href="/therapist/visits/{{ $booking->linked_visit->id }}/medical-record" class="kx-btn kx-btn--primary kx-btn--sm record-link">Medical Record</a>
                                     @elseif($booking->linked_visit)
                                         <span class="appointment-status">Visit Created</span>
                                     @else
@@ -698,9 +656,9 @@
                             </div>
 
                             <div class="action-stack">
-                                <a href="/therapist/visits/{{ $visit->id }}/medical-record" class="record-link">Medical Record</a>
-                                <a href="/therapist/visits/{{ $visit->id }}/report" class="report-link">Report</a>
-                                <a href="/therapist/visits/{{ $visit->id }}/report/print" target="_blank" class="print-link">Print</a>
+                                <a href="/therapist/visits/{{ $visit->id }}/medical-record" class="kx-btn kx-btn--primary kx-btn--sm record-link">Medical Record</a>
+                                <a href="/therapist/visits/{{ $visit->id }}/report" class="kx-btn kx-btn--secondary kx-btn--sm report-link">Report</a>
+                                <a href="/therapist/visits/{{ $visit->id }}/report/print" target="_blank" class="kx-btn kx-btn--outline kx-btn--sm print-link">Print</a>
                             </div>
                         </div>
                     @empty
@@ -746,8 +704,8 @@
                             </div>
 
                             <div class="action-stack">
-                                <a href="/therapist/visits/{{ $visit->id }}/medical-record" class="record-link">Continue Record</a>
-                                <a href="/therapist/visits/{{ $visit->id }}/report" class="report-link">Preview Report</a>
+                                <a href="/therapist/visits/{{ $visit->id }}/medical-record" class="kx-btn kx-btn--primary kx-btn--sm record-link">Continue Record</a>
+                                <a href="/therapist/visits/{{ $visit->id }}/report" class="kx-btn kx-btn--secondary kx-btn--sm report-link">Preview Report</a>
                             </div>
                         </div>
                     @empty
@@ -809,9 +767,9 @@
 
                                     <td>
                                         <div class="action-stack">
-                                            <a href="/therapist/visits/{{ $visit->id }}/medical-record" class="record-link">Medical Record</a>
-                                            <a href="/therapist/visits/{{ $visit->id }}/report" class="report-link">Report</a>
-                                            <a href="/therapist/visits/{{ $visit->id }}/report/print" target="_blank" class="print-link">Print</a>
+                                            <a href="/therapist/visits/{{ $visit->id }}/medical-record" class="kx-btn kx-btn--primary kx-btn--sm record-link">Medical Record</a>
+                                            <a href="/therapist/visits/{{ $visit->id }}/report" class="kx-btn kx-btn--secondary kx-btn--sm report-link">Report</a>
+                                            <a href="/therapist/visits/{{ $visit->id }}/report/print" target="_blank" class="kx-btn kx-btn--outline kx-btn--sm print-link">Print</a>
                                         </div>
                                     </td>
                                 </tr>
@@ -849,20 +807,7 @@
         button.id = 'khayraInstallAppButton';
         button.type = 'button';
         button.innerText = 'Install App';
-        button.style.position = 'fixed';
-        button.style.right = '18px';
-        button.style.bottom = '18px';
-        button.style.zIndex = '99999';
-        button.style.border = '0';
-        button.style.borderRadius = '999px';
-        button.style.padding = '12px 16px';
-        button.style.background = '#2f7c7a';
-        button.style.color = '#ffffff';
-        button.style.fontWeight = '900';
-        button.style.fontFamily = 'Arial, sans-serif';
-        button.style.fontSize = '13px';
-        button.style.boxShadow = '0 14px 30px rgba(47,124,122,.24)';
-        button.style.cursor = 'pointer';
+        button.className = 'kx-btn kx-btn--primary kx-install-btn';
 
         button.addEventListener('click', function () {
             if (!deferredInstallPrompt) {

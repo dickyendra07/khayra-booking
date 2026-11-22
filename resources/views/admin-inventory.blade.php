@@ -17,11 +17,11 @@
         .page-subtitle { margin: 12px 0 0; max-width: 860px; color: #6b7280; font-size: 14px; line-height: 1.9; }
 
         .top-actions { display: flex; gap: 10px; flex-wrap: wrap; }
-        .btn { min-height: 42px; border: 0; cursor: pointer; padding: 0 16px; border-radius: 14px; color: #fff; font-size: 13px; font-weight: 900; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; transition: transform .15s ease, opacity .15s ease; }
-        .btn:hover { transform: translateY(-1px); opacity: .96; }
-        .btn-primary { background: linear-gradient(135deg, #3d8a89 0%, #2f7c7a 100%); box-shadow: 0 10px 20px rgba(47,124,122,.16); }
-        .btn-dark { background: linear-gradient(135deg, #22343a 0%, #17232b 100%); }
-        .btn-soft { color: #2f7c7a; background: #ffffff; border: 1px solid #e6ebea; }
+
+
+
+
+
 
         .shell { background: #ffffff; border: 1px solid #ecefef; border-radius: 30px; box-shadow: 0 14px 34px rgba(15,23,42,.05); overflow: hidden; }
 
@@ -88,9 +88,9 @@
         .status-empty { background: #fff1f1; color: #b91c1c; }
         .status-inactive { background: #f1f5f9; color: #475569; }
         .action-stack { display: flex; flex-wrap: wrap; gap: 8px; }
-        .mini-link { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; padding: 9px 12px; border-radius: 12px; font-size: 12px; font-weight: 900; border: 1px solid transparent; }
-        .mini-detail { background: #eef7f5; color: #2f7c7a; border-color: #d8ebe7; }
-        .mini-edit { background: #eef2ff; color: #3457d5; border-color: #dde5ff; }
+
+
+
 
         .note-list { padding: 0 22px 22px; display: grid; gap: 14px; }
         .note-card { border: 1px solid #e8eeee; background: linear-gradient(180deg, #ffffff 0%, #fbfcfc 100%); border-radius: 20px; padding: 16px; }
@@ -424,43 +424,15 @@
             min-width: 250px;
         }
 
-        .inventory-action {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 34px;
-            padding: 0 11px;
-            border-radius: 11px;
-            text-decoration: none;
-            font-size: 11px;
-            font-weight: 900;
-            border: 1px solid transparent;
-            white-space: nowrap;
-        }
 
-        .action-detail {
-            background: #eef7f5;
-            color: #2f7c7a;
-            border-color: #d8ebe7;
-        }
 
-        .action-edit {
-            background: #eef2ff;
-            color: #3457d5;
-            border-color: #dde5ff;
-        }
 
-        .action-movement {
-            background: #f8fafc;
-            color: #475569;
-            border-color: #e2e8f0;
-        }
 
-        .action-opname {
-            background: #fff7ed;
-            color: #c2410c;
-            border-color: #fed7aa;
-        }
+
+
+
+
+
 
         .sticky-action {
             position: sticky;
@@ -484,6 +456,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="/images/khayra-logo.png">
+    @include('partials.ui-assets')
 </head>
 <body>
 <div class="layout">
@@ -501,13 +474,13 @@
                 </div>
 
                 <div class="top-actions">
-                    <a href="/admin/inventory/create" class="btn btn-primary">+ Tambah Barang</a>
-                    <a href="/admin/inventory/import" class="btn btn-soft">Import CSV</a>
-                    <a href="/admin/inventory/export/csv" class="btn btn-soft">Export CSV</a>
-                    <a href="/admin/inventory/monthly-summary" class="btn btn-soft">Monthly Summary</a>
-                    <a href="/admin/inventory/stock-opname" class="btn btn-primary">Stock Opname</a>
-                    <a href="/admin/inventory/product-usage" class="btn btn-soft">Product Usage</a>
-                    <a href="/admin/inventory/stock-movements" class="btn btn-dark">Stock Movements</a>
+                    <a href="/admin/inventory/create" class="kx-btn kx-btn--primary btn btn-primary">+ Tambah Barang</a>
+                    <a href="/admin/inventory/import" class="kx-btn kx-btn--outline btn btn-soft">Import CSV</a>
+                    <a href="/admin/inventory/export/csv" class="kx-btn kx-btn--outline btn btn-soft">Export CSV</a>
+                    <a href="/admin/inventory/monthly-summary" class="kx-btn kx-btn--outline btn btn-soft">Monthly Summary</a>
+                    <a href="/admin/inventory/stock-opname" class="kx-btn kx-btn--outline btn btn-primary">Stock Opname</a>
+                    <a href="/admin/inventory/product-usage" class="kx-btn kx-btn--outline btn btn-soft">Product Usage</a>
+                    <a href="/admin/inventory/stock-movements" class="kx-btn kx-btn--outline btn btn-dark">Stock Movements</a>
                 </div>
             </div>
 
@@ -708,7 +681,7 @@
                                 </select>
                             </div>
 
-                            <button type="submit" class="btn btn-primary">Filter</button>
+                            <button type="submit" class="kx-btn kx-btn--primary btn btn-primary">Filter</button>
                         </form>
 
                         @if($items->count())
@@ -724,12 +697,12 @@
                     </div>
 
                     <div class="import-actions">
-                        <a href="/admin/inventory/export" class="btn btn-primary">Export CSV</a>
+                        <a href="/admin/inventory/export" class="kx-btn kx-btn--primary btn btn-primary">Export CSV</a>
 
                         <form method="POST" action="/admin/inventory/import" enctype="multipart/form-data" style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
                             @csrf
                             <input type="file" name="inventory_file" accept=".csv,text/csv" class="file-input" required>
-                            <button type="submit" class="btn btn-dark">Import CSV</button>
+                            <button type="submit" class="kx-btn kx-btn--primary btn btn-dark">Import CSV</button>
                         </form>
                     </div>
                 </div>
@@ -753,7 +726,7 @@
                             <input type="text" name="bulk_value" placeholder="Isi untuk category / location">
                         </div>
 
-                        <button type="submit" class="btn btn-primary">Apply ke Barang Terpilih</button>
+                        <button type="submit" class="kx-btn kx-btn--primary btn btn-primary">Apply ke Barang Terpilih</button>
                     </div>
 
                     <div class="bulk-help">
@@ -856,10 +829,10 @@
 
                                     <td class="sticky-action">
                                         <div class="inventory-actions">
-                                            <a href="/admin/inventory/{{ $item->id }}" class="inventory-action action-detail">Detail</a>
-                                            <a href="/admin/inventory/{{ $item->id }}/edit" class="inventory-action action-edit">Edit</a>
-                                            <a href="/admin/inventory/{{ $item->id }}/movements" class="inventory-action action-movement">Movement</a>
-                                            <a href="/admin/inventory/stock-opname?item_id={{ $item->id }}" class="inventory-action action-opname">Opname</a>
+                                            <a href="/admin/inventory/{{ $item->id }}" class="kx-btn kx-btn--outline kx-btn--sm inventory-action action-detail">Detail</a>
+                                            <a href="/admin/inventory/{{ $item->id }}/edit" class="kx-btn kx-btn--outline kx-btn--sm inventory-action action-edit">Edit</a>
+                                            <a href="/admin/inventory/{{ $item->id }}/movements" class="kx-btn kx-btn--secondary kx-btn--sm inventory-action action-movement">Movement</a>
+                                            <a href="/admin/inventory/stock-opname?item_id={{ $item->id }}" class="kx-btn kx-btn--secondary kx-btn--sm inventory-action action-opname">Opname</a>
                                         </div>
                                     </td>
                                 </tr>
@@ -977,20 +950,7 @@
         button.id = 'khayraInstallAppButton';
         button.type = 'button';
         button.innerText = 'Install App';
-        button.style.position = 'fixed';
-        button.style.right = '18px';
-        button.style.bottom = '18px';
-        button.style.zIndex = '99999';
-        button.style.border = '0';
-        button.style.borderRadius = '999px';
-        button.style.padding = '12px 16px';
-        button.style.background = '#2f7c7a';
-        button.style.color = '#ffffff';
-        button.style.fontWeight = '900';
-        button.style.fontFamily = 'Arial, sans-serif';
-        button.style.fontSize = '13px';
-        button.style.boxShadow = '0 14px 30px rgba(47,124,122,.24)';
-        button.style.cursor = 'pointer';
+        button.className = 'kx-btn kx-btn--primary kx-install-btn';
 
         button.addEventListener('click', function () {
             if (!deferredInstallPrompt) {
