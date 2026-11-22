@@ -19,7 +19,7 @@ uses(RefreshDatabase::class);
  * Data sintetis yang meniru pola invoice produksi #2, #3, #7. Semua test juga membuktikan data TIDAK diubah.
  */
 beforeEach(function () {
-    $this->withSession(adminSession(['admin_email' => 'admin@uji.test']));
+    $this->withSession(ownerSession(['admin_email' => 'admin@uji.test']));
     $this->patient = Patient::create(['full_name' => 'Pasien Legacy Uji', 'whatsapp' => '081200000001']);
 });
 
@@ -126,7 +126,7 @@ it('detail pasien: total Paid memakai fallback yang sama dan Outstanding tidak m
 it('laporan revenue CSV mengekspor paid = amount dan remaining = 0 untuk invoice paid/paid_amount 0', function () {
     paidZero();
 
-    $csv = $this->get('/admin/reports/revenue?export=csv&date_from='.ClinicTime::monthKey().'-01&date_to='.ClinicTime::now()->endOfMonth()->toDateString())->streamedContent();
+    $csv = $this->get('/owner/reports/revenue?export=csv&date_from='.ClinicTime::monthKey().'-01&date_to='.ClinicTime::now()->endOfMonth()->toDateString())->streamedContent();
     $rows = array_map('str_getcsv', array_filter(explode("\n", $csv)));
     $header = array_shift($rows);
     $row = array_combine($header, $rows[0]);
@@ -138,7 +138,7 @@ it('kartu Net Revenue dashboard = omzet invoice non-void (diskon tidak dikurangk
     // amount sudah NET diskon: subtotal 600.000 - diskon 100.000 = 500.000, dibayar penuh.
     paidZero(['subtotal_amount' => 600000, 'discount_amount' => 100000, 'amount' => 500000, 'paid_amount' => 500000, 'remaining_amount' => 0]);
 
-    $this->get('/admin/dashboard')->assertOk()
+    $this->get('/owner/erm-dashboard')->assertOk()
         ->assertViewHas('monthlyNetRevenue', fn ($value) => (float) $value === 500000.0)
         ->assertViewHas('monthlyPaidAmount', fn ($value) => (float) $value === 500000.0);
 });
@@ -148,8 +148,8 @@ it('menampilkan halaman dan laporan tidak pernah menulis audit/koreksi pada invo
     $auditBefore = BillingAuditLog::count();
     $before = snapshotOf($billing);
 
-    $this->get('/admin/owner-finance')->assertOk();
-    $this->get('/admin/owner-dashboard')->assertOk();
+    $this->get('/owner/finance')->assertOk();
+    $this->get('/owner/dashboard')->assertOk();
     $this->get("/admin/billings/{$billing->id}")->assertOk();
     Artisan::call('billing:audit-integrity', ['--strict' => true]);
 

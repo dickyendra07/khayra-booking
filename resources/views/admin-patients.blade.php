@@ -478,7 +478,9 @@
                 </div>
 
                 <div class="top-actions">
-                    <a href="/admin/dashboard" class="kx-btn kx-btn--outline ghost-link">Dashboard</a>
+                    @if(\App\Support\PortalAuth::isOwner())
+                        <a href="/owner/erm-dashboard" class="kx-btn kx-btn--outline ghost-link">Dashboard</a>
+                    @endif
                     <a href="/admin/patients/create" class="kx-btn kx-btn--primary ghost-link">+ Create Patient</a>
                 </div>
             </div>

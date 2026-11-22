@@ -22,21 +22,21 @@ function adminLogin($test, string $email = 'admin@uji.test', string $password = 
 }
 
 it('mengizinkan login admin dengan kredensial dari config', function () {
-    adminLogin($this)->assertRedirect('/admin/dashboard');
+    adminLogin($this)->assertRedirect('/admin/bookings');
 
-    $this->get('/admin/dashboard')->assertOk();
+    $this->get('/admin/bookings')->assertOk();
 });
 
 it('mendukung ADMIN_PASSWORD_HASH (bcrypt)', function () {
     config(['khayra_auth.admin.password' => null, 'khayra_auth.admin.password_hash' => Hash::make('sandi-hash-uji')]);
 
-    adminLogin($this, password: 'sandi-hash-uji')->assertRedirect('/admin/dashboard');
+    adminLogin($this, password: 'sandi-hash-uji')->assertRedirect('/admin/bookings');
 });
 
 it('menolak password yang salah dengan pesan generik', function () {
-    adminLogin($this, password: 'salah')->assertSessionHasErrors(['email' => 'Email atau password admin salah.']);
+    adminLogin($this, password: 'salah')->assertSessionHasErrors(['email' => 'Email atau password salah.']);
 
-    $this->get('/admin/dashboard')->assertRedirect('/admin/login');
+    $this->get('/admin/bookings')->assertRedirect('/admin/login');
 });
 
 it('menolak login jika kredensial belum dikonfigurasi (tanpa fallback default)', function () {
@@ -48,14 +48,14 @@ it('menolak login jika kredensial belum dikonfigurasi (tanpa fallback default)',
     adminLogin($this, 'admin@khayraphysio.com', 'password')->assertSessionHasErrors('email');
     adminLogin($this, '', '')->assertSessionHasErrors();
 
-    $this->get('/admin/dashboard')->assertRedirect('/admin/login');
+    $this->get('/admin/bookings')->assertRedirect('/admin/login');
 });
 
 it('meregenerasi sesi setelah login berhasil', function () {
     $this->startSession();
     $before = session()->getId();
 
-    adminLogin($this)->assertRedirect('/admin/dashboard');
+    adminLogin($this)->assertRedirect('/admin/bookings');
 
     expect(session()->getId())->not->toBe($before);
 });
@@ -68,7 +68,7 @@ it('memblokir setelah 5 kegagalan dari kombinasi email dan IP yang sama', functi
     // Percobaan ke-6 diblokir, walaupun password benar.
     adminLogin($this)->assertSessionHasErrors('email');
     expect(sessionError('email'))->toContain('Terlalu banyak percobaan');
-    $this->get('/admin/dashboard')->assertRedirect('/admin/login');
+    $this->get('/admin/bookings')->assertRedirect('/admin/login');
 });
 
 it('tidak memblokir IP lain untuk kombinasi yang sama', function () {
@@ -76,7 +76,7 @@ it('tidak memblokir IP lain untuk kombinasi yang sama', function () {
         adminLogin($this, password: 'salah');
     }
 
-    adminLogin($this, ip: '10.0.0.99')->assertRedirect('/admin/dashboard');
+    adminLogin($this, ip: '10.0.0.99')->assertRedirect('/admin/bookings');
 });
 
 it('memblokir satu IP yang mencoba banyak identitas berbeda', function () {
@@ -93,7 +93,7 @@ it('membersihkan hitungan kegagalan setelah login berhasil', function () {
         adminLogin($this, password: 'salah');
     }
 
-    adminLogin($this)->assertRedirect('/admin/dashboard');
+    adminLogin($this)->assertRedirect('/admin/bookings');
     $this->post('/admin/logout');
 
     foreach (range(1, 4) as $i) {
@@ -104,12 +104,12 @@ it('membersihkan hitungan kegagalan setelah login berhasil', function () {
 
 it('menginvalidasi sesi saat logout', function () {
     adminLogin($this);
-    $this->get('/admin/dashboard')->assertOk();
+    $this->get('/admin/bookings')->assertOk();
 
     $this->post('/admin/logout')->assertRedirect('/admin/login');
 
     expect(session('admin_logged_in'))->toBeNull();
-    $this->get('/admin/dashboard')->assertRedirect('/admin/login');
+    $this->get('/admin/bookings')->assertRedirect('/admin/login');
 });
 
 it('tetap memakai perlindungan CSRF pada form login di aplikasi (token tersedia di halaman)', function () {

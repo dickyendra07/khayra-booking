@@ -25,6 +25,17 @@ return [
     ],
 
     /*
+    | Akun Owner (pemilik klinik). OPSIONAL: jika OWNER_EMAIL dan OWNER_PASSWORD_HASH /
+    | OWNER_PASSWORD tidak diisi, login owner dinonaktifkan. Owner satu-satunya yang boleh
+    | membuka Dashboard ERM, Owner Dashboard, Owner Finance / Cashflow, dan Reporting Center.
+    */
+    'owner' => [
+        'email' => env('OWNER_EMAIL'),
+        'password_hash' => env('OWNER_PASSWORD_HASH'),
+        'password' => env('OWNER_PASSWORD'),
+    ],
+
+    /*
     | Kebijakan pembatasan percobaan login (gagal) per area.
     |
     | pair     : kombinasi identitas + IP

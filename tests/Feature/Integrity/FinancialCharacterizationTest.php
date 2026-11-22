@@ -16,7 +16,7 @@ uses(RefreshDatabase::class);
  * memakai buku pembayaran dan perilakunya diuji di PaymentLedgerTest.
  */
 beforeEach(function () {
-    $this->withSession(adminSession(['admin_email' => 'admin@uji.test']));
+    $this->withSession(ownerSession(['admin_email' => 'admin@uji.test']));
     $this->patient = Patient::create(['full_name' => 'Pasien Karakter', 'whatsapp' => '081234567890']);
 });
 
@@ -31,7 +31,7 @@ function legacyInvoice(array $attrs = []): Billing
 
 function financeOf($test, ?string $month = null)
 {
-    return $test->get('/admin/owner-finance?month='.($month ?? ClinicTime::monthKey()))->viewData('summary');
+    return $test->get('/owner/finance?month='.($month ?? ClinicTime::monthKey()))->viewData('summary');
 }
 
 it('invoice lama memakai model legacy secara default', function () {
@@ -71,7 +71,7 @@ it('invoice lama berstatus paid dengan paid_amount 0 dihitung sama di dashboard 
 
     expect((float) financeOf($this)['billing_income'])->toBe(300000.0);
 
-    $this->get('/admin/dashboard')->assertOk()
+    $this->get('/owner/erm-dashboard')->assertOk()
         ->assertViewHas('monthlyPaidAmount', fn ($value) => (float) $value === 300000.0);
 });
 

@@ -7,7 +7,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 uses(RefreshDatabase::class);
 
 it('keeps existing billing, patient and finance pages working with legacy and new invoices', function () {
-    $this->withSession(adminSession());
+    $this->withSession(ownerSession());
 
     $patient = Patient::create(['full_name' => 'Smoke', 'whatsapp' => '08123456789', 'religion' => 'islam']);
 
@@ -22,7 +22,7 @@ it('keeps existing billing, patient and finance pages working with legacy and ne
         "/admin/billings/{$legacy->id}/edit", "/admin/billings/{$manual->id}", "/admin/billings/{$manual->id}/print",
         '/admin/billings/create', '/admin/cashier', '/admin/patients', "/admin/patients/{$patient->id}",
         "/admin/patients/{$patient->id}/edit", '/admin/patients/create',
-        '/admin/owner-finance', '/admin/owner-finance/print', '/admin/reports/revenue', '/admin/reports/monthly-clinic',
+        '/owner/finance', '/owner/finance/print', '/owner/reports/revenue', '/owner/reports/monthly-clinic',
     ] as $url) {
         $this->get($url)->assertOk();
     }

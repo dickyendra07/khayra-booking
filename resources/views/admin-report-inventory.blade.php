@@ -98,22 +98,22 @@
                     <p class="subtitle">Laporan stok, stock value, potential sales, stok masuk/keluar, adjustment, low stock, empty stock, dan product usage.</p>
                 </div>
                 <div class="actions">
-                    <a href="/admin/reports/inventory?month={{ $month }}&export=csv" class="kx-btn kx-btn--primary btn btn-primary">Export CSV</a>
+                    <a href="/owner/reports/inventory?month={{ $month }}&export=csv" class="kx-btn kx-btn--primary btn btn-primary">Export CSV</a>
                     <a href="/admin/inventory" class="kx-btn kx-btn--outline btn btn-soft">Inventory Control</a>
                 </div>
             </div>
 
             
 <div class="nav-grid">
-    <a class="nav-card {{ ($activeReport ?? '') === 'monthly' ? 'active' : '' }}" href="/admin/reports/monthly-clinic">Monthly Clinic</a>
-    <a class="nav-card {{ ($activeReport ?? '') === 'revenue' ? 'active' : '' }}" href="/admin/reports/revenue">Revenue</a>
-    <a class="nav-card {{ ($activeReport ?? '') === 'inventory' ? 'active' : '' }}" href="/admin/reports/inventory">Inventory</a>
-    <a class="nav-card {{ ($activeReport ?? '') === 'therapist' ? 'active' : '' }}" href="/admin/reports/therapist-performance">Therapist Performance</a>
+    <a class="nav-card {{ ($activeReport ?? '') === 'monthly' ? 'active' : '' }}" href="/owner/reports/monthly-clinic">Monthly Clinic</a>
+    <a class="nav-card {{ ($activeReport ?? '') === 'revenue' ? 'active' : '' }}" href="/owner/reports/revenue">Revenue</a>
+    <a class="nav-card {{ ($activeReport ?? '') === 'inventory' ? 'active' : '' }}" href="/owner/reports/inventory">Inventory</a>
+    <a class="nav-card {{ ($activeReport ?? '') === 'therapist' ? 'active' : '' }}" href="/owner/reports/therapist-performance">Therapist Performance</a>
 </div>
 
 
             <section class="filter-card">
-                <form method="GET" action="/admin/reports/inventory" class="filter-form">
+                <form method="GET" action="/owner/reports/inventory" class="filter-form">
                     <div class="field">
                         <label>Month</label>
                         <input type="month" name="month" value="{{ $month }}">

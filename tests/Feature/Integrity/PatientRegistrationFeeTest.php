@@ -32,7 +32,7 @@ uses(RefreshDatabase::class);
 */
 
 beforeEach(function () {
-    $this->withSession(adminSession(['admin_email' => 'admin@uji.test']));
+    $this->withSession(ownerSession(['admin_email' => 'admin@uji.test']));
     $this->therapist = Therapist::create(['full_name' => 'Terapis', 'email' => 't@uji.test', 'password' => Hash::make('x-uji'), 'status' => 'active']);
 });
 
@@ -282,7 +282,7 @@ it('tagihan administrasi tetap unpaid sampai dibayar lewat alur pembayaran exist
     $this->post("/admin/billings/{$fee->id}/payments", ['tendered_amount' => 50000, 'method' => 'qr'] + idem())->assertSessionHas('success');
 
     $fee->refresh();
-    $summary = $this->get('/admin/owner-finance?month='.ClinicTime::monthKey())->viewData('summary');
+    $summary = $this->get('/owner/finance?month='.ClinicTime::monthKey())->viewData('summary');
 
     expect($fee->payment_status)->toBe('paid')->and((float) $fee->change_amount)->toBe(25000.0)
         ->and(BillingPayment::where('billing_id', $fee->id)->count())->toBe(2)

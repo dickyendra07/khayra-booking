@@ -14,9 +14,13 @@ beforeEach(function () {
         'khayra_auth.admin.email' => 'admin@uji.test',
         'khayra_auth.admin.password' => 'sandi-uji-lokal',
         'khayra_auth.admin.password_hash' => null,
+        // Buka-kembali buku meminta password ulang untuk akun yang sedang login (owner).
+        'khayra_auth.owner.email' => 'admin@uji.test',
+        'khayra_auth.owner.password' => 'sandi-uji-lokal',
+        'khayra_auth.owner.password_hash' => null,
     ]);
 
-    $this->withSession(adminSession(['admin_email' => 'admin@uji.test']));
+    $this->withSession(ownerSession(['admin_email' => 'admin@uji.test']));
     $this->patient = Patient::create(['full_name' => 'Pasien Closing', 'whatsapp' => '081234567890']);
     $this->month = now()->format('Y-m');
 
@@ -29,7 +33,7 @@ function reopenPayload(string $month, array $overrides = []): array
 }
 
 it('menutup buku sekali dan mencatat audit period_closed', function () {
-    $this->post('/admin/owner-finance/close', ['month' => $this->month, 'notes' => 'final'])->assertRedirect();
+    $this->post('/owner/finance/close', ['month' => $this->month, 'notes' => 'final'])->assertRedirect();
 
     $closing = FinanceMonthlyClosing::firstOrFail();
 
@@ -40,37 +44,37 @@ it('menutup buku sekali dan mencatat audit period_closed', function () {
 });
 
 it('menolak penutupan ulang yang menimpa closing dan snapshot tidak berubah', function () {
-    $this->post('/admin/owner-finance/close', ['month' => $this->month, 'notes' => 'asli']);
+    $this->post('/owner/finance/close', ['month' => $this->month, 'notes' => 'asli']);
     $original = FinanceMonthlyClosing::firstOrFail()->only(['billing_income', 'total_income', 'notes', 'closed_at', 'snapshot']);
 
     Billing::create(['patient_id' => $this->patient->id, 'invoice_number' => 'INV-C-2', 'invoice_date' => now()->toDateString(), 'amount' => 999999, 'paid_amount' => 999999, 'payment_status' => 'paid']);
 
-    $this->post('/admin/owner-finance/close', ['month' => $this->month, 'notes' => 'menimpa'])->assertSessionHas('error');
+    $this->post('/owner/finance/close', ['month' => $this->month, 'notes' => 'menimpa'])->assertSessionHas('error');
 
     expect(FinanceMonthlyClosing::count())->toBe(1)
         ->and(FinanceMonthlyClosing::firstOrFail()->only(['billing_income', 'total_income', 'notes', 'closed_at', 'snapshot']))->toEqual($original);
 });
 
 it('menolak transaksi finance manual pada bulan yang sudah ditutup (tambah dan hapus)', function () {
-    $this->post('/admin/owner-finance/close', ['month' => $this->month]);
+    $this->post('/owner/finance/close', ['month' => $this->month]);
     $transaction = FinanceTransaction::create(['transaction_date' => now()->toDateString(), 'type' => 'expense', 'source' => 'operational', 'title' => 'Uji', 'amount' => 1000]);
 
-    $this->post('/admin/owner-finance/transactions', ['transaction_date' => now()->toDateString(), 'type' => 'income', 'title' => 'Baru', 'amount' => 5000])->assertSessionHas('error');
-    $this->post("/admin/owner-finance/transactions/{$transaction->id}/delete")->assertSessionHas('error');
+    $this->post('/owner/finance/transactions', ['transaction_date' => now()->toDateString(), 'type' => 'income', 'title' => 'Baru', 'amount' => 5000])->assertSessionHas('error');
+    $this->post("/owner/finance/transactions/{$transaction->id}/delete")->assertSessionHas('error');
 
     expect(FinanceTransaction::count())->toBe(1);
 });
 
 it('membuka kembali buku hanya dengan alasan, konfirmasi bulan, dan password yang benar', function () {
-    $this->post('/admin/owner-finance/close', ['month' => $this->month]);
+    $this->post('/owner/finance/close', ['month' => $this->month]);
 
-    $this->post('/admin/owner-finance/reopen', reopenPayload($this->month, ['reason' => 'pendek']))->assertSessionHasErrors('reason');
-    $this->post('/admin/owner-finance/reopen', reopenPayload($this->month, ['confirm_month' => '1999-01']))->assertSessionHas('error');
-    $this->post('/admin/owner-finance/reopen', reopenPayload($this->month, ['password' => 'salah']))->assertSessionHas('error');
+    $this->post('/owner/finance/reopen', reopenPayload($this->month, ['reason' => 'pendek']))->assertSessionHasErrors('reason');
+    $this->post('/owner/finance/reopen', reopenPayload($this->month, ['confirm_month' => '1999-01']))->assertSessionHas('error');
+    $this->post('/owner/finance/reopen', reopenPayload($this->month, ['password' => 'salah']))->assertSessionHas('error');
 
     expect(FinanceMonthlyClosing::isClosed($this->month))->toBeTrue();
 
-    $this->post('/admin/owner-finance/reopen', reopenPayload($this->month))->assertSessionHas('success');
+    $this->post('/owner/finance/reopen', reopenPayload($this->month))->assertSessionHas('success');
 
     $closing = FinanceMonthlyClosing::firstOrFail();
     $log = BillingAuditLog::where('action', 'period_reopened')->firstOrFail();
@@ -85,31 +89,31 @@ it('membuka kembali buku hanya dengan alasan, konfirmasi bulan, dan password yan
 });
 
 it('membatasi percobaan password salah pada prosedur buka kembali', function () {
-    $this->post('/admin/owner-finance/close', ['month' => $this->month]);
+    $this->post('/owner/finance/close', ['month' => $this->month]);
 
     foreach (range(1, 5) as $i) {
-        $this->post('/admin/owner-finance/reopen', reopenPayload($this->month, ['password' => 'salah']))->assertSessionHas('error');
+        $this->post('/owner/finance/reopen', reopenPayload($this->month, ['password' => 'salah']))->assertSessionHas('error');
     }
 
     // Percobaan berikutnya diblokir walaupun password benar.
-    $this->post('/admin/owner-finance/reopen', reopenPayload($this->month));
+    $this->post('/owner/finance/reopen', reopenPayload($this->month));
 
     expect(session('error'))->toContain('Terlalu banyak percobaan')->and(FinanceMonthlyClosing::isClosed($this->month))->toBeTrue();
 });
 
 it('menolak buka kembali untuk bulan yang tidak tertutup', function () {
-    $this->post('/admin/owner-finance/reopen', reopenPayload($this->month))->assertSessionHas('error');
+    $this->post('/owner/finance/reopen', reopenPayload($this->month))->assertSessionHas('error');
 
     expect(BillingAuditLog::where('action', 'period_reopened')->count())->toBe(0);
 });
 
 it('mengizinkan tutup ulang setelah dibuka dan menyimpan closing sebelumnya di audit', function () {
-    $this->post('/admin/owner-finance/close', ['month' => $this->month, 'notes' => 'pertama']);
-    $this->post('/admin/owner-finance/reopen', reopenPayload($this->month));
+    $this->post('/owner/finance/close', ['month' => $this->month, 'notes' => 'pertama']);
+    $this->post('/owner/finance/reopen', reopenPayload($this->month));
 
     Billing::create(['patient_id' => $this->patient->id, 'invoice_number' => 'INV-C-3', 'invoice_date' => now()->toDateString(), 'amount' => 100000, 'paid_amount' => 100000, 'payment_status' => 'paid']);
 
-    $this->post('/admin/owner-finance/close', ['month' => $this->month, 'notes' => 'kedua'])->assertSessionHas('success');
+    $this->post('/owner/finance/close', ['month' => $this->month, 'notes' => 'kedua'])->assertSessionHas('success');
 
     $closing = FinanceMonthlyClosing::firstOrFail();
     $closeLogs = BillingAuditLog::where('action', 'period_closed')->orderBy('id')->get();
@@ -128,17 +132,17 @@ it('owner finance tetap konsisten: invoice void dikeluarkan dan pengganti dihitu
 
     $this->post('/admin/billings', ['patient_id' => $this->patient->id, 'invoice_date' => now()->toDateString(), 'amount' => 350000, 'payment_status' => 'paid']);
 
-    $this->get('/admin/owner-finance?month='.$this->month)->assertOk()
+    $this->get('/owner/finance?month='.$this->month)->assertOk()
         ->assertViewHas('summary', fn ($s) => (float) $s['billing_income'] === 350000.0 && $s['transaction_count'] === 1);
 });
 
 it('menampilkan peringatan bila snapshot closing berbeda dari data billing saat ini (tanpa mengubah snapshot)', function () {
-    $this->post('/admin/owner-finance/close', ['month' => $this->month]);
+    $this->post('/owner/finance/close', ['month' => $this->month]);
 
     // Simulasi data lama yang berubah sebelum proteksi ada (langsung di database).
     Billing::query()->update(['paid_amount' => 100000, 'amount' => 100000]);
 
-    $this->get('/admin/owner-finance?month='.$this->month)->assertOk()
+    $this->get('/owner/finance?month='.$this->month)->assertOk()
         ->assertSee('data berbeda dari snapshot closing')
         ->assertViewHas('closingDrift');
 
@@ -146,8 +150,8 @@ it('menampilkan peringatan bila snapshot closing berbeda dari data billing saat 
 });
 
 it('menampilkan form buka kembali pada bulan tertutup', function () {
-    $this->post('/admin/owner-finance/close', ['month' => $this->month]);
+    $this->post('/owner/finance/close', ['month' => $this->month]);
 
-    $this->get('/admin/owner-finance?month='.$this->month)->assertOk()
+    $this->get('/owner/finance?month='.$this->month)->assertOk()
         ->assertSee('Buka Kembali Buku')->assertSee('name="confirm_month"', false);
 });

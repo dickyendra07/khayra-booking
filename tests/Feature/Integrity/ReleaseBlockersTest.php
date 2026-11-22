@@ -38,7 +38,7 @@ uses(RefreshDatabase::class);
 */
 
 beforeEach(function () {
-    $this->withSession(adminSession(['admin_email' => 'admin@uji.test']));
+    $this->withSession(ownerSession(['admin_email' => 'admin@uji.test']));
     $this->patient = Patient::create(['full_name' => 'Pasien Blocker', 'whatsapp' => '081234567890']);
 });
 
@@ -201,14 +201,14 @@ it('BLOCKER 1 (D): invoice manual dan transaksi finance manual pada periode tert
     expect(Billing::count())->toBe(0)->and(BillingPayment::count())->toBe(0);
 
     // Periode sudah tertutup: transaksi manual create dan delete ditolak.
-    $this->post('/admin/owner-finance/transactions', ['transaction_date' => ClinicTime::today(), 'type' => 'income', 'title' => 'Modal', 'amount' => 1000000])
+    $this->post('/owner/finance/transactions', ['transaction_date' => ClinicTime::today(), 'type' => 'income', 'title' => 'Modal', 'amount' => 1000000])
         ->assertSessionHas('error', fn ($m) => str_contains($m, 'tutup buku'));
     expect(FinanceTransaction::count())->toBe(0);
 
     FinanceMonthlyClosing::query()->delete();
     $transaction = FinanceTransaction::create(['transaction_date' => ClinicTime::today(), 'type' => 'income', 'title' => 'Modal', 'amount' => 1000, 'source' => 'other_income']);
     rbClosing(ClinicTime::monthKey());
-    $this->post("/admin/owner-finance/transactions/{$transaction->id}/delete")->assertSessionHas('error', fn ($m) => str_contains($m, 'tutup buku'));
+    $this->post("/owner/finance/transactions/{$transaction->id}/delete")->assertSessionHas('error', fn ($m) => str_contains($m, 'tutup buku'));
     expect(FinanceTransaction::count())->toBe(1);
 });
 

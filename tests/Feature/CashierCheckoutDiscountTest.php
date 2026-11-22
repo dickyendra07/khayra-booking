@@ -10,7 +10,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    $this->withSession(adminSession());
+    $this->withSession(ownerSession());
 
     $this->patient = Patient::create(['full_name' => 'Pasien Uji', 'whatsapp' => '081234567890']);
 
@@ -161,7 +161,7 @@ it('records the same figures the finance ledger reads', function () {
         ['description' => '+ Uji Add-on', 'price' => 100000, 'service' => $this->addOn],
     ], ['promo_id' => $this->promo->id, 'paid_amount' => 550000]));
 
-    $this->get('/admin/owner-finance?month='.now()->format('Y-m'))
+    $this->get('/owner/finance?month='.now()->format('Y-m'))
         ->assertOk()
         ->assertViewHas('summary', fn ($summary) => (float) $summary['billing_income'] === 550000.0
             && (float) $summary['total_income'] === 550000.0

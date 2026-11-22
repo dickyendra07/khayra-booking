@@ -28,7 +28,7 @@ it('hash bcrypt yang terisi mengalahkan ADMIN_PASSWORD teks biasa (tidak ada byp
     hardenCreds(['khayra_auth.admin.password' => 'sisa-plaintext-lama']);
 
     hardenLogin($this, password: 'sisa-plaintext-lama')->assertSessionHasErrors('email');
-    hardenLogin($this)->assertRedirect('/admin/dashboard');
+    hardenLogin($this)->assertRedirect('/admin/bookings');
 });
 
 it('hash yang rusak/bukan bcrypt gagal tertutup dan TIDAK jatuh ke password plaintext', function () {
@@ -38,7 +38,7 @@ it('hash yang rusak/bukan bcrypt gagal tertutup dan TIDAK jatuh ke password plai
 
     hardenLogin($this, password: 'sisa-plaintext-lama')->assertSessionHasErrors('email');
     hardenLogin($this, password: 'bukan-hash-bcrypt')->assertSessionHasErrors('email');
-    $this->get('/admin/dashboard')->assertRedirect('/admin/login');
+    $this->get('/admin/bookings')->assertRedirect('/admin/login');
 });
 
 it('hash argon (bukan bcrypt) ditolak tanpa melempar error ke pengguna', function () {
@@ -50,7 +50,7 @@ it('hash argon (bukan bcrypt) ditolak tanpa melempar error ke pengguna', functio
 it('email dicocokkan tanpa membedakan huruf besar/kecil dan spasi, tetapi password tetap peka huruf', function () {
     hardenCreds();
 
-    hardenLogin($this, '  OWNER@Uji.Test ')->assertRedirect('/admin/dashboard');
+    hardenLogin($this, '  OWNER@Uji.Test ')->assertRedirect('/admin/bookings');
     $this->post('/admin/logout');
 
     hardenLogin($this, password: 'SANDI-UJI-PANJANG-1')->assertSessionHasErrors('email');
@@ -76,17 +76,17 @@ it('menyimpan email kanonik dari config sebagai aktor audit, bukan teks yang dik
 
 it('rotasi kredensial membatalkan sesi admin yang sudah login', function () {
     hardenCreds();
-    hardenLogin($this)->assertRedirect('/admin/dashboard');
-    $this->get('/admin/dashboard')->assertOk();
+    hardenLogin($this)->assertRedirect('/admin/bookings');
+    $this->get('/admin/bookings')->assertOk();
 
     hardenCreds(['khayra_auth.admin.password_hash' => Hash::make('sandi-baru-yang-panjang')]);
 
-    $this->get('/admin/dashboard')->assertRedirect('/admin/login');
+    $this->get('/admin/bookings')->assertRedirect('/admin/login');
     expect(session('admin_logged_in'))->toBeNull();
 
     hardenLogin($this)->assertSessionHasErrors('email');
-    hardenLogin($this, password: 'sandi-baru-yang-panjang')->assertRedirect('/admin/dashboard');
-    $this->get('/admin/dashboard')->assertOk();
+    hardenLogin($this, password: 'sandi-baru-yang-panjang')->assertRedirect('/admin/bookings');
+    $this->get('/admin/bookings')->assertOk();
 });
 
 it('penghapusan kredensial dari konfigurasi membatalkan sesi yang masih terbuka', function () {
@@ -95,23 +95,23 @@ it('penghapusan kredensial dari konfigurasi membatalkan sesi yang masih terbuka'
 
     config(['khayra_auth.admin.email' => null, 'khayra_auth.admin.password_hash' => null, 'khayra_auth.admin.password' => null]);
 
-    $this->get('/admin/dashboard')->assertRedirect('/admin/login');
+    $this->get('/admin/bookings')->assertRedirect('/admin/login');
 });
 
 it('login admin yang valid menyimpan sidik jari kredensial yang berlaku di sesi', function () {
     hardenCreds();
 
-    hardenLogin($this)->assertRedirect('/admin/dashboard');
+    hardenLogin($this)->assertRedirect('/admin/bookings');
 
     expect(session('admin_credential_fp'))->toBe(AdminCredentials::fingerprint())->not->toBeEmpty();
-    $this->get('/admin/dashboard')->assertOk();
+    $this->get('/admin/bookings')->assertOk();
 });
 
 it('FAIL-CLOSED: sesi admin tanpa sidik jari (sesi versi lama) ditolak dan autentikasi admin dihapus dari sesi', function () {
     hardenCreds();
 
     $this->withSession(['admin_logged_in' => true, 'admin_email' => 'owner@uji.test'])
-        ->get('/admin/dashboard')->assertRedirect('/admin/login');
+        ->get('/admin/bookings')->assertRedirect('/admin/login');
 
     expect(session('admin_logged_in'))->toBeNull()->and(session('admin_email'))->toBeNull()->and(session('admin_credential_fp'))->toBeNull();
 
@@ -123,7 +123,7 @@ it('FAIL-CLOSED: sidik jari kosong, null, bukan string, atau salah ditolak', fun
     hardenCreds();
 
     $this->withSession(['admin_logged_in' => true, 'admin_credential_fp' => $fingerprint])
-        ->get('/admin/dashboard')->assertRedirect('/admin/login');
+        ->get('/admin/bookings')->assertRedirect('/admin/login');
 
     expect(session('admin_logged_in'))->toBeNull();
 })->with(['string kosong' => [''], 'null' => [null], 'palsu' => ['palsu'], 'array' => [['x']], 'angka' => [0], 'huruf besar' => [fn () => strtoupper(AdminCredentials::fingerprint())]]);
@@ -132,21 +132,21 @@ it('sidik jari yang cocok diterima', function () {
     hardenCreds();
 
     $this->withSession(['admin_logged_in' => true, 'admin_credential_fp' => AdminCredentials::fingerprint()])
-        ->get('/admin/dashboard')->assertOk();
+        ->get('/admin/bookings')->assertOk();
 });
 
 it('sidik jari lama ditolak setelah rotasi EMAIL admin', function () {
     hardenCreds();
-    hardenLogin($this)->assertRedirect('/admin/dashboard');
+    hardenLogin($this)->assertRedirect('/admin/bookings');
 
     hardenCreds(['khayra_auth.admin.email' => 'owner-baru@uji.test']);
 
-    $this->get('/admin/dashboard')->assertRedirect('/admin/login');
+    $this->get('/admin/bookings')->assertRedirect('/admin/login');
     expect(session('admin_logged_in'))->toBeNull();
 
     hardenLogin($this)->assertSessionHasErrors('email');
-    hardenLogin($this, 'owner-baru@uji.test')->assertRedirect('/admin/dashboard');
-    $this->get('/admin/dashboard')->assertOk();
+    hardenLogin($this, 'owner-baru@uji.test')->assertRedirect('/admin/bookings');
+    $this->get('/admin/bookings')->assertOk();
 });
 
 it('sesi admin yang ditolak tidak mengganggu sesi terapis dan pasien yang sedang aktif', function () {
@@ -155,7 +155,7 @@ it('sesi admin yang ditolak tidak mengganggu sesi terapis dan pasien yang sedang
     $this->withSession([
         'admin_logged_in' => true, 'admin_credential_fp' => 'kedaluwarsa',
         'therapist_logged_in' => true, 'therapist_id' => 77, 'patient_logged_in' => true, 'patient_id' => 88,
-    ])->get('/admin/dashboard')->assertRedirect('/admin/login');
+    ])->get('/admin/bookings')->assertRedirect('/admin/login');
 
     expect(session('admin_logged_in'))->toBeNull()
         ->and(session('therapist_logged_in'))->toBeTrue()->and(session('therapist_id'))->toBe(77)
@@ -209,7 +209,7 @@ it('setelah logout, sesi lama tidak dapat dipakai lagi dan token CSRF diganti', 
     $this->post('/admin/logout')->assertRedirect('/admin/login');
 
     expect(session()->token())->not->toBe($tokenBefore);
-    $this->get('/admin/dashboard')->assertRedirect('/admin/login');
+    $this->get('/admin/bookings')->assertRedirect('/admin/login');
 });
 
 it('GET ke URL logout tidak menutup sesi dan tidak menjadi jalur CSRF logout', function () {
@@ -217,7 +217,7 @@ it('GET ke URL logout tidak menutup sesi dan tidak menjadi jalur CSRF logout', f
     hardenLogin($this);
 
     $this->get('/admin/logout')->assertStatus(405);
-    $this->get('/admin/dashboard')->assertOk();
+    $this->get('/admin/bookings')->assertOk();
 });
 
 it('khayra:admin-hash mencetak hash bcrypt valid yang cocok dengan password tanpa mencetak password', function () {
@@ -290,7 +290,7 @@ it('preflight lulus bersih (tanpa WARN format) dengan hash valid dan tanpa plain
 
 it('rotasi end-to-end: hash dari khayra:admin-hash dipakai login, lolos verify dan preflight, sesi lama gugur, tanpa lockout', function () {
     hardenCreds(['khayra_auth.admin.password_hash' => null, 'khayra_auth.admin.password' => 'kredensial-lama-plain', 'cache.default' => 'file']);
-    $this->post('/admin/login', ['email' => 'owner@uji.test', 'password' => 'kredensial-lama-plain'])->assertRedirect('/admin/dashboard');
+    $this->post('/admin/login', ['email' => 'owner@uji.test', 'password' => 'kredensial-lama-plain'])->assertRedirect('/admin/bookings');
 
     // 1) Operator membuat hash (prompt tersembunyi) dan membaca baris yang dicetak.
     $this->artisan('khayra:admin-hash')
@@ -315,10 +315,10 @@ it('rotasi end-to-end: hash dari khayra:admin-hash dipakai login, lolos verify d
     expect($rows->firstWhere('check', 'Format password admin')['status'])->toBe('PASS');
 
     // 4) Sesi lama gugur; password lama ditolak; password baru masuk.
-    $this->get('/admin/dashboard')->assertRedirect('/admin/login');
+    $this->get('/admin/bookings')->assertRedirect('/admin/login');
     hardenLogin($this, password: 'kredensial-lama-plain')->assertSessionHasErrors('email');
-    hardenLogin($this, password: 'kredensial-baru-12345')->assertRedirect('/admin/dashboard');
-    $this->get('/admin/dashboard')->assertOk();
+    hardenLogin($this, password: 'kredensial-baru-12345')->assertRedirect('/admin/bookings');
+    $this->get('/admin/bookings')->assertOk();
 });
 
 it('login dan perintah rotasi tidak pernah menulis password atau hash ke log aplikasi', function () {

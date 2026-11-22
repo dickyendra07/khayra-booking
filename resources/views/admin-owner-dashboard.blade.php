@@ -291,9 +291,9 @@
                     </p>
 
                     <div class="quick-links" style="margin-top:18px;">
-                        <a href="/admin/owner-finance?month={{ $month }}" class="kx-btn kx-btn--outline btn btn-soft">Owner Finance / Cashflow</a>
-                        <a href="/admin/reports/monthly-clinic?month={{ $month }}" class="kx-btn kx-btn--outline btn btn-soft">Monthly Clinic Report</a>
-                        <a href="/admin/reports/revenue" class="kx-btn kx-btn--outline btn btn-soft">Revenue Report</a>
+                        <a href="/owner/finance?month={{ $month }}" class="kx-btn kx-btn--outline btn btn-soft">Owner Finance / Cashflow</a>
+                        <a href="/owner/reports/monthly-clinic?month={{ $month }}" class="kx-btn kx-btn--outline btn btn-soft">Monthly Clinic Report</a>
+                        <a href="/owner/reports/revenue" class="kx-btn kx-btn--outline btn btn-soft">Revenue Report</a>
                         <a href="/admin/staff-leaves" class="kx-btn kx-btn--outline btn btn-soft">Staff Leave Approval</a>
                     </div>
                 </div>
@@ -304,7 +304,7 @@
                         Gunakan filter bulan untuk melihat ringkasan performa owner. Data revenue mengecualikan invoice void.
                     </p>
 
-                    <form method="GET" action="/admin/owner-dashboard" class="period-form">
+                    <form method="GET" action="/owner/dashboard" class="period-form">
                         <input type="month" name="month" value="{{ $month }}">
                         <button type="submit" class="kx-btn kx-btn--outline btn btn-white">Update Period</button>
                     </form>

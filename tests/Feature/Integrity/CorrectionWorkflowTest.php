@@ -12,7 +12,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    $this->withSession(adminSession(['admin_email' => 'admin@uji.test']));
+    $this->withSession(ownerSession(['admin_email' => 'admin@uji.test']));
     $this->patient = Patient::create(['full_name' => 'Pasien Koreksi', 'whatsapp' => '081234567890']);
     $this->program = ClinicService::create(['name' => 'Prog', 'price_per_visit' => 500000, 'category' => 'Program', 'status' => 'active']);
     $this->product = InventoryItem::create(['sku' => 'K-1', 'name' => 'Tape', 'stock' => 10, 'selling_price' => 40000, 'status' => 'active']);
@@ -79,7 +79,7 @@ it('alur koreksi: void invoice lunas lalu terbitkan ulang menghasilkan invoice b
 
     // Arus kas bulan ini: uang diterima 580.000 dikurangi refund 40.000 = 540.000 = nilai invoice pengganti
     // (pemindahan kredit tidak dihitung sebagai kas baru). Omzet hanya invoice pengganti.
-    $this->get('/admin/owner-finance?month='.ClinicTime::monthKey())
+    $this->get('/owner/finance?month='.ClinicTime::monthKey())
         ->assertViewHas('summary', fn ($s) => (float) $s['billing_income'] === 540000.0 && (float) $s['invoice_revenue'] === 540000.0);
     expect(PaymentLedger::heldOnVoid($original->fresh()))->toBe(0.0);
 

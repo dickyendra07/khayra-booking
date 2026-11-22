@@ -15,6 +15,9 @@ abstract class TestCase extends BaseTestCase
             'khayra_auth.admin.email' => 'admin@uji.test',
             'khayra_auth.admin.password' => 'kata-sandi-uji-lokal',
             'khayra_auth.admin.password_hash' => null,
+            'khayra_auth.owner.email' => 'owner@uji.test',
+            'khayra_auth.owner.password' => 'kata-sandi-owner-uji',
+            'khayra_auth.owner.password_hash' => null,
         ]);
     }
 }

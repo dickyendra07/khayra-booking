@@ -21,16 +21,16 @@ beforeEach(function () {
 });
 
 it('admin login: membuka booking, kalender, pasien, visit, billing, kasir, finance', function () {
-    $this->withSession(adminSession());
+    $this->withSession(ownerSession());
 
     $booking = Booking::create(['patient_id' => $this->patient->id, 'full_name' => 'Pasien Regresi', 'whatsapp' => '081234567890', 'service' => 'Uji', 'booking_date' => now()->toDateString(), 'booking_time' => '09:00', 'status' => 'confirmed']);
     $visit = Visit::create(['patient_id' => $this->patient->id, 'therapist_id' => $this->therapist->id, 'therapist' => 'Terapis Regresi', 'visit_date' => now()->toDateString(), 'status' => 'scheduled']);
 
     foreach ([
-        '/admin/dashboard', '/admin/bookings', '/admin/bookings/calendar', '/admin/bookings/create',
+        '/owner/erm-dashboard', '/admin/bookings', '/admin/bookings/calendar', '/admin/bookings/create',
         "/admin/bookings/{$booking->id}", "/admin/bookings/{$booking->id}/edit",
         '/admin/patients', "/admin/patients/{$this->patient->id}", '/admin/visits', '/admin/visits/create', "/admin/visits/{$visit->id}/edit",
-        '/admin/billings', '/admin/cashier', '/admin/owner-finance', '/admin/owner-dashboard', '/admin/reports', '/admin/reports/revenue',
+        '/admin/billings', '/admin/cashier', '/owner/finance', '/owner/dashboard', '/owner/reports', '/owner/reports/revenue',
         '/admin/therapists', '/admin/promos', '/admin/services', '/admin/inventory',
     ] as $url) {
         $this->get($url)->assertOk();
@@ -38,7 +38,7 @@ it('admin login: membuka booking, kalender, pasien, visit, billing, kasir, finan
 });
 
 it('admin login: membuat booking dan visit lewat form seperti biasa', function () {
-    $this->withSession(adminSession());
+    $this->withSession(ownerSession());
 
     $this->post('/admin/bookings/create', [
         'patient_id' => $this->patient->id, 'therapist_id' => $this->therapist->id, 'full_name' => 'Pasien Regresi',
@@ -55,16 +55,16 @@ it('admin login: membuat booking dan visit lewat form seperti biasa', function (
 });
 
 it('admin login: tutup buku bulanan tetap berjalan dan memakai angka invoice', function () {
-    $this->withSession(adminSession());
+    $this->withSession(ownerSession());
 
     Billing::create(['patient_id' => $this->patient->id, 'invoice_number' => 'INV-REG', 'invoice_date' => now()->toDateString(), 'amount' => 250000, 'paid_amount' => 250000, 'payment_status' => 'paid']);
     $month = now()->format('Y-m');
 
-    $this->post('/admin/owner-finance/close', ['month' => $month])->assertRedirect("/admin/owner-finance?month={$month}");
+    $this->post('/owner/finance/close', ['month' => $month])->assertRedirect("/owner/finance?month={$month}");
 
     expect((float) FinanceMonthlyClosing::firstOrFail()->billing_income)->toBe(250000.0);
 
-    $this->get("/admin/owner-finance/print?month={$month}")->assertOk();
+    $this->get("/owner/finance/print?month={$month}")->assertOk();
 });
 
 it('therapist login: dashboard dan logout tetap berfungsi', function () {

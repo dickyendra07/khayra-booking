@@ -17,7 +17,7 @@ beforeEach(function () {
     config([
         'khayra_auth.admin.email' => 'admin@uji.test', 'khayra_auth.admin.password' => 'sandi-uji-lokal', 'khayra_auth.admin.password_hash' => null,
     ]);
-    $this->withSession(adminSession(['admin_email' => 'admin@uji.test']));
+    $this->withSession(ownerSession(['admin_email' => 'admin@uji.test']));
     $this->patient = Patient::create(['full_name' => 'Pasien Ledger', 'whatsapp' => '081234567890']);
 });
 
@@ -34,7 +34,7 @@ function ledgerCheckout($test, int $price, int $tendered, array $extra = [])
 
 function ledgerFinance($test, ?string $month = null)
 {
-    return $test->get('/admin/owner-finance?month='.($month ?? ClinicTime::monthKey()))->viewData('summary');
+    return $test->get('/owner/finance?month='.($month ?? ClinicTime::monthKey()))->viewData('summary');
 }
 
 // ---------------- uang kembalian ----------------
@@ -307,7 +307,7 @@ it('pembayaran untuk invoice bulan tertutup dicatat di bulan berjalan dan closin
 
     ledgerCheckout($this, 400000, 0, ['invoice_date' => $closedDate]);
     $billing = Billing::firstOrFail();
-    $this->post('/admin/owner-finance/close', ['month' => $closedMonth])->assertSessionHas('success');
+    $this->post('/owner/finance/close', ['month' => $closedMonth])->assertSessionHas('success');
 
     $before = FinanceMonthlyClosing::firstOrFail()->only(['billing_income', 'total_income', 'snapshot']);
 
@@ -315,13 +315,13 @@ it('pembayaran untuk invoice bulan tertutup dicatat di bulan berjalan dan closin
 
     expect(FinanceMonthlyClosing::firstOrFail()->only(['billing_income', 'total_income', 'snapshot']))->toEqual($before)
         ->and((float) ledgerFinance($this)['billing_income'])->toBe(400000.0)
-        ->and($this->get('/admin/owner-finance?month='.$closedMonth)->viewData('closingDrift'))->toBeNull();
+        ->and($this->get('/owner/finance?month='.$closedMonth)->viewData('closingDrift'))->toBeNull();
 });
 
 it('pembayaran tidak dapat dicatat bila bulan berjalan sudah tutup buku', function () {
     ledgerCheckout($this, 400000, 0);
     $billing = Billing::firstOrFail();
-    $this->post('/admin/owner-finance/close', ['month' => ClinicTime::monthKey()]);
+    $this->post('/owner/finance/close', ['month' => ClinicTime::monthKey()]);
 
     $this->post("/admin/billings/{$billing->id}/payments", idem() + ['tendered_amount' => 400000, 'method' => 'cash'])->assertSessionHas('error');
 
@@ -331,7 +331,7 @@ it('pembayaran tidak dapat dicatat bila bulan berjalan sudah tutup buku', functi
 it('tutup buku menyimpan arus kas, omzet, dan basis perhitungan di snapshot', function () {
     ledgerCheckout($this, 550000, 600000);
 
-    $this->post('/admin/owner-finance/close', ['month' => ClinicTime::monthKey()])->assertSessionHas('success');
+    $this->post('/owner/finance/close', ['month' => ClinicTime::monthKey()])->assertSessionHas('success');
 
     $closing = FinanceMonthlyClosing::firstOrFail();
 
@@ -408,8 +408,8 @@ it('owner finance dan cetak menampilkan baris pembayaran dan refund', function (
     $billing = Billing::firstOrFail();
     $this->post("/admin/billings/{$billing->id}/void", ['void_reason' => 'Batal', 'money_disposition' => 'refund', 'refund_method' => 'cash']);
 
-    $this->get('/admin/owner-finance')->assertOk()->assertSee('Pembayaran Invoice')->assertSee('Refund Pasien');
-    $this->get('/admin/owner-finance/print')->assertOk();
+    $this->get('/owner/finance')->assertOk()->assertSee('Pembayaran Invoice')->assertSee('Refund Pasien');
+    $this->get('/owner/finance/print')->assertOk();
 });
 
 it('command audit merekonsiliasi buku pembayaran: bersih untuk data konsisten, melaporkan data yang menyimpang', function () {
@@ -441,8 +441,8 @@ it('baris pembayaran dan refund di Owner Finance tidak menawarkan tombol hapus (
 
     $manual = FinanceTransaction::create(['transaction_date' => ClinicTime::today(), 'type' => 'expense', 'source' => 'operational', 'title' => 'Manual', 'amount' => 1000]);
 
-    $html = $this->get('/admin/owner-finance')->assertOk()->getContent();
+    $html = $this->get('/owner/finance')->assertOk()->getContent();
 
-    expect(substr_count($html, '/admin/owner-finance/transactions/'))->toBe(1)                                  // hanya milik transaksi manual
-        ->and($html)->toContain("/admin/owner-finance/transactions/{$manual->id}/delete");
+    expect(substr_count($html, '/owner/finance/transactions/'))->toBe(1)                                  // hanya milik transaksi manual
+        ->and($html)->toContain("/owner/finance/transactions/{$manual->id}/delete");
 });

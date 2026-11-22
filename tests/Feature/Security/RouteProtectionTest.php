@@ -64,10 +64,16 @@ it('menutup laporan therapist-performance dari pengguna tanpa login dan tidak me
     expect($response->getContent())->not->toContain('Rp ')->not->toContain('patients');
 });
 
-it('tetap mengizinkan admin yang sudah login membuka laporan therapist-performance', function () {
-    $this->withSession(adminSession())
-        ->get('/admin/reports/therapist-performance')
+it('tetap mengizinkan owner yang sudah login membuka laporan therapist-performance', function () {
+    $this->withSession(ownerSession())
+        ->get('/owner/reports/therapist-performance')
         ->assertOk();
+});
+
+it('menolak admin (bukan owner) membuka laporan therapist-performance', function () {
+    $this->withSession(adminSession())
+        ->get('/owner/reports/therapist-performance')
+        ->assertForbidden();
 });
 
 it('tidak membiarkan sesi pasien atau therapist membuka halaman admin', function () {

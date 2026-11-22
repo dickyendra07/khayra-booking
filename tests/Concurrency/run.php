@@ -34,6 +34,7 @@ $env = [
     'DB_USERNAME' => $user, 'DB_PASSWORD' => $pass, 'SESSION_DRIVER' => 'array', 'CACHE_STORE' => 'array', 'QUEUE_CONNECTION' => 'sync',
     'NEW_PATIENT_ADMIN_FEE_ENABLED' => 'true', 'APP_MAINTENANCE_DRIVER' => 'file', 'BCRYPT_ROUNDS' => '4',
     'ADMIN_EMAIL' => 'race@uji.test', 'ADMIN_PASSWORD' => 'kata-sandi-uji-lokal', 'ADMIN_PASSWORD_HASH' => '',
+    'OWNER_EMAIL' => 'race@uji.test', 'OWNER_PASSWORD' => 'kata-sandi-uji-lokal', 'OWNER_PASSWORD_HASH' => '',
 ];
 
 foreach ($env as $key => $value) {
@@ -233,7 +234,7 @@ for ($iteration = 1; $iteration <= $iterations; $iteration++) {
         [$at(0, 1500), 'http', ['method' => 'POST', 'uri' => '/admin/billings', 'params' => [
             'patient_id' => $patient->id, 'invoice_date' => $today, 'amount' => 80000, 'paid_amount' => 30000, 'payment_status' => 'partial', 'payment_method' => 'cash', 'checkout_token' => bin2hex(random_bytes(8)),
         ]]],
-        [$at(0, 1500), 'http', ['method' => 'POST', 'uri' => '/admin/owner-finance/transactions', 'params' => [
+        [$at(0, 1500), 'http', ['method' => 'POST', 'uri' => '/owner/finance/transactions', 'params' => [
             'transaction_date' => $today, 'type' => 'expense', 'title' => 'Biaya uji '.$iteration, 'amount' => 45000,
         ]]],
         [$at(0, 1500), 'http', ['method' => 'POST', 'uri' => "/admin/billings/{$voidInvoice->id}/void", 'params' => [

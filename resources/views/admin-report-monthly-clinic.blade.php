@@ -98,17 +98,17 @@
                     <p class="subtitle">Ringkasan bulanan untuk owner: booking, visit, pasien baru, revenue, outstanding, produk keluar, movement stok, dan void.</p>
                 </div>
                 <div class="actions">
-                    <a href="/admin/reports/monthly-clinic?month={{ $month }}&export=csv" class="kx-btn kx-btn--primary btn btn-primary">Export CSV</a>
-                    <a href="/admin/dashboard" class="kx-btn kx-btn--outline btn btn-soft">Dashboard</a>
+                    <a href="/owner/reports/monthly-clinic?month={{ $month }}&export=csv" class="kx-btn kx-btn--primary btn btn-primary">Export CSV</a>
+                    <a href="/owner/erm-dashboard" class="kx-btn kx-btn--outline btn btn-soft">Dashboard</a>
                 </div>
             </div>
 
             
 <div class="nav-grid">
-    <a class="nav-card {{ ($activeReport ?? '') === 'monthly' ? 'active' : '' }}" href="/admin/reports/monthly-clinic">Monthly Clinic</a>
-    <a class="nav-card {{ ($activeReport ?? '') === 'revenue' ? 'active' : '' }}" href="/admin/reports/revenue">Revenue</a>
-    <a class="nav-card {{ ($activeReport ?? '') === 'inventory' ? 'active' : '' }}" href="/admin/reports/inventory">Inventory</a>
-    <a class="nav-card {{ ($activeReport ?? '') === 'therapist' ? 'active' : '' }}" href="/admin/reports/therapist-performance">Therapist Performance</a>
+    <a class="nav-card {{ ($activeReport ?? '') === 'monthly' ? 'active' : '' }}" href="/owner/reports/monthly-clinic">Monthly Clinic</a>
+    <a class="nav-card {{ ($activeReport ?? '') === 'revenue' ? 'active' : '' }}" href="/owner/reports/revenue">Revenue</a>
+    <a class="nav-card {{ ($activeReport ?? '') === 'inventory' ? 'active' : '' }}" href="/owner/reports/inventory">Inventory</a>
+    <a class="nav-card {{ ($activeReport ?? '') === 'therapist' ? 'active' : '' }}" href="/owner/reports/therapist-performance">Therapist Performance</a>
 </div>
 
 
@@ -131,7 +131,7 @@
             </section>
 
             <section class="filter-card">
-                <form method="GET" action="/admin/reports/monthly-clinic" class="filter-form">
+                <form method="GET" action="/owner/reports/monthly-clinic" class="filter-form">
                     <div class="field">
                         <label>Month</label>
                         <input type="month" name="month" value="{{ $month }}">

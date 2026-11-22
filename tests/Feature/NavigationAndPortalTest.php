@@ -9,12 +9,38 @@ uses(RefreshDatabase::class);
 it('semua tautan navigasi sidebar admin tetap terbuka (tidak 404/500)', function () {
     $this->withSession(adminSession());
 
-    $html = $this->get('/admin/dashboard')->assertOk()->getContent();
+    $html = $this->get('/admin/bookings')->assertOk()->getContent();
     preg_match_all('/href="(\/admin\/[^"#?]*)"/', $html, $matches);
 
     $links = array_values(array_unique($matches[1]));
 
     expect(count($links))->toBeGreaterThan(15);
+
+    // Admin tidak boleh diberi tautan ke area owner.
+    expect($html)->not->toContain('href="/owner/');
+
+    $broken = [];
+
+    foreach ($links as $link) {
+        $status = $this->get($link)->getStatusCode();
+
+        if ($status >= 400) {
+            $broken[] = "{$link} => {$status}";
+        }
+    }
+
+    expect($broken)->toBe([]);
+});
+
+it('semua tautan navigasi sidebar owner (termasuk 4 menu Overview) tetap terbuka (tidak 404/500)', function () {
+    $this->withSession(ownerSession());
+
+    $html = $this->get('/owner/dashboard')->assertOk()->getContent();
+    preg_match_all('/href="(\/(?:admin|owner)\/[^"#?]*)"/', $html, $matches);
+
+    $links = array_values(array_unique($matches[1]));
+
+    expect($links)->toContain('/owner/erm-dashboard', '/owner/dashboard', '/owner/finance', '/owner/reports');
 
     $broken = [];
 

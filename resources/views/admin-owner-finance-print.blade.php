@@ -173,7 +173,7 @@
 <div class="report">
     <div class="no-print">
         <button onclick="window.print()" class="kx-btn kx-btn--outline btn">Print / Save PDF</button>
-        <a href="/admin/owner-finance?month={{ $month }}" class="kx-btn kx-btn--outline btn btn-soft">Back to Finance</a>
+        <a href="/owner/finance?month={{ $month }}" class="kx-btn kx-btn--outline btn btn-soft">Back to Finance</a>
     </div>
 
     <div class="header">

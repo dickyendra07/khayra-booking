@@ -68,7 +68,7 @@
                         Kumpulan laporan premium untuk melihat kondisi operasional, revenue, stok, promo, invoice void, dan performa therapist dalam satu area.
                     </p>
                 </div>
-                <a href="/admin/dashboard" class="kx-btn kx-btn--outline btn btn-soft">← Dashboard</a>
+                <a href="/owner/erm-dashboard" class="kx-btn kx-btn--outline btn btn-soft">← Dashboard</a>
             </div>
 
             <section class="hero">

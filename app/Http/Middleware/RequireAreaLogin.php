@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Support\AdminCredentials;
+use App\Support\PortalAuth;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -25,6 +26,13 @@ class RequireAreaLogin
             'session' => 'admin_logged_in',
             'login' => '/admin/login',
             'public' => ['admin/login', 'admin/logout'],
+        ],
+        // Area owner memakai sesi login yang sama dengan admin (satu form login). Pembatasan role
+        // (hanya owner) dilakukan oleh PortalAccess setelah login lolos di sini.
+        'owner' => [
+            'session' => 'admin_logged_in',
+            'login' => '/admin/login',
+            'public' => [],
         ],
         'therapist' => [
             'session' => 'therapist_logged_in',
@@ -56,8 +64,10 @@ class RequireAreaLogin
         if ($request->session()->get($config['session'])) {
             // Fail-closed: sesi admin harus membawa sidik jari kredensial yang cocok dengan kredensial berlaku. Sesi tanpa sidik jari
             // (versi lama) atau dengan kredensial lama ditolak; hanya kunci admin yang dihapus, sesi pasien/terapis tidak disentuh.
-            if ($area === 'admin' && ! AdminCredentials::sessionStillValid($request->session()->get('admin_credential_fp'))) {
-                $request->session()->forget(['admin_logged_in', 'admin_email', 'admin_credential_fp']);
+            // Sidik jari diperiksa terhadap akun sesuai role sesi (admin/owner); sesi tanpa role = admin.
+            if (in_array($area, ['admin', 'owner'], true)
+                && ! AdminCredentials::sessionStillValid($request->session()->get('admin_credential_fp'), PortalAuth::role() ?? PortalAuth::ROLE_ADMIN)) {
+                $request->session()->forget(['admin_logged_in', 'admin_email', 'admin_credential_fp', 'portal_role']);
 
                 return redirect($config['login']);
             }

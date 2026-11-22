@@ -1063,7 +1063,9 @@
                 </div>
 
                 <div class="top-actions">
-                    <a href="/admin/dashboard" class="kx-btn kx-btn--outline ghost-link">Dashboard ERM</a>
+                    @if(\App\Support\PortalAuth::isOwner())
+                        <a href="/owner/erm-dashboard" class="kx-btn kx-btn--outline ghost-link">Dashboard ERM</a>
+                    @endif
                     <a href="/booking" class="kx-btn kx-btn--primary primary-link">Open Public Booking</a>
                 </div>
             </div>

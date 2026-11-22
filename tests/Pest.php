@@ -75,6 +75,19 @@ function adminSession(array $extra = []): array
     ], $extra);
 }
 
+/**
+ * Sesi owner yang valid untuk test (role owner + sidik jari kredensial owner). Owner boleh membuka halaman
+ * /owner/* sekaligus halaman admin. Gunakan adminSession() untuk menguji pembatasan akses admin.
+ */
+function ownerSession(array $extra = []): array
+{
+    return array_merge([
+        'admin_logged_in' => true,
+        'portal_role' => 'owner',
+        'admin_credential_fp' => \App\Support\AdminCredentials::fingerprint('owner'),
+    ], $extra);
+}
+
 /** Token satu-kali-pakai yang dikirim formulir pembayaran/refund (idempotensi). */
 function idem(?string $key = null): array
 {

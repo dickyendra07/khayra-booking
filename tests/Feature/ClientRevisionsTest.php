@@ -20,7 +20,7 @@ use Illuminate\Support\Str;
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    $this->withSession(adminSession(['admin_email' => 'admin@uji.test']));
+    $this->withSession(ownerSession(['admin_email' => 'admin@uji.test']));
     $this->patient = Patient::create(['full_name' => 'Pasien Revisi', 'whatsapp' => '081234567890', 'birth_date' => '1990-01-01']);
     $this->therapist = Therapist::create(['full_name' => 'Terapis', 'email' => 't@uji.test', 'password' => Hash::make('x-uji'), 'status' => 'active']);
 });
@@ -283,7 +283,7 @@ it('template v2 (hanya setelah disetujui klinik): tanpa kotak TTD fisioterapis, 
 
 function crSummary($test, ?string $month = null): array
 {
-    return $test->get('/admin/owner-finance?month='.($month ?? ClinicTime::monthKey()))->assertOk()->viewData('summary');
+    return $test->get('/owner/finance?month='.($month ?? ClinicTime::monthKey()))->assertOk()->viewData('summary');
 }
 
 it('laporan omzet per kategori memisahkan treatment, ruangan, dan biaya admin; total sama dengan omzet; void tidak dihitung', function () {
@@ -317,8 +317,8 @@ it('laporan omzet per kategori memisahkan treatment, ruangan, dan biaya admin; t
         ->and($summary['revenue_by_category']['total'])->toBe((float) $summary['invoice_revenue'])
         ->and(array_sum($byCategory->all()) + $summary['revenue_by_category']['uncategorised'])->toBe((float) $summary['invoice_revenue']);
 
-    $this->get('/admin/owner-finance?month='.ClinicTime::monthKey())->assertSee('Omzet per Kategori')->assertSee('Biaya Ruangan')->assertSee('Biaya Admin');
-    $this->get('/admin/owner-finance/print?month='.ClinicTime::monthKey())->assertOk()->assertSee('Omzet per Kategori');
+    $this->get('/owner/finance?month='.ClinicTime::monthKey())->assertSee('Omzet per Kategori')->assertSee('Biaya Ruangan')->assertSee('Biaya Admin');
+    $this->get('/owner/finance/print?month='.ClinicTime::monthKey())->assertOk()->assertSee('Omzet per Kategori');
 });
 
 it('laporan per kategori tidak mengubah arus kas (billing income) maupun closing yang sudah ada', function () {

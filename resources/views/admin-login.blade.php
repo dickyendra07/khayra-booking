@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Login - Khayra Physio</title>
+    <title>Login Admin / Owner - Khayra Physio</title>
     <style>
         * { box-sizing: border-box; }
 
@@ -221,9 +221,9 @@
                 </div>
 
                 <div class="form-wrap">
-                    <h1>Admin Login</h1>
+                    <h1>Login Admin / Owner</h1>
                     <p class="subtitle">
-                        Masuk ke Admin Workspace untuk mengelola pendaftaran pasien, pengelolaan jadwal pasien, pembayaran pasien, dan penjualan.
+                        Masuk ke workspace klinik. Admin mengelola pendaftaran, jadwal, pembayaran, dan penjualan; Owner mengakses dashboard, keuangan, dan laporan.
                     </p>
 
                     @if(session('error'))
@@ -246,7 +246,7 @@
 
                         <div class="field">
                             <label>Email Address</label>
-                            <input type="email" name="email" value="{{ old('email') }}" placeholder="Enter your admin email">
+                            <input type="email" name="email" value="{{ old('email') }}" placeholder="Enter your admin or owner email">
                         </div>
 
                         <div class="field">
@@ -259,7 +259,7 @@
                 </div>
 
                 <div class="footer-row">
-                    <span>Internal admin access only</span>
+                    <span>Internal admin &amp; owner access only</span>
                     <a href="/">← Back to Home</a>
                 </div>
             </section>

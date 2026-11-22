@@ -13,6 +13,9 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         // Pengaman terpusat area admin / therapist / patient (lihat RequireAreaLogin).
         $middleware->appendToGroup('web', \App\Http\Middleware\RequireAreaLogin::class);
+
+        // Gerbang role: /owner/* hanya untuk Owner (berjalan setelah RequireAreaLogin).
+        $middleware->appendToGroup('web', \App\Http\Middleware\PortalAccess::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

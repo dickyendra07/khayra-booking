@@ -38,7 +38,7 @@ beforeEach(function () {
 function uiAdminPages($test): array
 {
     return [
-        '/admin/dashboard', '/admin/owner-dashboard', '/admin/owner-finance', '/admin/reports', '/admin/bookings', '/admin/bookings/calendar',
+        '/owner/erm-dashboard', '/owner/dashboard', '/owner/finance', '/owner/reports', '/admin/bookings', '/admin/bookings/calendar',
         '/admin/bookings/create', "/admin/bookings/{$test->booking->id}", "/admin/bookings/{$test->booking->id}/edit", '/admin/patients', '/admin/patients/create',
         "/admin/patients/{$test->patient->id}", "/admin/patients/{$test->patient->id}/edit", "/admin/patients/{$test->patient->id}/informed-consent",
         '/admin/visits', '/admin/visits/create', "/admin/visits/{$test->visit->id}/edit", '/admin/therapists', '/admin/therapists/create',
@@ -47,13 +47,14 @@ function uiAdminPages($test): array
         '/admin/registration-fees', '/admin/package-treatments', '/admin/consent-archive', '/admin/documents', '/admin/exercise-library',
         '/admin/referral-letters', '/admin/inventory', '/admin/inventory/create', '/admin/inventory/stock-movements',
         '/admin/inventory/stock-opname', '/admin/inventory/monthly-summary', '/admin/inventory/import', '/admin/satu-sehat-readiness',
-        '/admin/reports/revenue', '/admin/reports/monthly-clinic', '/admin/reports/inventory', '/admin/reports/therapist-performance',
+        '/owner/reports/revenue', '/owner/reports/monthly-clinic', '/owner/reports/inventory', '/owner/reports/therapist-performance',
         '/admin/rest-letter/create',
     ];
 }
 
 it('semua halaman admin utama tetap dirender dan memuat stylesheet design system bersama', function () {
-    $this->withSession(adminSession(['admin_email' => 'admin@uji.test']));
+    // Owner boleh membuka halaman owner (/owner/*) sekaligus semua halaman admin.
+    $this->withSession(ownerSession(['admin_email' => 'owner@uji.test']));
 
     $problems = [];
 
@@ -223,11 +224,11 @@ it('master ruangan: tidak ada tarif/satuan yang dikarang; seed tetap non-billabl
 });
 
 it('layout mobile: grid kalender bulanan dan laporan revenue tidak melebarkan halaman (min-width:0 / minmax)', function () {
-    $this->withSession(adminSession());
+    $this->withSession(ownerSession());
 
     $bookings = $this->get('/admin/bookings')->assertOk()->getContent();
     expect($bookings)->toContain('.preview-grid > * { min-width: 0; }')
         ->and($bookings)->toContain('.month-grid { grid-template-columns: repeat(7, minmax(0, 1fr))');
 
-    expect($this->get('/admin/reports/revenue')->assertOk()->getContent())->toContain('.two-grid > * { min-width:0; }');
+    expect($this->get('/owner/reports/revenue')->assertOk()->getContent())->toContain('.two-grid > * { min-width:0; }');
 });
