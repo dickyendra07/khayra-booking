@@ -332,10 +332,7 @@
         }
 
         @media (max-width: 1024px) {
-            .layout {
-                display: block;
-            }
-
+            /* .layout menumpuk di <=980px oleh khayra-ui.css (bersama sidebar); jangan menumpuk lebih awal. */
             .main {
                 padding: 20px;
             }

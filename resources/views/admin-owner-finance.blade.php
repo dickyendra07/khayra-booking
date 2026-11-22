@@ -303,7 +303,7 @@
         }
 
         @media (max-width: 1180px) {
-            .layout { display: block; }
+            /* .layout menumpuk di <=980px oleh khayra-ui.css (bersama sidebar); jangan menumpuk lebih awal. */
             .main { padding: 18px; }
             .hero { grid-template-columns: 1fr; }
             .stats-grid { grid-template-columns: 1fr 1fr; }
