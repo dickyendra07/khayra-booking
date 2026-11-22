@@ -50,3 +50,16 @@ it('membatasi POST booking publik per IP (429 setelah 10 permintaan per menit)',
 
     $this->post('/booking', bookingPayload($date, ['whatsapp' => '081277779999']))->assertStatus(429);
 });
+
+it('menautkan booking publik ke pasien lama hanya bila nomor WhatsApp cocok, bukan karena nama sama', function () {
+    $existing = \App\Models\Patient::create(['full_name' => 'Siti Aminah', 'whatsapp' => '082222222222']);
+    $date = ClinicTime::now()->addDays(2)->toDateString();
+
+    // Nama sama, WhatsApp berbeda: orang lain, tidak boleh tertaut ke pasien yang sudah ada.
+    $this->post('/booking', bookingPayload($date, ['full_name' => ' siti aminah ', 'whatsapp' => '083333333333']))->assertSessionHasNoErrors();
+    expect(Booking::where('whatsapp', '083333333333')->first()->patient_id)->toBeNull();
+
+    // WhatsApp sama (hanya beda spasi): pasien yang sama, tertaut.
+    $this->post('/booking', bookingPayload($date, ['full_name' => 'Siti Aminah', 'whatsapp' => '0822 2222 2222']))->assertSessionHasNoErrors();
+    expect(Booking::where('full_name', 'Siti Aminah')->where('whatsapp', '0822 2222 2222')->first()->patient_id)->toBe($existing->id);
+});

@@ -476,7 +476,6 @@ Route::post('/booking', function (Request $request) {
     }
 
     $normalizedWhatsapp = preg_replace('/[^0-9]/', '', (string) $request->whatsapp);
-    $normalizedName = trim(strtolower((string) $request->full_name));
 
     $matchedPatient = Patient::query()
         ->where(function ($query) use ($request, $normalizedWhatsapp) {
@@ -488,9 +487,8 @@ Route::post('/booking', function (Request $request) {
         })
         ->first();
 
-    if (!$matchedPatient && $normalizedName !== '') {
-        $matchedPatient = Patient::whereRaw('LOWER(TRIM(full_name)) = ?', [$normalizedName])->first();
-    }
+    // Sengaja HANYA mencocokkan nomor WhatsApp. Kecocokan nama saja tidak dipakai: nama umum bisa menautkan booking
+    // orang asing ke pasien lain (membuka riwayatnya di sisi admin). Admin menautkan manual bila perlu.
 
     Booking::create([
         'patient_id' => $matchedPatient ? $matchedPatient->id : null,
