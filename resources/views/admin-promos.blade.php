@@ -70,7 +70,7 @@
         form { margin: 0; }
 
         @media (max-width: 1000px) {
-            .layout { display:block; }
+            /* .layout menumpuk di <=980px oleh khayra-ui.css (bersama sidebar); jangan menumpuk lebih awal. */
             .main { padding:16px; }
             .title { font-size:32px; }
             .hero-grid, .stats-grid { grid-template-columns:1fr; }
