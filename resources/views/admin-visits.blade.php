@@ -305,6 +305,8 @@
                         </tbody>
                     </table>
                 </div>
+
+                {{ $visits->links('partials.pagination') }}
             </section>
         </div>
     </main>

@@ -742,6 +742,8 @@
                         </tbody>
                     </table>
                 </div>
+
+                {{ $billings->links('partials.pagination') }}
             </section>
         </div>
     </main>
