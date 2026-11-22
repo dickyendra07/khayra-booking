@@ -516,7 +516,7 @@ Route::get('/admin/bookings', function (Request $request) {
     $status = $request->query('status');
     $selectedDate = $request->query('date') ?: ClinicTime::today();
 
-    $query = Booking::with(['patient', 'visits'])->latest();
+    $query = Booking::with(['patient', 'visits'])->latest()->orderByDesc('id');
 
     if ($search) {
         $query->where(function ($q) use ($search) {
@@ -531,9 +531,8 @@ Route::get('/admin/bookings', function (Request $request) {
         $query->where('status', $status);
     }
 
-    $bookings = $query->get();
-
-    $allBookings = Booking::with(['patient', 'visits'])->latest()->get();
+    // Daftar dipaginasi (sebelumnya seluruh tabel dimuat ke satu halaman).
+    $bookings = $query->paginate(50)->withQueryString();
 
     $selectedDateBookings = Booking::with(['patient', 'visits'])
         ->whereDate('booking_date', $selectedDate)
@@ -543,51 +542,71 @@ Route::get('/admin/bookings', function (Request $request) {
     $todayBookings = Booking::whereDate('booking_date', ClinicTime::today())->get();
     $tomorrowBookings = Booking::whereDate('booking_date', ClinicTime::now()->addDay()->toDateString())->get();
 
-    $pendingCount = $allBookings->where('status', 'pending')->count();
-    $confirmedCount = $allBookings->where('status', 'confirmed')->count();
-    $arrivedCount = $allBookings->where('status', 'arrived')->count();
-    $inTreatmentCount = $allBookings->where('status', 'in_treatment')->count();
-    $completedCount = $allBookings->where('status', 'completed')->count();
-    $cancelledCount = $allBookings->where('status', 'cancelled')->count();
-    $noShowCount = $allBookings->where('status', 'no_show')->count();
+    // Satu query agregat (bukan memuat seluruh booking + relasi hanya untuk menghitung status).
+    $statusTotals = Booking::query()
+        ->select('status', DB::raw('COUNT(*) as total'))
+        ->groupBy('status')
+        ->pluck('total', 'status');
+
+    $statusCount = fn (string $status): int => (int) ($statusTotals[$status] ?? 0);
+
+    $pendingCount = $statusCount('pending');
+    $confirmedCount = $statusCount('confirmed');
+    $arrivedCount = $statusCount('arrived');
+    $inTreatmentCount = $statusCount('in_treatment');
+    $completedCount = $statusCount('completed');
+    $cancelledCount = $statusCount('cancelled');
+    $noShowCount = $statusCount('no_show');
 
     $statusCounts = [
-        'pending' => $allBookings->where('status', 'pending')->count(),
-        'confirmed' => $allBookings->where('status', 'confirmed')->count(),
-        'arrived' => $allBookings->where('status', 'arrived')->count(),
-        'in_treatment' => $allBookings->where('status', 'in_treatment')->count(),
-        'completed' => $allBookings->where('status', 'completed')->count(),
-        'cancelled' => $allBookings->where('status', 'cancelled')->count(),
-        'no_show' => $allBookings->where('status', 'no_show')->count(),
+        'pending' => $pendingCount,
+        'confirmed' => $confirmedCount,
+        'arrived' => $arrivedCount,
+        'in_treatment' => $inTreatmentCount,
+        'completed' => $completedCount,
+        'cancelled' => $cancelledCount,
+        'no_show' => $noShowCount,
     ];
 
     $selectedDateCarbon = \Carbon\Carbon::parse($selectedDate);
 
     $weekStart = $selectedDateCarbon->copy()->startOfWeek();
-    $weekDays = collect(range(0, 6))->map(function ($day) use ($weekStart) {
-        $date = $weekStart->copy()->addDays($day);
-        $dayBookings = Booking::whereDate('booking_date', $date->toDateString())->get();
+    $monthStart = $selectedDateCarbon->copy()->startOfMonth()->startOfWeek();
+    $monthEnd = $selectedDateCarbon->copy()->endOfMonth()->endOfWeek();
+
+    // Satu query untuk seluruh grid kalender (minggu terpilih selalu berada di dalam grid bulan), bukan satu query per hari.
+    $gridBookings = Booking::query()
+        ->whereDate('booking_date', '>=', $monthStart->toDateString())
+        ->whereDate('booking_date', '<=', $monthEnd->toDateString())
+        ->get(['booking_date', 'status'])
+        ->groupBy(fn ($booking) => substr((string) $booking->booking_date, 0, 10));
+
+    $daySummary = function (string $dateString) use ($gridBookings): array {
+        $dayBookings = $gridBookings->get($dateString, collect());
 
         return [
-            'date' => $date->toDateString(),
-            'label' => $date->format('D'),
-            'day' => $date->format('d'),
             'count' => $dayBookings->count(),
             'pending' => $dayBookings->where('status', 'pending')->count(),
             'confirmed' => $dayBookings->where('status', 'confirmed')->count(),
             'completed' => $dayBookings->where('status', 'completed')->count(),
         ];
-    });
+    };
 
-    $monthStart = $selectedDateCarbon->copy()->startOfMonth()->startOfWeek();
-    $monthEnd = $selectedDateCarbon->copy()->endOfMonth()->endOfWeek();
+    $weekDays = collect(range(0, 6))->map(function ($day) use ($weekStart, $daySummary) {
+        $date = $weekStart->copy()->addDays($day);
+
+        return [
+            'date' => $date->toDateString(),
+            'label' => $date->format('D'),
+            'day' => $date->format('d'),
+        ] + $daySummary($date->toDateString());
+    });
 
     $monthDays = collect();
     $cursor = $monthStart->copy();
 
     while ($cursor->lte($monthEnd)) {
         $dateString = $cursor->toDateString();
-        $dayBookings = Booking::whereDate('booking_date', $dateString)->get();
 
         $monthDays->push([
             'date' => $dateString,
@@ -595,11 +614,7 @@ Route::get('/admin/bookings', function (Request $request) {
             'label' => $cursor->format('D'),
             'is_current_month' => $cursor->month === $selectedDateCarbon->month,
             'is_selected' => $dateString === $selectedDate,
-            'count' => $dayBookings->count(),
-            'pending' => $dayBookings->where('status', 'pending')->count(),
-            'confirmed' => $dayBookings->where('status', 'confirmed')->count(),
-            'completed' => $dayBookings->where('status', 'completed')->count(),
-        ]);
+        ] + $daySummary($dateString));
 
         $cursor->addDay();
     }
@@ -610,7 +625,6 @@ Route::get('/admin/bookings', function (Request $request) {
 
     return view('admin-bookings', compact(
         'bookings',
-        'allBookings',
         'selectedDate',
         'selectedDateBookings',
         'todayBookings',
@@ -2360,7 +2374,14 @@ Route::get('/admin/visits', function () {
         return redirect('/admin/login');
     }
 
-    $visits = Visit::with(['patient', 'booking', 'medicalRecord', 'therapistRelation'])->latest()->get();
+    // Dipaginasi: memuat seluruh tabel menghasilkan halaman puluhan MB saat data membesar.
+    // orderByDesc('id') menjadikan urutan deterministik agar baris tidak dobel/hilang antar halaman.
+    $visits = Visit::with(['patient', 'booking', 'medicalRecord', 'therapistRelation'])
+        ->latest()
+        ->orderByDesc('id')
+        ->paginate(50)
+        ->withQueryString();
+
     return view('admin-visits', compact('visits'));
 });
 
@@ -6147,7 +6168,7 @@ Route::get('/admin/billings', function (Request $request) {
     $dateFrom = $request->query('date_from');
     $dateTo = $request->query('date_to');
 
-    $query = Billing::with(['patient', 'visit', 'items.inventoryItem'])->latest();
+    $query = Billing::with(['patient', 'visit', 'items.inventoryItem'])->latest()->orderByDesc('id');
 
     if ($status && in_array($status, ['paid', 'unpaid', 'partial', 'void'])) {
         $query->where('payment_status', $status);
@@ -6176,7 +6197,9 @@ Route::get('/admin/billings', function (Request $request) {
         });
     }
 
-    $billings = $query->get();
+    // Hanya DAFTAR yang dipaginasi. Angka ringkasan di bawah tetap dihitung dari seluruh data pada periode yang
+    // dipilih (BillingMoney per baris, logika uang legacy/ledger tidak diubah).
+    $billings = $query->paginate(50)->withQueryString();
 
     $summaryQuery = Billing::query();
 

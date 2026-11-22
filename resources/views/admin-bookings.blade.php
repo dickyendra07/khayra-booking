@@ -1558,6 +1558,8 @@
                             </tbody>
                         </table>
                     </div>
+
+                    {{ $bookings->links('partials.pagination') }}
                 @else
                     <div class="empty-state">
                         Belum ada data booking yang cocok dengan filter saat ini.
