@@ -409,11 +409,13 @@ Route::post('/booking', function (Request $request) {
         'full_name' => 'required|string|max:255',
         'whatsapp' => 'required|string|max:50',
         'service' => 'required|string|max:255',
-        'booking_date' => 'required|date',
+        'booking_date' => 'required|date|after_or_equal:'.ClinicTime::today(),
         'booking_time' => 'required',
         'therapist_id' => 'nullable|exists:therapists,id',
         'room_name' => 'nullable|string|max:255',
         'complaint' => 'nullable|string',
+    ], [
+        'booking_date.after_or_equal' => 'Tanggal booking tidak boleh di masa lalu.',
     ]);
 
     $selectedDate = $request->booking_date;
@@ -503,7 +505,7 @@ Route::post('/booking', function (Request $request) {
 
     return redirect('/booking?date=' . $selectedDate)
         ->with('success', 'Booking berhasil dikirim. Admin akan menghubungi Anda untuk konfirmasi.');
-});
+})->middleware('throttle:10,1'); // form publik tanpa login: batasi spam / pengisian slot palsu per IP
 
 
 
