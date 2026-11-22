@@ -79,7 +79,9 @@
                     </p>
                 </div>
                 <div>
-                    <a href="/admin/dashboard" class="btn btn-soft">Dashboard</a>
+                    @if(\App\Support\PortalAuth::isOwner())
+                        <a href="/owner/erm-dashboard" class="btn btn-soft">Dashboard</a>
+                    @endif
                 </div>
             </div>
 

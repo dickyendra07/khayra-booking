@@ -48,23 +48,28 @@ Route::get('/', function (Request $request) {
 });
 
 Route::get('/admin', function () {
-    if (session('admin_logged_in')) {
-        return redirect('/admin/dashboard');
-    }
+    return redirect(\App\Support\PortalAuth::homeFor(\App\Support\PortalAuth::role()));
+});
 
-    return redirect('/admin/login');
+Route::get('/owner', function () {
+    return redirect(\App\Support\PortalAuth::OWNER_HOME);
 });
 
 
 /*
 |--------------------------------------------------------------------------
-| Admin Authentication
+| Admin / Owner Authentication
 |--------------------------------------------------------------------------
+|
+| Satu form login untuk dua role. Role ditentukan dari kredensial
+| (lihat config/portal.php): admin -> staf operasional, owner -> pemilik.
+| Akses per halaman dipagari oleh App\Http\Middleware\PortalAccess.
+|
 */
 
 Route::get('/admin/login', function () {
-    if (session('admin_logged_in')) {
-        return redirect('/admin/dashboard');
+    if (\App\Support\PortalAuth::role() !== null) {
+        return redirect(\App\Support\PortalAuth::homeFor(\App\Support\PortalAuth::role()));
     }
 
     return view('admin-login');
@@ -76,38 +81,62 @@ Route::post('/admin/login', function (Request $request) {
         'password' => 'required|string',
     ]);
 
-    $adminEmail = env('ADMIN_EMAIL', 'admin@khayraphysio.com');
-    $adminPassword = env('ADMIN_PASSWORD', 'password');
+    $role = \App\Support\PortalAuth::attempt($request->email, $request->password);
 
-    if ($request->email !== $adminEmail || $request->password !== $adminPassword) {
+    if ($role === null) {
         return back()
-            ->withInput()
-            ->withErrors(['email' => 'Email atau password admin salah.']);
+            ->withInput($request->only('email'))
+            ->withErrors(['email' => 'Email atau password salah.']);
     }
+
+    // Cegah session fixation: ganti ID session setelah login berhasil.
+    $request->session()->regenerate();
 
     session([
         'admin_logged_in' => true,
         'admin_email' => $request->email,
+        'portal_role' => $role,
     ]);
 
-    return redirect('/admin/dashboard');
+    return redirect(\App\Support\PortalAuth::homeFor($role));
 });
 
-Route::post('/admin/logout', function () {
+Route::post('/admin/logout', function (Request $request) {
     session()->forget([
         'admin_logged_in',
         'admin_email',
+        'portal_role',
     ]);
+
+    $request->session()->regenerate();
+    $request->session()->regenerateToken();
 
     return redirect('/admin/login')->with('success', 'Anda berhasil logout.');
 });
 
-Route::get('/admin', function () {
-    return redirect('/admin/dashboard');
-});
+
+/*
+|--------------------------------------------------------------------------
+| URL lama -> URL owner (bookmark lama tetap jalan)
+|--------------------------------------------------------------------------
+*/
+
+foreach ([
+    'dashboard' => 'erm-dashboard',
+    'owner-dashboard' => 'dashboard',
+    'owner-finance' => 'finance',
+    'reports' => 'reports',
+] as $legacyPath => $ownerPath) {
+    Route::get('/admin/' . $legacyPath . '/{rest?}', function (Request $request, $rest = null) use ($ownerPath) {
+        $target = '/owner/' . $ownerPath . ($rest ? '/' . $rest : '');
+        $query = $request->getQueryString();
+
+        return redirect($target . ($query ? '?' . $query : ''));
+    })->where('rest', '.*');
+}
 
 
-Route::get('/admin/dashboard', function () {
+Route::get('/owner/erm-dashboard', function () {
     if (!session('admin_logged_in')) {
         return redirect('/admin/login');
     }
@@ -3839,7 +3868,7 @@ Route::post('/admin/services/{id}/delete', function ($id) {
 
 
 
-Route::get('/admin/owner-finance', function (Request $request) {
+Route::get('/owner/finance', function (Request $request) {
     if (!session('admin_logged_in')) {
         return redirect('/admin/login');
     }
@@ -3942,7 +3971,7 @@ Route::get('/admin/owner-finance', function (Request $request) {
     ));
 });
 
-Route::get('/admin/owner-finance/print', function (Request $request) {
+Route::get('/owner/finance/print', function (Request $request) {
     if (!session('admin_logged_in')) {
         return redirect('/admin/login');
     }
@@ -4041,7 +4070,7 @@ Route::get('/admin/owner-finance/print', function (Request $request) {
     ));
 });
 
-Route::post('/admin/owner-finance/close', function (Request $request) {
+Route::post('/owner/finance/close', function (Request $request) {
     if (!session('admin_logged_in')) {
         return redirect('/admin/login');
     }
@@ -4150,10 +4179,10 @@ Route::post('/admin/owner-finance/close', function (Request $request) {
         ]
     );
 
-    return redirect('/admin/owner-finance?month=' . $month)->with('success', 'Tutup buku bulan ' . $month . ' berhasil disimpan.');
+    return redirect('/owner/finance?month=' . $month)->with('success', 'Tutup buku bulan ' . $month . ' berhasil disimpan.');
 });
 
-Route::post('/admin/owner-finance/transactions', function (Request $request) {
+Route::post('/owner/finance/transactions', function (Request $request) {
     if (!session('admin_logged_in')) {
         return redirect('/admin/login');
     }
@@ -4172,17 +4201,17 @@ Route::post('/admin/owner-finance/transactions', function (Request $request) {
     $month = \Carbon\Carbon::parse($validated['transaction_date'])->format('Y-m');
 
     if (\App\Models\FinanceMonthlyClosing::where('month', $month)->exists()) {
-        return redirect('/admin/owner-finance?month=' . $month)->with('success', 'Bulan ini sudah tutup buku. Transaksi manual tidak bisa ditambahkan.');
+        return redirect('/owner/finance?month=' . $month)->with('success', 'Bulan ini sudah tutup buku. Transaksi manual tidak bisa ditambahkan.');
     }
 
     $validated['source'] = $validated['source'] ?: ($validated['type'] === 'income' ? 'other_income' : 'operational');
 
     \App\Models\FinanceTransaction::create($validated);
 
-    return redirect('/admin/owner-finance?month=' . $month)->with('success', 'Transaksi finance berhasil dicatat.');
+    return redirect('/owner/finance?month=' . $month)->with('success', 'Transaksi finance berhasil dicatat.');
 });
 
-Route::post('/admin/owner-finance/transactions/{id}/delete', function ($id) {
+Route::post('/owner/finance/transactions/{id}/delete', function ($id) {
     if (!session('admin_logged_in')) {
         return redirect('/admin/login');
     }
@@ -4191,16 +4220,16 @@ Route::post('/admin/owner-finance/transactions/{id}/delete', function ($id) {
     $month = $transaction->transaction_date ? $transaction->transaction_date->format('Y-m') : now()->format('Y-m');
 
     if (\App\Models\FinanceMonthlyClosing::where('month', $month)->exists()) {
-        return redirect('/admin/owner-finance?month=' . $month)->with('success', 'Bulan ini sudah tutup buku. Transaksi manual tidak bisa dihapus.');
+        return redirect('/owner/finance?month=' . $month)->with('success', 'Bulan ini sudah tutup buku. Transaksi manual tidak bisa dihapus.');
     }
 
     $transaction->delete();
 
-    return redirect('/admin/owner-finance?month=' . $month)->with('success', 'Transaksi finance manual berhasil dihapus.');
+    return redirect('/owner/finance?month=' . $month)->with('success', 'Transaksi finance manual berhasil dihapus.');
 });
 
 
-Route::get('/admin/owner-dashboard', function (Request $request) {
+Route::get('/owner/dashboard', function (Request $request) {
     if (!session('admin_logged_in')) {
         return redirect('/admin/login');
     }
@@ -4304,7 +4333,7 @@ Route::get('/admin/owner-dashboard', function (Request $request) {
     ));
 });
 
-Route::get('/admin/reports', function (Request $request) {
+Route::get('/owner/reports', function (Request $request) {
     if (!session('admin_logged_in')) {
         return redirect('/admin/login');
     }
@@ -4315,28 +4344,28 @@ Route::get('/admin/reports', function (Request $request) {
         [
             'title' => 'Monthly Clinic Report',
             'subtitle' => 'Owner snapshot bulanan: booking, visit, pasien baru, revenue, outstanding, product usage, movement stok, dan void.',
-            'url' => '/admin/reports/monthly-clinic?month=' . $month,
+            'url' => '/owner/reports/monthly-clinic?month=' . $month,
             'badge' => 'Owner value',
             'priority' => 'High',
         ],
         [
             'title' => 'Revenue Report',
             'subtitle' => 'Analisis pendapatan berdasarkan tanggal, status pembayaran, metode bayar, pasien, promo, outstanding, dan void.',
-            'url' => '/admin/reports/revenue',
+            'url' => '/owner/reports/revenue',
             'badge' => 'Finance',
             'priority' => 'High',
         ],
         [
             'title' => 'Inventory Report',
             'subtitle' => 'Laporan stok, stock value, potential sales, stock in/out, adjustment, low stock, empty stock, dan product usage.',
-            'url' => '/admin/reports/inventory?month=' . $month,
+            'url' => '/owner/reports/inventory?month=' . $month,
             'badge' => 'Stock control',
             'priority' => 'Medium',
         ],
         [
             'title' => 'Therapist Performance Report',
             'subtitle' => 'Performa therapist: jumlah visit, completed visit, pasien ditangani, rekam medis, completion rate, dan revenue terkait visit.',
-            'url' => '/admin/reports/therapist-performance?month=' . $month,
+            'url' => '/owner/reports/therapist-performance?month=' . $month,
             'badge' => 'Performance',
             'priority' => 'Premium',
         ],
@@ -4345,7 +4374,7 @@ Route::get('/admin/reports', function (Request $request) {
     return view('admin-reports', compact('cards'));
 });
 
-Route::get('/admin/reports/monthly-clinic', function (Request $request) {
+Route::get('/owner/reports/monthly-clinic', function (Request $request) {
     if (!session('admin_logged_in')) {
         return redirect('/admin/login');
     }
@@ -4503,7 +4532,7 @@ Route::get('/admin/reports/monthly-clinic', function (Request $request) {
     ));
 });
 
-Route::get('/admin/reports/revenue', function (Request $request) {
+Route::get('/owner/reports/revenue', function (Request $request) {
     if (!session('admin_logged_in')) {
         return redirect('/admin/login');
     }
@@ -4645,7 +4674,7 @@ Route::get('/admin/reports/revenue', function (Request $request) {
     ));
 });
 
-Route::get('/admin/reports/inventory', function (Request $request) {
+Route::get('/owner/reports/inventory', function (Request $request) {
     if (!session('admin_logged_in')) {
         return redirect('/admin/login');
     }
@@ -4738,7 +4767,7 @@ Route::get('/admin/reports/inventory', function (Request $request) {
     ));
 });
 
-Route::get('/admin/reports/therapist-performance', function () {
+Route::get('/owner/reports/therapist-performance', function () {
     $therapists = \App\Models\Therapist::orderBy('full_name')->get();
 
     $clinicalRequiredFields = [

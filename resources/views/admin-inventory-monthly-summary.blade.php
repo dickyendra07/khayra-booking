@@ -334,7 +334,7 @@
 </head>
 <body>
 <div class="layout">
-    @include('partials.admin-sidebar', ['activeMenu' => 'inventory-summary'])
+    @include('partials.admin-sidebar', ['activeMenu' => 'inventory-monthly-summary'])
 
     <main class="main">
         <div class="container">

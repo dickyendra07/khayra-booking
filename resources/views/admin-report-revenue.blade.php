@@ -97,22 +97,22 @@
                     <p class="subtitle">Analisis pendapatan berdasarkan tanggal, status pembayaran, metode bayar, pasien, promo, outstanding, dan void.</p>
                 </div>
                 <div class="actions">
-                    <a href="/admin/reports/revenue?date_from={{ $dateFrom }}&date_to={{ $dateTo }}&payment_method={{ $paymentMethod }}&status={{ $status }}&search={{ urlencode($search) }}&export=csv" class="btn btn-primary">Export CSV</a>
+                    <a href="/owner/reports/revenue?date_from={{ $dateFrom }}&date_to={{ $dateTo }}&payment_method={{ $paymentMethod }}&status={{ $status }}&search={{ urlencode($search) }}&export=csv" class="btn btn-primary">Export CSV</a>
                     <a href="/admin/billings" class="btn btn-soft">Billing List</a>
                 </div>
             </div>
 
             
 <div class="nav-grid">
-    <a class="nav-card {{ ($activeReport ?? '') === 'monthly' ? 'active' : '' }}" href="/admin/reports/monthly-clinic">Monthly Clinic</a>
-    <a class="nav-card {{ ($activeReport ?? '') === 'revenue' ? 'active' : '' }}" href="/admin/reports/revenue">Revenue</a>
-    <a class="nav-card {{ ($activeReport ?? '') === 'inventory' ? 'active' : '' }}" href="/admin/reports/inventory">Inventory</a>
-    <a class="nav-card {{ ($activeReport ?? '') === 'therapist' ? 'active' : '' }}" href="/admin/reports/therapist-performance">Therapist Performance</a>
+    <a class="nav-card {{ ($activeReport ?? '') === 'monthly' ? 'active' : '' }}" href="/owner/reports/monthly-clinic">Monthly Clinic</a>
+    <a class="nav-card {{ ($activeReport ?? '') === 'revenue' ? 'active' : '' }}" href="/owner/reports/revenue">Revenue</a>
+    <a class="nav-card {{ ($activeReport ?? '') === 'inventory' ? 'active' : '' }}" href="/owner/reports/inventory">Inventory</a>
+    <a class="nav-card {{ ($activeReport ?? '') === 'therapist' ? 'active' : '' }}" href="/owner/reports/therapist-performance">Therapist Performance</a>
 </div>
 
 
             <section class="filter-card">
-                <form method="GET" action="/admin/reports/revenue" class="filter-form">
+                <form method="GET" action="/owner/reports/revenue" class="filter-form">
                     <div class="field"><label>Date From</label><input type="date" name="date_from" value="{{ $dateFrom }}"></div>
                     <div class="field"><label>Date To</label><input type="date" name="date_to" value="{{ $dateTo }}"></div>
                     <div class="field">

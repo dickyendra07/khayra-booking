@@ -1197,7 +1197,9 @@
                 </div>
 
                 <div class="top-actions">
-                    <a href="/admin/dashboard" class="ghost-link">Dashboard ERM</a>
+                    @if(\App\Support\PortalAuth::isOwner())
+                        <a href="/owner/erm-dashboard" class="ghost-link">Dashboard ERM</a>
+                    @endif
                     <a href="/booking" class="primary-link">Open Public Booking</a>
                 </div>
             </div>

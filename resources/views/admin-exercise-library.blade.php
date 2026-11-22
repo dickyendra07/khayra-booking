@@ -56,7 +56,7 @@
                     <h1>Home Exercise Library</h1>
                     <p class="subtitle">Template latihan rumah untuk therapist agar edukasi pasien lebih rapi dan konsisten.</p>
                 </div>
-                <a href="/admin/reports/monthly-clinic" class="btn btn-soft">Reporting</a>
+                <a href="/owner/reports/monthly-clinic" class="btn btn-soft">Reporting</a>
             </div>
 
             @if(session('success'))

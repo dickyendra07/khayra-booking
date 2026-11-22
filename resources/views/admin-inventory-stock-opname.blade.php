@@ -327,7 +327,7 @@
 </head>
 <body>
 <div class="layout">
-    @include('partials.admin-sidebar', ['activeMenu' => 'inventory-opname'])
+    @include('partials.admin-sidebar', ['activeMenu' => 'inventory-stock-opname'])
 
     <main class="main">
         <div class="container">

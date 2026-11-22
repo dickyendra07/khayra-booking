@@ -1,15 +1,19 @@
 @php
     $active = $activeMenu ?? '';
+    $isOwner = \App\Support\PortalAuth::isOwner();
 
+    // 'ownerOnly' => true: hanya tampil untuk Owner. Akses URL-nya tetap
+    // dipagari di server oleh App\Http\Middleware\PortalAccess (/owner/*).
     $groups = [
         [
             'key' => 'overview',
             'label' => 'Overview',
+            'ownerOnly' => true,
             'items' => [
-                ['key' => 'dashboard', 'label' => 'Dashboard ERM', 'url' => '/admin/dashboard'],
-                ['key' => 'owner-dashboard', 'label' => 'Owner Dashboard', 'url' => '/admin/owner-dashboard'],
-                ['key' => 'owner-finance', 'label' => 'Owner Finance / Cashflow', 'url' => '/admin/owner-finance'],
-                ['key' => 'reports', 'label' => 'Reporting Center', 'url' => '/admin/reports'],
+                ['key' => 'dashboard', 'label' => 'Dashboard ERM', 'url' => '/owner/erm-dashboard'],
+                ['key' => 'owner-dashboard', 'label' => 'Owner Dashboard', 'url' => '/owner/dashboard'],
+                ['key' => 'owner-finance', 'label' => 'Owner Finance / Cashflow', 'url' => '/owner/finance'],
+                ['key' => 'reports', 'label' => 'Reporting Center', 'url' => '/owner/reports'],
             ],
         ],
         [
@@ -43,7 +47,6 @@
                 ['key' => 'exercise-library', 'label' => 'Exercise Library', 'url' => '/admin/exercise-library'],
                 ['key' => 'referral-letters', 'label' => 'Surat Rujukan', 'url' => '/admin/referral-letters'],
                 ['key' => 'rest-letter', 'label' => 'Surat Izin / Istirahat', 'url' => '/admin/rest-letter/create'],
-                ['key' => 'informed-consent', 'label' => 'Informed Consent', 'url' => '/admin/informed-consent/create'],
                 ['key' => 'consent-archive', 'label' => 'Arsip Consent', 'url' => '/admin/consent-archive'],
                 ['key' => 'satu-sehat', 'label' => 'Satu Sehat Ready', 'url' => '/admin/satu-sehat-readiness'],
             ],
@@ -53,7 +56,6 @@
             'label' => 'Inventory',
             'items' => [
                 ['key' => 'inventory', 'label' => 'Inventory / Stok Barang', 'url' => '/admin/inventory'],
-                ['key' => 'inventory-movements', 'label' => 'Mutasi Inventory', 'url' => '/admin/inventory/movements'],
                 ['key' => 'inventory-stock-movements', 'label' => 'Stock Movements', 'url' => '/admin/inventory/stock-movements'],
                 ['key' => 'inventory-stock-opname', 'label' => 'Stock Opname', 'url' => '/admin/inventory/stock-opname'],
                 ['key' => 'inventory-monthly-summary', 'label' => 'Monthly Summary', 'url' => '/admin/inventory/monthly-summary'],
@@ -69,6 +71,13 @@
             ],
         ],
     ];
+
+    $groups = collect($groups)
+        ->filter(fn ($group) => $isOwner || empty($group['ownerOnly']))
+        ->values()
+        ->all();
+
+    $firstGroupKey = $groups[0]['key'] ?? null;
 
     $openGroups = collect($groups)
         ->filter(fn ($group) => collect($group['items'])->contains(fn ($item) => $item['key'] === $active))
@@ -314,21 +323,25 @@
         <img src="/images/khayra-logo.png" alt="Khayra Logo" class="sidebar-logo">
         <div>
             <div class="sidebar-brand-name">Khayra Physio</div>
-            <div class="sidebar-brand-sub">ERM Workspace</div>
+            <div class="sidebar-brand-sub">{{ $isOwner ? 'Owner Workspace' : 'ERM Workspace' }}</div>
         </div>
     </div>
 
     <div class="sidebar-intro">
         <div class="sidebar-intro-title">Clinic Operating System</div>
         <div class="sidebar-intro-text">
-            Booking, patient timeline, rekam medis, billing, inventory, dokumen klinik, dan laporan owner dalam satu workspace.
+            @if($isOwner)
+                Booking, patient timeline, rekam medis, billing, inventory, dokumen klinik, dan laporan owner dalam satu workspace.
+            @else
+                Booking, patient timeline, rekam medis, billing, inventory, dan dokumen klinik dalam satu workspace.
+            @endif
         </div>
     </div>
 
     <div class="sidebar-groups">
         @foreach($groups as $group)
             @php
-                $groupIsOpen = in_array($group['key'], $openGroups, true) || ($active === '' && $group['key'] === 'overview');
+                $groupIsOpen = in_array($group['key'], $openGroups, true) || ($active === '' && $group['key'] === $firstGroupKey);
             @endphp
 
             <details class="sidebar-group" {{ $groupIsOpen ? 'open' : '' }}>
@@ -358,7 +371,7 @@
     <div class="sidebar-logout">
         <form method="POST" action="/admin/logout">
             @csrf
-            <button type="submit">Logout Admin</button>
+            <button type="submit">{{ $isOwner ? 'Logout Owner' : 'Logout Admin' }}</button>
         </form>
     </div>
 </aside>

@@ -733,7 +733,7 @@
             </div>
 
             <div class="top-actions">
-                <a href="/admin/reports" class="soft-btn">← Back to Reports</a>
+                <a href="/owner/reports" class="soft-btn">← Back to Reports</a>
                 <button type="button" class="soft-btn" onclick="window.print()">Print / Save PDF</button>
             </div>
         </div>

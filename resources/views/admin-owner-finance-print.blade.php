@@ -191,7 +191,7 @@
 <div class="report">
     <div class="no-print">
         <button onclick="window.print()" class="btn">Print / Save PDF</button>
-        <a href="/admin/owner-finance?month={{ $month }}" class="btn btn-soft">Back to Finance</a>
+        <a href="/owner/finance?month={{ $month }}" class="btn btn-soft">Back to Finance</a>
     </div>
 
     <div class="header">

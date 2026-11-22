@@ -350,7 +350,7 @@
                             <br>Notes: {{ $closing->notes }}
                         @endif
                     </div>
-                    <a href="/admin/owner-finance/print?month={{ $month }}" class="btn btn-green" target="_blank">Print Closed Report</a>
+                    <a href="/owner/finance/print?month={{ $month }}" class="btn btn-green" target="_blank">Print Closed Report</a>
                 </div>
             @endif
 
@@ -364,9 +364,9 @@
                     </p>
 
                     <div class="quick-links">
-                        <a href="/admin/owner-dashboard?month={{ $month }}" class="btn btn-soft">Back to Owner Dashboard</a>
+                        <a href="/owner/dashboard?month={{ $month }}" class="btn btn-soft">Back to Owner Dashboard</a>
                         <a href="/admin/billings" class="btn btn-soft">Open Billing Ledger</a>
-                        <a href="/admin/owner-finance/print?month={{ $month }}" class="btn btn-green" target="_blank">Print Monthly Report</a>
+                        <a href="/owner/finance/print?month={{ $month }}" class="btn btn-green" target="_blank">Print Monthly Report</a>
                     </div>
                 </div>
 
@@ -376,7 +376,7 @@
                         Billing void otomatis dikecualikan. Setelah tutup buku, transaksi manual bulan tersebut akan dikunci.
                     </p>
 
-                    <form method="GET" action="/admin/owner-finance" class="period-form">
+                    <form method="GET" action="/owner/finance" class="period-form">
                         <input type="month" name="month" value="{{ $month }}">
                         <button type="submit" class="btn btn-white">Update Period</button>
                     </form>
@@ -432,7 +432,7 @@
                 </div>
 
                 @if(!$closing)
-                    <form method="POST" action="/admin/owner-finance/transactions">
+                    <form method="POST" action="/owner/finance/transactions">
                         @csrf
 
                         <div class="form-grid">
@@ -520,7 +520,7 @@
                     </div>
 
                     <div class="action-row" style="margin-top:0;">
-                        <a href="/admin/owner-finance/print?month={{ $month }}" class="btn btn-soft" target="_blank">Print PDF</a>
+                        <a href="/owner/finance/print?month={{ $month }}" class="btn btn-soft" target="_blank">Print PDF</a>
                     </div>
                 </div>
 
@@ -569,7 +569,7 @@
                                         @if($transaction['kind'] === 'auto_billing')
                                             <a class="btn btn-soft" href="{{ $transaction['url'] }}">Open Billing</a>
                                         @elseif(!$closing)
-                                            <form method="POST" action="/admin/owner-finance/transactions/{{ $transaction['id'] }}/delete" onsubmit="return confirm('Hapus transaksi manual ini?')">
+                                            <form method="POST" action="/owner/finance/transactions/{{ $transaction['id'] }}/delete" onsubmit="return confirm('Hapus transaksi manual ini?')">
                                                 @csrf
                                                 <button type="submit" class="btn btn-red">Delete</button>
                                             </form>
@@ -602,7 +602,7 @@
 
                 <div class="close-book-box">
                     @if(!$closing)
-                        <form method="POST" action="/admin/owner-finance/close" onsubmit="return confirm('Tutup buku bulan {{ $monthLabel }}? Setelah ditutup, transaksi manual bulan ini akan dikunci.')">
+                        <form method="POST" action="/owner/finance/close" onsubmit="return confirm('Tutup buku bulan {{ $monthLabel }}? Setelah ditutup, transaksi manual bulan ini akan dikunci.')">
                             @csrf
                             <input type="hidden" name="month" value="{{ $month }}">
 

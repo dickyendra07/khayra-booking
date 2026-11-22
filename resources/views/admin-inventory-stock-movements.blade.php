@@ -90,7 +90,7 @@
 </head>
 <body>
 <div class="layout">
-    @include('partials.admin-sidebar', ['activeMenu' => 'inventory'])
+    @include('partials.admin-sidebar', ['activeMenu' => 'inventory-stock-movements'])
 
     <main class="main">
         <div class="container">
