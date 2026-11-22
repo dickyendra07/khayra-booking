@@ -49,27 +49,20 @@ use App\Models\FinanceMonthlyClosing;
 use App\Services\InvoiceWhatsappMessage;
 use App\Support\AdminCredentials;
 use App\Support\PortalAuth;
+use App\Support\PortalHosts;
 use App\Support\LoginThrottle;
 use App\Support\WhatsappLink;
 use App\Models\PackageTreatmentDocument;
 use App\Models\TherapistLeaveRequest;
 
 Route::get('/', function (Request $request) {
-    $host = $request->getHost();
-
-    if ($host === 'app.khayraphysio.com') {
-        return redirect('/admin/login');
-    }
-
-    if ($host === 'physio.khayraphysio.com') {
-        return redirect('/therapist/login');
-    }
-
-    if ($host === 'patient.khayraphysio.com') {
-        return redirect('/patient');
-    }
-
-    return view('welcome');
+    // Hostname portal dari config/khayra_hosts.php (bukan literal) agar konsisten dengan EnforcePortalHost.
+    return match (PortalHosts::portalForHost($request->getHost())) {
+        PortalHosts::ADMIN => redirect('/admin/login'),
+        PortalHosts::THERAPIST => redirect('/therapist/login'),
+        PortalHosts::PATIENT => redirect('/patient'),
+        default => view('welcome'),
+    };
 });
 
 Route::get('/admin', function () {

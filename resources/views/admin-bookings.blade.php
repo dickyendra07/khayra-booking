@@ -1066,7 +1066,7 @@
                     @if(\App\Support\PortalAuth::isOwner())
                         <a href="/owner/erm-dashboard" class="kx-btn kx-btn--outline ghost-link">Dashboard ERM</a>
                     @endif
-                    <a href="/booking" class="kx-btn kx-btn--primary primary-link">Open Public Booking</a>
+                    <a href="{{ \App\Support\PortalHosts::url('patient', '/booking') }}" class="kx-btn kx-btn--primary primary-link">Open Public Booking</a>
                 </div>
             </div>
 

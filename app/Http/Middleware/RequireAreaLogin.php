@@ -48,7 +48,8 @@ class RequireAreaLogin
 
     public function handle(Request $request, Closure $next): Response
     {
-        $path = trim($request->path(), '/');
+        // Path di-decode seperti router ("/%61dmin/x" harus tetap dianggap /admin/x).
+        $path = strtolower(trim($request->decodedPath(), '/'));
         $area = explode('/', $path)[0];
 
         if (! isset(self::AREAS[$area])) {
