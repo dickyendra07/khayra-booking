@@ -523,7 +523,6 @@
 
             <div class="topbar-actions">
                 <a href="/" class="kx-btn kx-btn--outline ghost-link">Home</a>
-                <a href="/admin/bookings" class="kx-btn kx-btn--outline ghost-link">Admin View</a>
             </div>
         </div>
 
@@ -574,7 +573,6 @@
 
                 <div class="mini-actions">
                     <a href="/" class="kx-btn kx-btn--secondary kx-btn--sm mini-link">Home</a>
-                    <a href="/admin/bookings" class="kx-btn kx-btn--secondary kx-btn--sm mini-link">Admin View</a>
                 </div>
             </div>
 

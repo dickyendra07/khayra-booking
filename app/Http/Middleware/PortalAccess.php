@@ -18,7 +18,8 @@ class PortalAccess
 {
     public function handle(Request $request, Closure $next): Response
     {
-        $path = trim($request->path(), '/');
+        // Path di-decode seperti router ("/%6Fwner/x" dan "/owner%2Fx" harus tetap dianggap /owner/x).
+        $path = strtolower(trim($request->decodedPath(), '/'));
 
         if (($path === 'owner' || str_starts_with($path, 'owner/')) && PortalAuth::role() !== PortalAuth::ROLE_OWNER) {
             abort(403, 'Halaman ini hanya dapat diakses oleh Owner.');

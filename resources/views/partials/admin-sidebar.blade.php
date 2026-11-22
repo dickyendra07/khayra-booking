@@ -74,9 +74,9 @@
             'key' => 'public-tools',
             'label' => 'Public Access',
             'items' => [
-                ['key' => 'form-booking', 'label' => 'Form Booking Publik', 'url' => '/booking'],
-                ['key' => 'patient-portal', 'label' => 'Patient Portal', 'url' => '/patient'],
-                ['key' => 'therapist-portal', 'label' => 'Therapist Portal', 'url' => '/therapist/login'],
+                ['key' => 'form-booking', 'label' => 'Form Booking Publik', 'url' => \App\Support\PortalHosts::url('patient', '/booking')],
+                ['key' => 'patient-portal', 'label' => 'Patient Portal', 'url' => \App\Support\PortalHosts::url('patient', '/patient')],
+                ['key' => 'therapist-portal', 'label' => 'Therapist Portal', 'url' => \App\Support\PortalHosts::url('therapist', '/therapist/login')],
             ],
         ],
     ];

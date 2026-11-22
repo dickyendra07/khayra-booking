@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Support\AdminCredentials;
 use App\Support\InvoiceNumberIndex;
+use App\Support\PortalHosts;
 use App\Support\SchemaGate;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
@@ -32,6 +33,7 @@ class KhayraPreflight extends Command
         $this->checkAuthentication();
         $this->checkCacheForThrottling();
         $this->checkSession();
+        $this->checkPortalHosts();
         $this->checkDatabase();
         $this->checkTimezone();
         $this->checkAdminFee();
@@ -181,6 +183,41 @@ class KhayraPreflight extends Command
         if (config('app.env') === 'production') {
             $this->add(config('session.secure') ? 'PASS' : 'WARN', 'SESSION_SECURE_COOKIE', config('session.secure') ? 'aktif' : 'nonaktif; aktifkan bila situs HTTPS');
             $this->add(config('session.http_only') ? 'PASS' : 'WARN', 'Session http_only', config('session.http_only') ? 'aktif' : 'nonaktif');
+        }
+    }
+
+    /** Isolasi hostname portal, URL pasien kanonis, dan proxy tepercaya (config/khayra_hosts.php, config/trustedproxy.php). */
+    private function checkPortalHosts(): void
+    {
+        $production = config('app.env') === 'production';
+        $hosts = array_filter(array_map(fn ($portal) => PortalHosts::host($portal), ['admin', 'therapist', 'patient']));
+
+        if (count($hosts) !== 3 || count(array_unique($hosts)) !== 3) {
+            $this->add('FAIL', 'Hostname portal', 'PORTAL_HOST_ADMIN / PORTAL_HOST_THERAPIST / PORTAL_HOST_PATIENT harus terisi dan berbeda satu sama lain');
+        } else {
+            $this->add('PASS', 'Hostname portal', 'admin='.$hosts[0].' therapist='.$hosts[1].' patient='.$hosts[2]);
+        }
+
+        if ($production) {
+            $this->add(PortalHosts::enforcing() ? 'PASS' : 'FAIL', 'Isolasi hostname', PortalHosts::enforcing() ? 'aktif (hostname tidak dikenal dan akses lintas portal ditolak)' : 'NONAKTIF di production (PORTAL_HOST_ENFORCE=false); hapus baris itu atau set true');
+        } else {
+            $this->add('PASS', 'Isolasi hostname', PortalHosts::enforcing() ? 'aktif' : 'nonaktif (bukan production)');
+        }
+
+        $patientUrl = (string) config('khayra_hosts.urls.patient');
+        $urlHost = strtolower((string) parse_url($patientUrl, PHP_URL_HOST));
+        $urlOk = str_starts_with($patientUrl, 'https://') && $urlHost === PortalHosts::host('patient');
+
+        if ($production) {
+            $this->add($urlOk ? 'PASS' : 'FAIL', 'PATIENT_PORTAL_URL', $urlOk ? $patientUrl : "harus https dan sama dengan PORTAL_HOST_PATIENT (sekarang: {$patientUrl})");
+        } else {
+            $this->add('PASS', 'PATIENT_PORTAL_URL', $patientUrl);
+        }
+
+        if ($production && blank(config('trustedproxy.proxies'))) {
+            $this->add('WARN', 'TRUSTED_PROXIES', 'kosong: bila ada reverse proxy (mis. CloudPanel Nginx -> 8080), IP klien terbaca sebagai IP proxy sehingga throttle login/booking per IP berlaku untuk semua orang. Verifikasi topologi, lalu isi IP proxy spesifik (docs/16).');
+        } else {
+            $this->add('PASS', 'TRUSTED_PROXIES', blank(config('trustedproxy.proxies')) ? 'kosong (tidak ada proxy yang dipercaya)' : implode(',', (array) config('trustedproxy.proxies')));
         }
     }
 

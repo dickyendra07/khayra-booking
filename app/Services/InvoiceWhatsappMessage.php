@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Billing;
+use App\Support\PortalHosts;
 
 /**
  * Teks WhatsApp yang dikirim admin ke pasien tentang invoice.
@@ -34,7 +35,7 @@ class InvoiceWhatsappMessage
         }
 
         $lines[] = '';
-        $lines[] = 'Invoice lengkap dapat dilihat di Portal Pasien: '.url('/patient').' (masuk dengan nomor WhatsApp dan tanggal lahir Anda).';
+        $lines[] = 'Invoice lengkap dapat dilihat di Portal Pasien: '.PortalHosts::patientUrl('/patient').' (masuk dengan nomor WhatsApp dan tanggal lahir Anda).';
         $lines[] = '';
         $lines[] = 'Terima kasih.';
 
